@@ -97,6 +97,11 @@ const val MINECRAFT_SERVICES_URL = "https://api.minecraftservices.com"
  * 设备代码用于在单独的设备或浏览器上授权用户
  */
 suspend fun fetchDeviceCodeResponse(context: CoroutineContext): DeviceCodeResponse = coroutineScope {
+    //Fail fast with a clear message instead of sending a request Microsoft can only answer with a bare HTTP 400
+    if (BuildKeys.OAUTH_CLIENT_ID.isBlank()) {
+        Logger.error(TAG, "OAUTH_CLIENT_ID is empty in this build, Microsoft login is unavailable")
+        throw IllegalStateException("Microsoft login is not configured: this build has no OAuth client ID (OAUTH_CLIENT_ID).")
+    }
     withRetry {
         submitForm(
             url = "$MICROSOFT_AUTH_URL$TENANT/oauth2/v2.0/devicecode",

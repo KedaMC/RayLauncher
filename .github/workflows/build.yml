@@ -63,6 +63,12 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Check OAuth client ID
+        run: |
+          if [ -z "$OAUTH_CLIENT_ID" ]; then
+            echo "::warning title=OAUTH_CLIENT_ID missing::Repository secret OAUTH_CLIENT_ID is not set. Microsoft login will fail with HTTP 400 in this build."
+          fi
+
       - name: Set up JDK 21
         uses: actions/setup-java@v5
         with:
