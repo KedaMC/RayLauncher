@@ -314,6 +314,7 @@
     <string name="account_logging_xbox_underage">Tanggal lahir akun menunjukkan bahwa Anda berusia di bawah 18 tahun. Akun ini perlu ditambahkan ke grup keluarga.</string>
     <string name="account_logging_frequent">Upaya masuk terlalu sering. Coba lagi nanti.</string>
     <string name="account_logging_blocked_ip">Alamat IP saat ini telah diblokir untuk masuk.</string>
+    <string name="account_logging_invalid_app_registration">Layanan Minecraft menolak registrasi aplikasi Microsoft launcher ini (invalid app registration). Aplikasi OAuth harus disetujui Mojang terlebih dahulu: https://aka.ms/AppRegInfo</string>
     <string name="account_logging_profile_not_exists">Silakan buat profil pemain Minecraft terlebih dahulu, lalu coba masuk lagi!</string>
     <string name="account_logging_not_purchased_minecraft">Kepemilikan Minecraft tidak terverifikasi. Silakan beli dari situs web resmi Minecraft.</string>
     <string name="account_type_microsoft">Microsoft</string>

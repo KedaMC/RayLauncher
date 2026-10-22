@@ -483,6 +483,7 @@
     <string name="account_logging_xbox_underage">The birthdate on the account indicates the user is under 18. A guardian must add this account to a family group to continue using it.</string>
     <string name="account_logging_frequent">Login attempts are too frequent. Please try again later.</string>
     <string name="account_logging_blocked_ip">The current IP address has been blocked from logging in.</string>
+    <string name="account_logging_invalid_app_registration">Minecraft services rejected this launcher\'s Microsoft app registration (invalid app registration). The OAuth app must be approved by Mojang first: https://aka.ms/AppRegInfo</string>
     <string name="account_logging_profile_not_exists">Please create a Minecraft player profile first, then try logging in again!</string>
     <string name="account_logging_not_purchased_minecraft">Minecraft ownership not verified. Please purchase it from Minecraft\'s official website.</string>
     <string name="account_relogin_title">Sign In Required</string>

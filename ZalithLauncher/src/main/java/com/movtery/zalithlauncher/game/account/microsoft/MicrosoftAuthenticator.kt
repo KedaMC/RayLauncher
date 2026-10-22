@@ -25,6 +25,7 @@ import com.movtery.zalithlauncher.game.account.AccountsManager
 import com.movtery.zalithlauncher.game.account.CredentialsExpiredException
 import com.movtery.zalithlauncher.game.account.microsoft.MinecraftProfileException.ExceptionStatus.BLOCKED_IP
 import com.movtery.zalithlauncher.game.account.microsoft.MinecraftProfileException.ExceptionStatus.FREQUENT
+import com.movtery.zalithlauncher.game.account.microsoft.MinecraftProfileException.ExceptionStatus.INVALID_APP_REGISTRATION
 import com.movtery.zalithlauncher.game.account.microsoft.XboxLoginException.ExceptionStatus.BANNED
 import com.movtery.zalithlauncher.game.account.microsoft.XboxLoginException.ExceptionStatus.BLOCKED_REGION
 import com.movtery.zalithlauncher.game.account.microsoft.XboxLoginException.ExceptionStatus.NOT_ACCEPTED_SERVICE
@@ -49,6 +50,7 @@ import com.movtery.zalithlauncher.path.GLOBAL_CLIENT
 import com.movtery.zalithlauncher.utils.logging.Logger
 import com.movtery.zalithlauncher.utils.network.httpPostJson
 import com.movtery.zalithlauncher.utils.network.safeBodyAsJson
+import com.movtery.zalithlauncher.utils.network.safeBodyAsText
 import com.movtery.zalithlauncher.utils.network.submitForm
 import com.movtery.zalithlauncher.utils.string.toUuidStr
 import io.ktor.client.plugins.ClientRequestException
@@ -390,20 +392,28 @@ private suspend fun authenticateMinecraft(
     update(AsyncStatus.AUTHENTICATE_MINECRAFT)
 
     return withRetry {
-        runCatching {
+        try {
             httpPostJson<MinecraftAuthResponse>(
                 url = "$MINECRAFT_SERVICES_URL/authentication/login_with_xbox",
                 body = mapOf("identityToken" to "XBL3.0 x=${xstsResult.uhs};${xstsResult.token}"),
                 context = context
             )
-        }.onFailure { e ->
-            if (e is ResponseException) {
-                when (e.response.status.value) {
-                    429 -> throw MinecraftProfileException(FREQUENT)
-                    403 -> throw MinecraftProfileException(BLOCKED_IP)
+        } catch (e: ResponseException) {
+            when (e.response.status.value) {
+                429 -> throw MinecraftProfileException(FREQUENT)
+                403 -> {
+                    //A 403 here is not always an IP block: an OAuth app that Mojang has not approved yet
+                    //is rejected with "Invalid app registration". Read the body so the user sees the real cause.
+                    val body = runCatching { e.response.safeBodyAsText() }.getOrNull().orEmpty()
+                    Logger.error(TAG, "Minecraft services rejected login_with_xbox with 403: $body")
+                    if (body.contains("Invalid app registration", ignoreCase = true) || body.contains("AppRegInfo", ignoreCase = true)) {
+                        throw MinecraftProfileException(INVALID_APP_REGISTRATION)
+                    }
+                    throw MinecraftProfileException(BLOCKED_IP)
                 }
             }
-        }.getOrThrow()
+            throw e
+        }
     }
 }
 

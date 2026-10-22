@@ -21,6 +21,7 @@ package com.movtery.zalithlauncher.game.account.microsoft
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.game.account.microsoft.MinecraftProfileException.ExceptionStatus.BLOCKED_IP
 import com.movtery.zalithlauncher.game.account.microsoft.MinecraftProfileException.ExceptionStatus.FREQUENT
+import com.movtery.zalithlauncher.game.account.microsoft.MinecraftProfileException.ExceptionStatus.INVALID_APP_REGISTRATION
 import com.movtery.zalithlauncher.game.account.microsoft.MinecraftProfileException.ExceptionStatus.PROFILE_NOT_EXISTS
 import com.movtery.zalithlauncher.ui.AndroidStringText
 import com.movtery.zalithlauncher.ui.androidText
@@ -43,7 +44,12 @@ class MinecraftProfileException(val status: ExceptionStatus) : RuntimeException(
         /**
          * 未创建配置
          */
-        PROFILE_NOT_EXISTS
+        PROFILE_NOT_EXISTS,
+
+        /**
+         * OAuth 应用尚未通过 Mojang 审批 (Invalid app registration)
+         */
+        INVALID_APP_REGISTRATION
     }
 }
 
@@ -53,6 +59,7 @@ fun MinecraftProfileException.toLocal(): AndroidStringText {
             FREQUENT -> R.string.account_logging_frequent
             BLOCKED_IP -> R.string.account_logging_blocked_ip
             PROFILE_NOT_EXISTS -> R.string.account_logging_profile_not_exists
+            INVALID_APP_REGISTRATION -> R.string.account_logging_invalid_app_registration
         }
     )
 }
