@@ -19,6 +19,7 @@
 package com.movtery.zalithlauncher.ui.screens.content.download.game
 
 import androidx.compose.animation.AnimatedVisibility
+import com.movtery.zalithlauncher.ui.components.glassRadioColors
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeOut
@@ -41,10 +42,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import com.movtery.zalithlauncher.ui.components.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Surface
+import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -57,6 +58,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.foundation.layout.RowScope
+import com.movtery.zalithlauncher.ui.components.GlassItemSurface
+import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
@@ -411,13 +415,9 @@ fun AddonListItem(
     summary: (@Composable () -> Unit)? = null,
     onClick: () -> Unit = {}
 ) {
-    Row(
-        modifier = modifier
-            .clip(shape = MaterialTheme.shapes.medium)
-            .clickable(onClick = onClick),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+    val itemContent: @Composable RowScope.() -> Unit = {
         RadioButton(
+            colors = glassRadioColors(),
             selected = selected,
             onClick = onClick
         )
@@ -430,6 +430,31 @@ fun AddonListItem(
             )
             summary?.invoke()
         }
+    }
+
+    if (liquidGlassBackdrop() != null) {
+        // Each loader/addon version choice is its own Liquid Glass box
+        GlassItemSurface(
+            modifier = modifier,
+            shape = MaterialTheme.shapes.large,
+            color = cardColor(),
+            contentColor = onCardColor(),
+            onClick = onClick
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                content = itemContent
+            )
+        }
+    } else {
+        Row(
+            modifier = modifier
+                .clip(shape = MaterialTheme.shapes.medium)
+                .clickable(onClick = onClick),
+            verticalAlignment = Alignment.CenterVertically,
+            content = itemContent
+        )
     }
 }
 

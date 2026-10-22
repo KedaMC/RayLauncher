@@ -352,6 +352,11 @@ object AllSettings : SettingsRegistry() {
     val launcherFestivalEffects = boolSetting("launcherFestivalEffects", true)
 
     /**
+     * Liquid Glass 效果（PrismalAGSL），默认关闭
+     */
+    val launcherLiquidGlass = boolSetting("launcherLiquidGlass", false)
+
+    /**
      * 动画倍速
      */
     val launcherAnimateSpeed = intSetting("launcherAnimateSpeed", 5, 0..10)

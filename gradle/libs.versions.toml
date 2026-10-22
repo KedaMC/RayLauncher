@@ -54,6 +54,7 @@ appcompat = "1.8.0"
 dagger = "2.60.1"
 hilt = "1.4.0"
 webkit = "1.17.1"
+prismal = "v1.0.4"
 
 [libraries]
 androidx-media3-exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "media3Exoplayer" }
@@ -133,6 +134,7 @@ documentfile = { module = "androidx.documentfile:documentfile", version.ref = "d
 zip4j = { module = "net.lingala.zip4j:zip4j", version.ref = "zip4j" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hilt" }
+prismal = { module = "com.github.styropyr0:PrismalAGSL", version.ref = "prismal" }
 dagger-hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "dagger" }
 dagger-hilt-android-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "dagger" }
 

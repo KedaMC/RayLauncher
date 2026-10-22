@@ -38,7 +38,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -56,7 +56,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
+import com.movtery.zalithlauncher.ui.components.GlassDialog as Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.ImageLoader
 import coil3.compose.AsyncImage
@@ -86,12 +86,14 @@ import com.movtery.zalithlauncher.setting.enums.BackgroundBlur
 import com.movtery.zalithlauncher.ui.AndroidStringText
 import com.movtery.zalithlauncher.ui.androidText
 import com.movtery.zalithlauncher.ui.components.ButtonPosition
+import com.movtery.zalithlauncher.ui.components.LocalLiquidGlassBackdrop
 import com.movtery.zalithlauncher.ui.components.MarqueeText
 import com.movtery.zalithlauncher.ui.components.PositionButton
 import com.movtery.zalithlauncher.ui.components.PositionFilledTonalButton
 import com.movtery.zalithlauncher.ui.components.SimpleAlertDialog
 import com.movtery.zalithlauncher.ui.components.VideoPlayer
 import com.movtery.zalithlauncher.ui.components.rememberDialogMaxHeight
+import com.styropyr0.prismal.sources.prismalGlassLayer
 import com.movtery.zalithlauncher.ui.screens.content.FirstLoginMenu
 import com.movtery.zalithlauncher.ui.theme.cardColor
 import com.movtery.zalithlauncher.ui.theme.onCardColor
@@ -552,6 +554,7 @@ fun Background(
     val backgroundBlurEnabled = backgroundMode && blur > 0 && opacity < 100
     val layerCapture = !backgroundMode && blur > 0 && opacity < 100 && viewModel.isValid
     val density = LocalDensity.current
+    val glassBackdrop = LocalLiquidGlassBackdrop.current
 
     Box(
         modifier = modifier
@@ -567,6 +570,10 @@ fun Background(
                 recordContent = layerCapture,
                 blurRadiusPx = blur * density.density,
                 whiteOverlayAlpha = if (backgroundBlurEnabled) whiteOverlayAlpha(blur) else 0f
+            )
+            .then(
+                //Liquid Glass：把背景内容录制进共享图层，供玻璃组件采样
+                if (glassBackdrop != null) Modifier.prismalGlassLayer(glassBackdrop) else Modifier
             )
     ) {
         if (viewModel.isValid) {

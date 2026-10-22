@@ -41,7 +41,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.nonInteractiveScrollbar
 import androidx.compose.material3.rememberTopAppBarState
@@ -59,6 +59,7 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.drawscope.inset
@@ -86,6 +87,7 @@ import com.movtery.zalithlauncher.game.version.installed.cleanup.GameAssetCleane
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.ui.activities.MainActivity
 import com.movtery.zalithlauncher.ui.base.BaseScreen
+import com.movtery.zalithlauncher.ui.components.BackgroundCard
 import com.movtery.zalithlauncher.ui.components.EdgeDirection
 import com.movtery.zalithlauncher.ui.components.IconTextButton
 import com.movtery.zalithlauncher.ui.components.MarqueeText
@@ -102,6 +104,7 @@ import com.movtery.zalithlauncher.ui.screens.content.elements.VersionItemLayout
 import com.movtery.zalithlauncher.ui.screens.content.elements.VersionsOperation
 import com.movtery.zalithlauncher.ui.screens.content.elements.backgroundGlass
 import com.movtery.zalithlauncher.ui.theme.cardColor
+import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
 import com.movtery.zalithlauncher.ui.theme.onCardColor
 import com.movtery.zalithlauncher.utils.animation.swapAnimateDpAsState
 import com.movtery.zalithlauncher.utils.canHandlePermission
@@ -410,11 +413,23 @@ private fun LeftMenu(
             }
         }
 
+        val glassButtonColors = if (liquidGlassBackdrop() != null) {
+            ButtonDefaults.buttonColors(
+                containerColor = cardColor(),
+                contentColor = Color.White,
+                disabledContainerColor = cardColor(),
+                disabledContentColor = Color.White.copy(alpha = 0.5f)
+            )
+        } else {
+            ButtonDefaults.buttonColors()
+        }
+
         ScalingActionButton(
             modifier = Modifier
                 .padding(start = 12.dp)
                 .padding(top = 8.dp)
                 .fillMaxWidth(),
+            colors = glassButtonColors,
             onClick = {
                 (context as? MainActivity)?.let { activity ->
                     checkStoragePermissions(
@@ -436,6 +451,7 @@ private fun LeftMenu(
             modifier = Modifier
                 .padding(start = 12.dp, top = 8.dp, bottom = 12.dp)
                 .fillMaxWidth(),
+            colors = glassButtonColors,
             onClick = onCleanupGameFiles
         ) {
             MarqueeText(text = stringResource(R.string.versions_manage_cleanup))
@@ -592,20 +608,15 @@ private fun VersionsLayout(
                             .padding(all = 12.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        val blur = AllSettings.backgroundBlur.state
                         val cardColor = cardColor()
 
-                        Surface(
+                        BackgroundCard(
                             modifier = Modifier.height(IntrinsicSize.Max),
-                            color = cardColor,
-                            contentColor = onCardColor(),
                             shape = MaterialTheme.shapes.large,
-                            shadowElevation = actionBarShadowElevation,
+                            liquidGlass = true
                         ) {
                             Row(
-                                modifier = Modifier
-                                    .backgroundGlass(blur, cardColor)
-                                    .padding(all = 8.dp),
+                                modifier = Modifier.padding(all = 8.dp),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -625,19 +636,16 @@ private fun VersionsLayout(
                         }
 
                         // 版本分类
-                        Surface(
+                        BackgroundCard(
                             modifier = Modifier
                                 .weight(1f, fill = false)
                                 .height(IntrinsicSize.Max),
-                            color = cardColor,
-                            contentColor = onCardColor(),
                             shape = MaterialTheme.shapes.large,
-                            shadowElevation = actionBarShadowElevation,
+                            liquidGlass = true
                         ) {
                             val scrollState = rememberScrollState()
                             Row(
                                 modifier = Modifier
-                                    .backgroundGlass(blur, cardColor)
                                     .fadeEdge(
                                         state = scrollState,
                                         length = 32.dp,

@@ -29,6 +29,7 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -61,6 +62,7 @@ import com.movtery.zalithlauncher.ui.base.BaseAppCompatActivity
 import com.movtery.zalithlauncher.ui.base.ObserveFullScreenSetting
 import com.movtery.zalithlauncher.ui.buildAppendedText
 import com.movtery.zalithlauncher.ui.components.SimpleAlertDialog
+import com.movtery.zalithlauncher.ui.components.glassPageCapture
 import com.movtery.zalithlauncher.ui.screens.NestedNavKey
 import com.movtery.zalithlauncher.ui.screens.NormalNavKey
 import com.movtery.zalithlauncher.ui.screens.content.elements.Background
@@ -299,26 +301,29 @@ class MainActivity : BaseAppCompatActivity() {
             ) {
                 ObserveFullScreenSetting(AllSettings.launcherFullScreen.state)
 
-                    Background(
-                        modifier = Modifier.fillMaxSize(),
-                        viewModel = backgroundViewModel
-                    )
+                    //Liquid Glass: dialogs blur this whole page (wallpaper + screen UI), recorded only while one is open
+                    Box(modifier = Modifier.fillMaxSize().glassPageCapture()) {
+                        Background(
+                            modifier = Modifier.fillMaxSize(),
+                            viewModel = backgroundViewModel
+                        )
 
-                    MainScreen(
-                        screenBackStackModel = screenBackStackModel,
-                        eventViewModel = eventViewModel,
-                        modpackImportViewModel = modpackImportViewModel,
-                        modifyVersionViewModel = modifyVersionViewModel,
-                        submitError = {
-                            errorViewModel.showError(it)
-                        }
-                    )
+                        MainScreen(
+                            screenBackStackModel = screenBackStackModel,
+                            eventViewModel = eventViewModel,
+                            modpackImportViewModel = modpackImportViewModel,
+                            modifyVersionViewModel = modifyVersionViewModel,
+                            submitError = {
+                                errorViewModel.showError(it)
+                            }
+                        )
 
-                    //节日彩蛋效果层
-                    FestivalEffects(
-                        modifier = Modifier.fillMaxSize(),
-                        festivals = festivals
-                    )
+                        //节日彩蛋效果层
+                        FestivalEffects(
+                            modifier = Modifier.fillMaxSize(),
+                            festivals = festivals
+                        )
+                    }
 
                     //启动游戏操作流程
                     LaunchGameOperation(

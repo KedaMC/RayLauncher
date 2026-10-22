@@ -623,6 +623,8 @@
     <string name="settings_launcher_color_theme_title">Tema Warna</string>
     <string name="settings_launcher_color_theme_summary">Sesuaikan warna launcher</string>
     <string name="settings_launcher_full_screen_summary">Buat halaman launcher jadi layar penuh, mengabaikan area aman seperti notch dan punch-hole</string>
+    <string name="settings_launcher_liquid_glass_title">Liquid Glass</string>
+    <string name="settings_launcher_liquid_glass_summary">Aktifkan atau nonaktifkan efek Liquid Glass pada top bar dan kartu beranda. Butuh latar gambar; refraksi penuh butuh Android 13+</string>
     <string name="settings_launcher_animate_speed_title">Kecepatan Animasi</string>
     <string name="settings_launcher_swap_animate_type_title">Animasi Transisi</string>
     <string name="settings_launcher_swap_animate_type_summary">Pilih animasi transisi yang paling cocok sama preferensi kamu</string>
@@ -820,6 +822,7 @@
     <string name="version_summary_fools_potato">Selama bertahun-tahun, Poisonous Potato diabaikan dan diremehkan, jadi kami memberinya buff yang epik!</string>
     <string name="version_summary_fools_creaft_mine">Sekarang Anda dapat membuat apa saja—bahkan seluruh dunia!</string>
     <string name="game_menu_option_switch_memory">Tampilan RAM</string>
+    <string name="game_menu_option_liquid_glass">Liquid Glass</string>
     <string name="game_menu_option_controls_opacity">Opasitas Layout Kontrol</string>
     <string name="account_microsoft_exit_by_user">Anda meninggalkan halaman web, jadi proses login Microsoft telah dibatalkan untuk Anda.</string>
     <string name="cape_name_none">Tidak Ada</string>

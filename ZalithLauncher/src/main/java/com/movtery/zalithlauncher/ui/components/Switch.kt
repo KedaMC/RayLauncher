@@ -21,20 +21,29 @@ package com.movtery.zalithlauncher.ui.components
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchColors
 import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.movtery.zalithlauncher.R
+import com.movtery.zalithlauncher.setting.AllSettings
 
 @Composable
 fun DefaultSwitch(
@@ -45,32 +54,94 @@ fun DefaultSwitch(
     colors: SwitchColors = SwitchDefaults.colors(),
     interactionSource: MutableInteractionSource? = null
 ) {
-    Switch(
-        checked = checked,
-        onCheckedChange = onCheckedChange,
-        modifier = modifier,
-        enabled = enabled,
-        thumbContent = {
-            val rotation by animateFloatAsState(
-                if (checked) 0.0f else -(180.0f)
+    val glassEnabled = AllSettings.launcherLiquidGlass.state
+    val backdrop = liquidGlassBackdrop()
+    val glassColors = if (glassEnabled) {
+        SwitchDefaults.colors(
+            checkedThumbColor = Color.White,
+            checkedTrackColor = Color.White.copy(alpha = 0.24f),
+            checkedBorderColor = Color.White.copy(alpha = 0.56f),
+            checkedIconColor = Color(0xFF202124),
+            uncheckedThumbColor = Color.White.copy(alpha = 0.86f),
+            uncheckedTrackColor = Color.White.copy(alpha = 0.10f),
+            uncheckedBorderColor = Color.White.copy(alpha = 0.38f),
+            uncheckedIconColor = Color.White.copy(alpha = 0.82f),
+            disabledCheckedThumbColor = Color.White.copy(alpha = 0.56f),
+            disabledCheckedTrackColor = Color.White.copy(alpha = 0.12f),
+            disabledCheckedBorderColor = Color.White.copy(alpha = 0.25f),
+            disabledCheckedIconColor = Color.DarkGray.copy(alpha = 0.7f),
+            disabledUncheckedThumbColor = Color.White.copy(alpha = 0.5f),
+            disabledUncheckedTrackColor = Color.White.copy(alpha = 0.06f),
+            disabledUncheckedBorderColor = Color.White.copy(alpha = 0.18f),
+            disabledUncheckedIconColor = Color.White.copy(alpha = 0.4f)
+        )
+    } else colors
+
+    val switchContent: @Composable () -> Unit = {
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            modifier = Modifier.padding(horizontal = 2.dp, vertical = 1.dp),
+            enabled = enabled,
+            thumbContent = {
+                val rotation by animateFloatAsState(if (checked) 0.0f else -(180.0f))
+                Crossfade(modifier = Modifier.rotate(rotation), targetState = checked) {
+                    Icon(
+                        modifier = Modifier.size(16.dp),
+                        painter = painterResource(if (it) R.drawable.ic_check else R.drawable.ic_close),
+                        contentDescription = null,
+                        tint = glassColors.trackColor(enabled, checked)
+                    )
+                }
+            },
+            colors = glassColors,
+            interactionSource = interactionSource
+        )
+    }
+    if (glassEnabled && backdrop != null) {
+        Box(
+            modifier = modifier.then(
+                if (enabled) Modifier.liquidGlassPressAnimation() else Modifier
             )
-            Crossfade(
-                modifier = Modifier.rotate(rotation),
-                targetState = checked
-            ) {
-                Icon(
-                    modifier = Modifier.size(16.dp),
-                    painter = painterResource(
-                        if (it) R.drawable.ic_check else R.drawable.ic_close
-                    ),
-                    contentDescription = null,
-                    tint = colors.trackColor(enabled, checked)
-                )
-            }
-        },
-        colors = colors,
-        interactionSource = interactionSource
-    )
+        ) {
+            // Draw the glass on the actual 52x32dp track, not the larger
+            // minimum-touch-target bounds of Material3 Switch.
+            LiquidGlassSurface(
+                backdrop = backdrop,
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .width(52.dp)
+                    .height(32.dp),
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = Color.White,
+                blurRadius = 6.dp
+            ) {}
+            switchContent()
+        }
+    } else if (glassEnabled) {
+        Box(modifier = modifier) { switchContent() }
+    } else {
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            modifier = modifier,
+            enabled = enabled,
+            thumbContent = {
+                val rotation by animateFloatAsState(if (checked) 0.0f else -(180.0f))
+                Crossfade(modifier = Modifier.rotate(rotation), targetState = checked) {
+                    Icon(
+                        modifier = Modifier.size(16.dp),
+                        painter = painterResource(if (it) R.drawable.ic_check else R.drawable.ic_close),
+                        contentDescription = null,
+                        tint = colors.trackColor(enabled, checked)
+                    )
+                }
+            },
+            colors = colors,
+            interactionSource = interactionSource
+        )
+    }
 }
 
 /**

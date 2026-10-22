@@ -72,7 +72,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.kedamc.launcher.v2"
+        applicationId = "com.ray.launcher.lite"
         minSdk = 26
         targetSdk = 34
         versionCode = launcherVersionCode
@@ -296,6 +296,7 @@ dependencies {
     implementation(libs.toml4j)
     implementation(libs.maven.artifact)
     implementation(libs.mmkv)
+    implementation(libs.prismal)
     implementation(libs.fishnet)
     implementation(libs.process.phoenix)
     implementation(libs.lunarcalendar)

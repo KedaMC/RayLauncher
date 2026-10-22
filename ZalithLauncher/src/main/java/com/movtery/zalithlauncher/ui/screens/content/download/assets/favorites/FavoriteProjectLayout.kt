@@ -31,7 +31,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import androidx.compose.material3.CardDefaults
+import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -53,6 +54,7 @@ import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.game.download.assets.favorites.FavoriteEntry
 import com.movtery.zalithlauncher.game.download.assets.platform.PlatformFilterCode
 import com.movtery.zalithlauncher.setting.AllSettings
+import com.movtery.zalithlauncher.ui.components.BackgroundCard
 import com.movtery.zalithlauncher.ui.screens.content.download.assets.elements.AssetsIcon
 import com.movtery.zalithlauncher.ui.screens.content.download.assets.elements.FavoriteToggleLabel
 import com.movtery.zalithlauncher.ui.screens.content.download.assets.elements.ProjectTitleHead
@@ -97,16 +99,19 @@ fun FavoriteProjectLayout(
         scale.animateTo(targetValue = 1f, animationSpec = getAnimateTween())
     }
 
-    Surface(
+    BackgroundCard(
         modifier = modifier.graphicsLayer(scaleY = scale.value, scaleX = scale.value),
         shape = shape,
-        color = color,
-        contentColor = contentColor,
-        onClick = onClick.takeIf { !invalid } ?: {}
+        colors = CardDefaults.cardColors(
+            containerColor = color,
+            contentColor = contentColor
+        ),
+        liquidGlass = true,
+        onClick = onClick.takeIf { !invalid } ?: {},
+        enabled = !invalid
     ) {
         Row(
             modifier = Modifier
-                .backgroundGlass(blur, color, influencedByBackground)
                 .padding(all = 8.dp)
                 .height(IntrinsicSize.Min)
                 .alpha(if (invalid) 0.5f else 1f),

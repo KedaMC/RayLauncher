@@ -37,7 +37,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
@@ -87,6 +87,7 @@ import com.movtery.zalithlauncher.ui.components.TextRailItem
 import com.movtery.zalithlauncher.ui.components.fadeEdge
 import com.movtery.zalithlauncher.ui.screens.NestedNavKey
 import com.movtery.zalithlauncher.ui.screens.TitledNavKey
+import com.movtery.zalithlauncher.ui.screens.content.download.assets.elements.BaseFilterLayout
 import com.movtery.zalithlauncher.ui.screens.content.download.assets.elements.FilterListLayout
 import com.movtery.zalithlauncher.ui.screens.content.download.assets.elements.FilterSelectionMode
 import com.movtery.zalithlauncher.ui.screens.content.elements.backgroundGlass
@@ -364,17 +365,16 @@ private fun FavoritesContent(
             ) {
                 val blur = AllSettings.backgroundBlur.state
                 val barColor = cardColor()
-                Surface(
+                BaseFilterLayout(
                     modifier = Modifier.padding(all = 12.dp),
                     color = barColor,
                     contentColor = onCardColor(),
                     shape = MaterialTheme.shapes.large,
-                    shadowElevation = actionBarShadowElevation
+                    blur = blur
                 ) {
                     val scrollState = rememberScrollState()
                     Row(
                         modifier = Modifier
-                            .backgroundGlass(blur, barColor)
                             .fadeEdge(
                                 state = scrollState,
                                 length = 32.dp,
@@ -443,6 +443,10 @@ private fun FavoritesFilter(
     ) {
         //名称搜索，直接从数据池过滤，无需主动触发
         item {
+            BaseFilterLayout(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large
+            ) {
             OwnOutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
                 value = viewModel.searchName,
@@ -457,8 +461,19 @@ private fun FavoritesFilter(
                         contentDescription = stringResource(R.string.generic_search)
                     )
                 },
+                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    disabledContainerColor = Color.Transparent,
+                    errorContainerColor = Color.Transparent,
+                    focusedBorderColor = Color.Transparent,
+                    unfocusedBorderColor = Color.Transparent,
+                    disabledBorderColor = Color.Transparent,
+                    errorBorderColor = Color.Transparent
+                ),
                 shape = MaterialTheme.shapes.large
             )
+            }
         }
 
         //目标平台过滤

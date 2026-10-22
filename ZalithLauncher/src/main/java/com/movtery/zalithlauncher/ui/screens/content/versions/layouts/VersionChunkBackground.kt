@@ -39,7 +39,8 @@ fun VersionChunkBackground(
 ) {
     BackgroundCard(
         modifier = modifier.fillMaxWidth(),
-        shape = shape
+        shape = shape,
+        liquidGlass = true
     ) {
         Column(
             modifier = Modifier.padding(paddingValues),

@@ -19,6 +19,7 @@
 package com.movtery.zalithlauncher.ui.screens.content.elements
 
 import android.annotation.SuppressLint
+import com.movtery.zalithlauncher.ui.components.glassRadioColors
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -59,19 +60,19 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import com.movtery.zalithlauncher.ui.components.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledTonalButton
+import com.movtery.zalithlauncher.ui.components.FilledTonalButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import com.movtery.zalithlauncher.ui.components.IconButton
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Surface
+import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -110,7 +111,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.window.Dialog
+import com.movtery.zalithlauncher.ui.components.GlassDialog as Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.graphics.createBitmap
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -318,6 +319,7 @@ fun AccountItem(
                 .padding(all = 8.dp)
         ) {
             RadioButton(
+                colors = glassRadioColors(),
                 selected = selected,
                 onClick = {
                     if (selected || !enabled) return@RadioButton
@@ -1730,6 +1732,7 @@ fun CapeListItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         RadioButton(
+            colors = glassRadioColors(),
             selected = selected,
             onClick = onClick
         )

@@ -166,6 +166,7 @@ fun SearchModPackScreen(
             //新增导入整合包按钮
             item {
                 BaseFilterLayout(
+                    glassBlur = 8.dp,
                     modifier = Modifier
                         .fillMaxWidth()
                         .semantics { role = Role.Button },

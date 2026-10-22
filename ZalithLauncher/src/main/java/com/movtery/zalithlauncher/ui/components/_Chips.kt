@@ -25,7 +25,12 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.ProvideTextStyle
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
@@ -37,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import com.movtery.zalithlauncher.R
 
 /**
@@ -56,6 +62,47 @@ fun CheckChip(
     border: BorderStroke? = FilterChipDefaults.filterChipBorder(enabled, selected),
     interactionSource: MutableInteractionSource? = null
 ) {
+    val glassBackdrop = liquidGlassBackdrop()
+    if (glassBackdrop != null) {
+        // Liquid Glass chip: its own glass capsule, tinted when selected
+        LiquidGlassSurface(
+            backdrop = glassBackdrop,
+            shape = MaterialTheme.shapes.large,
+            modifier = modifier.alpha(if (enabled) 1f else 0.5f),
+            containerColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
+            contentColor = Color.White,
+            onClick = if (enabled) onClick else null
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                AnimatedVisibility(
+                    visible = selected,
+                    enter = expandIn(
+                        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+                        expandFrom = Alignment.CenterStart
+                    ) + fadeIn(),
+                    exit = shrinkOut(
+                        shrinkTowards = Alignment.CenterStart
+                    ) + fadeOut()
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_check),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .padding(end = 6.dp)
+                            .size(FilterChipDefaults.IconSize)
+                    )
+                }
+                ProvideTextStyle(MaterialTheme.typography.labelLarge) {
+                    label()
+                }
+            }
+        }
+        return
+    }
+
     FilterChip(
         modifier = modifier,
         selected = selected,

@@ -18,6 +18,7 @@
 
 package com.movtery.zalithlauncher.ui.components
 
+import com.movtery.zalithlauncher.ui.theme.cardColor
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.basicMarquee
@@ -26,6 +27,7 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -34,18 +36,18 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Button
+
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonElevation
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RichTooltip
-import androidx.compose.material3.Surface
+
 import androidx.compose.material3.Text
 import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
@@ -74,6 +76,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.movtery.zalithlauncher.ui.components.LiquidGlassSurface
+import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
 import com.movtery.zalithlauncher.ui.screens.content.elements.DisabledAlpha
 import kotlinx.coroutines.launch
 
@@ -97,21 +101,48 @@ fun ScalingActionButton(
         label = "ButtonScale"
     )
 
-    Button(
-        onClick = onClick,
-        modifier = modifier.graphicsLayer {
-            scaleX = scale.value
-            scaleY = scale.value
-        },
-        enabled = enabled,
-        shape = shape,
-        colors = colors,
-        elevation = elevation,
-        border = border,
-        contentPadding = contentPadding,
-        interactionSource = interactionSource,
-        content = content
-    )
+    val glassBackdrop = liquidGlassBackdrop()
+    if (glassBackdrop != null) {
+        LiquidGlassSurface(
+            backdrop = glassBackdrop,
+            shape = shape,
+            modifier = modifier.then(
+                if (enabled) Modifier.liquidGlassPressAnimation() else Modifier
+            ),
+            containerColor = scalingGlassTint(colors, enabled),
+            contentColor = Color.White,
+            onClick = if (enabled) onClick else null
+        ) {
+            Row(
+                modifier = Modifier
+                    .defaultMinSize(
+                        minWidth = ButtonDefaults.MinWidth,
+                        minHeight = ButtonDefaults.MinHeight
+                    )
+                    .padding(contentPadding)
+                    .alpha(if (enabled) 1f else DisabledAlpha),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+                content = content
+            )
+        }
+    } else {
+        Button(
+            onClick = onClick,
+            modifier = modifier.graphicsLayer {
+                scaleX = scale.value
+                scaleY = scale.value
+            },
+            enabled = enabled,
+            shape = shape,
+            colors = colors,
+            elevation = elevation,
+            border = border,
+            contentPadding = contentPadding,
+            interactionSource = interactionSource,
+            content = content
+        )
+    }
 }
 
 @Composable
@@ -205,22 +236,63 @@ fun BaseIconTextButton(
     enabled: Boolean = true,
     onLongClick: () -> Unit = {},
 ) {
-    Row(
-        modifier = modifier
-            .clip(shape = shape)
-            .combinedClickable(enabled = enabled, onClick = onClick, onLongClick = onLongClick)
-            .padding(PaddingValues(horizontal = 8.dp, vertical = 4.dp))
-            .alpha(if (enabled) 1f else DisabledAlpha),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        icon(Modifier.align(Alignment.CenterVertically))
-        Text(
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale = animateFloatAsState(
+        targetValue = if (isPressed) 0.96f else 1f,
+        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+        label = "LiquidGlassButtonScale"
+    )
+    val glassBackdrop = liquidGlassBackdrop()
+
+    val buttonContent: @Composable () -> Unit = {
+        Row(
             modifier = Modifier
-                .align(Alignment.CenterVertically)
-                .padding(end = 4.dp),
-            text = text,
-            style = style
-        )
+                .clip(shape = shape)
+                .then(
+                    if (glassBackdrop != null && enabled) Modifier.liquidGlassPressAnimation()
+                    else Modifier
+                )
+                .combinedClickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    enabled = enabled,
+                    onClick = onClick,
+                    onLongClick = onLongClick
+                )
+                .padding(PaddingValues(horizontal = 8.dp, vertical = 4.dp))
+                .alpha(if (enabled) 1f else DisabledAlpha),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            icon(Modifier.align(Alignment.CenterVertically))
+            Text(
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .padding(end = 4.dp),
+                text = text,
+                style = style
+            )
+        }
+    }
+
+    if (glassBackdrop != null) {
+        LiquidGlassSurface(
+            backdrop = glassBackdrop,
+            shape = shape,
+            modifier = modifier,
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = LocalContentColor.current,
+            blurRadius = 8.dp
+        ) {
+            buttonContent()
+        }
+    } else {
+        Box(modifier = modifier.graphicsLayer {
+            scaleX = scale.value
+            scaleY = scale.value
+        }) {
+            buttonContent()
+        }
     }
 }
 
@@ -326,4 +398,12 @@ fun TooltipIconButton(
             content()
         }
     }
+}
+
+/** Glass tint shared by all [ScalingActionButton]s: the same card color list items use; errors stay red. */
+@Composable
+private fun scalingGlassTint(colors: ButtonColors, enabled: Boolean): Color {
+    val container = if (enabled) colors.containerColor else colors.disabledContainerColor
+    val scheme = MaterialTheme.colorScheme
+    return if (container == scheme.error || container == scheme.errorContainer) container else cardColor()
 }

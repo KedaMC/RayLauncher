@@ -42,8 +42,12 @@ import com.movtery.zalithlauncher.setting.enums.isLauncherInDarkTheme
 import com.movtery.zalithlauncher.ui.theme.components.activeMaskView
 import com.movtery.zalithlauncher.utils.festival.Festival
 import com.movtery.zalithlauncher.utils.festival.LocalFestivals
+import com.movtery.zalithlauncher.ui.components.GlassPageCapture
+import com.movtery.zalithlauncher.ui.components.LocalLiquidGlassBackdrop
+import com.movtery.zalithlauncher.ui.components.LocalLiquidGlassPage
 import com.movtery.zalithlauncher.viewmodel.BackgroundViewModel
 import com.movtery.zalithlauncher.viewmodel.LocalBackgroundViewModel
+import com.styropyr0.prismal.sources.rememberPrismalGlassLayer
 
 private val embermireLight = lightColorScheme(
     primary = primaryLight.embermire,
@@ -606,6 +610,8 @@ fun ZalithLauncherTheme(
     dynamicColor: Boolean = true,
     backgroundViewModel: BackgroundViewModel? = null,
     festivals: List<Festival> = emptyList(),
+    //In game there is no launcher background; provide a glass layer anyway (see GameGlassBackdrop)
+    forceGlassLayer: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorTheme = AllSettings.launcherColorTheme.state
@@ -673,9 +679,23 @@ fun ZalithLauncherTheme(
         }
     }
 
+    //Liquid Glass：仅在设置开启且存在有效背景媒体时提供可采样的背景图层
+    val glassLayer = rememberPrismalGlassLayer()
+    val activeGlassLayer = glassLayer.takeIf {
+        AllSettings.launcherLiquidGlass.state &&
+                (backgroundViewModel?.isValid == true || forceGlassLayer)
+    }
+
+    //Second layer that records the whole page (wallpaper + UI) while a dialog is open
+    val pageLayer = rememberPrismalGlassLayer()
+    val pageCapture = remember(pageLayer) { GlassPageCapture(pageLayer) }
+    val activePageCapture = pageCapture.takeIf { activeGlassLayer != null }
+
     CompositionLocalProvider(
         LocalBackgroundViewModel provides backgroundViewModel,
-        LocalFestivals provides festivals
+        LocalFestivals provides festivals,
+        LocalLiquidGlassBackdrop provides activeGlassLayer,
+        LocalLiquidGlassPage provides activePageCapture
     ) {
         MaterialExpressiveTheme(
             colorScheme = currentDisplayScheme,

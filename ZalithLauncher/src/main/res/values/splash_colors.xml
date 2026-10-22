@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark in both themes so the white splash glyph is always visible -->
+    <color name="splash_background">#1F1A20</color>
+</resources>

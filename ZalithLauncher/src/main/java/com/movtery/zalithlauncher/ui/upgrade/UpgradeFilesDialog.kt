@@ -19,6 +19,7 @@
 package com.movtery.zalithlauncher.ui.upgrade
 
 import androidx.compose.foundation.basicMarquee
+import com.movtery.zalithlauncher.ui.components.glassRadioColors
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -112,6 +113,7 @@ private fun UpgradeFileLayout(
         verticalAlignment = Alignment.CenterVertically
     ) {
         RadioButton(
+            colors = glassRadioColors(),
             selected = selected,
             onClick = onClick,
             enabled = enabled

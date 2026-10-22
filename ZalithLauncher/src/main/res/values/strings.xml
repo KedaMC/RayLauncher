@@ -425,6 +425,7 @@
     <string name="game_menu_option_fps_display_mode_number">Number</string>
     <string name="game_menu_option_fps_display_mode_chart">Chart</string>
     <string name="game_menu_option_switch_memory">Memory Display</string>
+    <string name="game_menu_option_liquid_glass">Liquid Glass</string>
     <string name="game_menu_option_menu_ball_opacity">Menu Overlay Opacity</string>
     <string name="game_menu_option_send_keycode">Send Keycode</string>
     <string name="game_menu_option_replacement_control">Replace Control Layout</string>
@@ -1077,6 +1078,8 @@
     <string name="settings_launcher_language">Language</string>
     <string name="settings_launcher_full_screen_title">Fullscreen Mode</string>
     <string name="settings_launcher_full_screen_summary">Make the launcher pages fullscreen, ignoring safe areas like notches and punch-holes</string>
+    <string name="settings_launcher_liquid_glass_title">Liquid Glass</string>
+    <string name="settings_launcher_liquid_glass_summary">Enable or disable the Liquid Glass effect on the top bar and home cards. Works with an image background; full refraction needs Android 13+</string>
     <string name="settings_launcher_animate_speed_title">Animation Speed</string>
     <string name="settings_launcher_animate_speed_summary">Adjust the playback speed multiplier for launcher animations</string>
     <string name="settings_launcher_animate_extent_title">Animation Intensity</string>
@@ -1267,7 +1270,7 @@
     <string name="about_launcher_version">Launcher Version: %s</string>
     <string name="about_launcher_author_movtery_title">MovTery</string>
     <string name="about_launcher_author_movtery_text">Author of Zalith Launcher</string>
-    <string name="about_launcher_maintainer_keda_text">Maintainer of ZalithLauncher2 Lite</string>
+    <string name="about_launcher_maintainer_keda_text">Maintainer of Ray Launcher</string>
     <string name="about_launcher_project_link">Project Link</string>
     <string name="about_sponsor">Sponsorship Support</string>
     <string name="about_acknowledgements_title">Acknowledgements</string>

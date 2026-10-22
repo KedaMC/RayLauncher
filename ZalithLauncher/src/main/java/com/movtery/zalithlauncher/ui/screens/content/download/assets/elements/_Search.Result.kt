@@ -48,10 +48,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import com.movtery.zalithlauncher.ui.components.IconButton
 import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
@@ -91,6 +91,9 @@ import com.movtery.zalithlauncher.game.version.mod.InstalledMod
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.ui.AndroidStringText
 import com.movtery.zalithlauncher.ui.androidText
+import com.movtery.zalithlauncher.ui.components.BackgroundCard
+import com.movtery.zalithlauncher.ui.components.GlassItemSurface
+import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
 import com.movtery.zalithlauncher.ui.components.MarqueeText
 import com.movtery.zalithlauncher.ui.components.ScalingLabel
 import com.movtery.zalithlauncher.ui.components.SmallOutlinedEditField
@@ -299,16 +302,14 @@ private fun PageController(
         }
     }
 
-    Surface(
+    GlassItemSurface(
         modifier = modifier,
         shape = shape,
-        color = color,
+        color = Color.Transparent,
         contentColor = contentColor
     ) {
         Row(
-            modifier = Modifier
-                .backgroundGlass(blur, color, influencedByBackground)
-                .padding(all = 4.dp),
+            modifier = Modifier.padding(all = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
@@ -369,11 +370,25 @@ private fun ResultList(
     installedInfo: ((Platform, projectId: String) -> InstalledMod?)? = null
 ) {
     val context = LocalContext.current
-    LazyColumn(
-        modifier = modifier,
-        state = state,
-        contentPadding = contentPadding
-    ) {
+    // With Liquid Glass every entry has its own glass box, so no big backing card here.
+    val glassActive = liquidGlassBackdrop() != null
+    val container: @Composable (@Composable () -> Unit) -> Unit = { inner ->
+        if (glassActive) {
+            Box(modifier = modifier) { inner() }
+        } else {
+            BackgroundCard(
+                modifier = modifier,
+                shape = MaterialTheme.shapes.extraLarge,
+                liquidGlass = true
+            ) { inner() }
+        }
+    }
+    container {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            state = state,
+            contentPadding = contentPadding
+        ) {
         items(data) { (item, mcmod) ->
             val platform = remember(item) { item.platform() }
             val title = remember(item) { item.platformTitle() }
@@ -408,6 +423,7 @@ private fun ResultList(
                 }
             )
         }
+        }
     }
 }
 
@@ -440,7 +456,8 @@ fun ResultProjectLayout(
         scale.animateTo(targetValue = 1f, animationSpec = getAnimateTween())
     }
 
-    Surface(
+    val glassItem = liquidGlassBackdrop() != null
+    GlassItemSurface(
         modifier = modifier.graphicsLayer(scaleY = scale.value, scaleX = scale.value),
         shape = shape,
         color = color,
@@ -449,7 +466,7 @@ fun ResultProjectLayout(
     ) {
         Row(
             modifier = Modifier
-                .backgroundGlass(blur, color, influencedByBackground)
+                .backgroundGlass(blur, color, influencedByBackground && !glassItem)
                 .padding(all = 8.dp)
                 .height(IntrinsicSize.Min),
             horizontalArrangement = Arrangement.spacedBy(12.dp)

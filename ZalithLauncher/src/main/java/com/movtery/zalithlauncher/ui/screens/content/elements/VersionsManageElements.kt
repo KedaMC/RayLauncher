@@ -19,11 +19,13 @@
 package com.movtery.zalithlauncher.ui.screens.content.elements
 
 import androidx.annotation.DrawableRes
+import com.movtery.zalithlauncher.ui.components.glassRadioColors
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -35,17 +37,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
+import com.movtery.zalithlauncher.ui.components.AlertDialog
+import com.movtery.zalithlauncher.ui.components.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import com.movtery.zalithlauncher.ui.components.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Surface
+import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -88,6 +90,9 @@ import com.movtery.zalithlauncher.game.version.installed.cleanup.CleanFailedExce
 import com.movtery.zalithlauncher.game.version.installed.cleanup.GameAssetCleaner
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.ui.androidText
+import com.movtery.zalithlauncher.ui.components.BackgroundCard
+import com.movtery.zalithlauncher.ui.components.LiquidGlassSurface
+import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
 import com.movtery.zalithlauncher.ui.components.LittleTextLabel
 import com.movtery.zalithlauncher.ui.components.MarqueeText
 import com.movtery.zalithlauncher.ui.components.SimpleAlertDialog
@@ -160,10 +165,29 @@ fun GamePathItemLayout(
     enabled: Boolean = true,
 ) {
     val notDefault = item.id != GamePathManager.DEFAULT_ID
+    val glassBackdrop = liquidGlassBackdrop()
 
-    NavigationDrawerItem(
-        modifier = modifier,
-        colors = NavigationDrawerItemDefaults.colors(),
+    Box(modifier = modifier) {
+        if (selected && glassBackdrop != null) {
+            LiquidGlassSurface(
+                backdrop = glassBackdrop,
+                shape = MaterialTheme.shapes.large,
+                modifier = Modifier.matchParentSize(),
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = Color.White,
+                blurRadius = 8.dp
+            ) {}
+        }
+        NavigationDrawerItem(
+        modifier = Modifier.fillMaxWidth(),
+        colors = NavigationDrawerItemDefaults.colors(
+            selectedContainerColor = if (glassBackdrop != null) Color.Transparent else if (AllSettings.launcherLiquidGlass.state) Color.White.copy(alpha = 0.16f) else MaterialTheme.colorScheme.secondaryContainer,
+            unselectedContainerColor = Color.Transparent,
+            selectedTextColor = if (AllSettings.launcherLiquidGlass.state) Color.White else MaterialTheme.colorScheme.onSecondaryContainer,
+            unselectedTextColor = if (AllSettings.launcherLiquidGlass.state) Color.White else MaterialTheme.colorScheme.onSurface,
+            selectedIconColor = if (AllSettings.launcherLiquidGlass.state) Color.White else MaterialTheme.colorScheme.onSecondaryContainer,
+            unselectedIconColor = if (AllSettings.launcherLiquidGlass.state) Color.White else MaterialTheme.colorScheme.onSurface
+        ),
         label = {
             Column(
                 modifier = Modifier
@@ -242,7 +266,8 @@ fun GamePathItemLayout(
         onClick = {
             if (enabled) onClick()
         }
-    )
+        )
+    }
 }
 
 @Composable
@@ -703,13 +728,13 @@ fun VersionItemLayout(
     LaunchedEffect(Unit) {
         scale.animateTo(targetValue = 1f, animationSpec = getAnimateTween())
     }
-    Surface(
+    BackgroundCard(
         modifier = modifier.graphicsLayer(scaleY = scale.value, scaleX = scale.value),
-        color = color,
-        contentColor = contentColor,
         shape = MaterialTheme.shapes.large,
+        liquidGlass = true,
+        colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = color, contentColor = contentColor),
         onClick = {
-            if (selected) return@Surface
+            if (selected) return@BackgroundCard
             onSelected()
         }
     ) {
@@ -717,11 +742,11 @@ fun VersionItemLayout(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(shape = MaterialTheme.shapes.large)
-                .backgroundGlass(blur, color, influencedByBackground)
                 .padding(all = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             RadioButton(
+                colors = glassRadioColors(),
                 selected = selected,
                 onClick = {
                     if (selected) return@RadioButton

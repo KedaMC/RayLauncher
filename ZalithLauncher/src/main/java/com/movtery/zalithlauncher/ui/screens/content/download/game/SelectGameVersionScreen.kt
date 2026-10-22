@@ -42,10 +42,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import com.movtery.zalithlauncher.ui.components.IconButton
 import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.nonInteractiveScrollbar
 import androidx.compose.runtime.Composable
@@ -83,6 +83,9 @@ import com.movtery.zalithlauncher.ui.components.CheckChip
 import com.movtery.zalithlauncher.ui.components.EdgeDirection
 import com.movtery.zalithlauncher.ui.components.LittleTextLabel
 import com.movtery.zalithlauncher.ui.components.ScalingLabel
+import com.movtery.zalithlauncher.ui.components.BackgroundCard
+import com.movtery.zalithlauncher.ui.components.GlassItemSurface
+import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
 import com.movtery.zalithlauncher.ui.components.SimpleTextInputField
 import com.movtery.zalithlauncher.ui.components.fadeEdge
 import com.movtery.zalithlauncher.ui.screens.NestedNavKey
@@ -296,18 +299,27 @@ private fun SelectGameVersionContent(
 
             is VersionState.None -> {
                 Column {
-                    VersionHeader(
+                    BackgroundCard(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 12.dp),
-                        versionFilter = viewModel.versionFilter,
-                        onVersionFilterChange = { viewModel.filterWith(it) },
-                        itemContainerColor = cardColor(),
-                        itemContentColor = onCardColor(),
-                        onRefreshClick = {
-                            viewModel.refresh(true)
-                        }
-                    )
+                        shape = MaterialTheme.shapes.large,
+                        liquidGlass = true
+                    ) {
+                        val glassActive = liquidGlassBackdrop() != null
+                        VersionHeader(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp, vertical = 8.dp),
+                            versionFilter = viewModel.versionFilter,
+                            onVersionFilterChange = { viewModel.filterWith(it) },
+                            itemContainerColor = if (glassActive) Color.Transparent else cardColor(),
+                            itemContentColor = if (glassActive) Color.White else onCardColor(),
+                            onRefreshClick = {
+                                viewModel.refresh(true)
+                            }
+                        )
+                    }
 
                     VersionList(
                         modifier = Modifier.weight(1f),
@@ -495,7 +507,8 @@ private fun VersionItemLayout(
 
     val (icon, versionType, wikiUrl, summary) = getVersionComponents(version)
 
-    Surface(
+    val glassItem = liquidGlassBackdrop() != null
+    GlassItemSurface(
         modifier = modifier.graphicsLayer(scaleY = scale.value, scaleX = scale.value),
         onClick = onClick,
         shape = shape,
@@ -505,7 +518,7 @@ private fun VersionItemLayout(
         Row(
             modifier = Modifier
                 .clip(shape = shape)
-                .backgroundGlass(blur, color, influencedByBackground)
+                .backgroundGlass(blur, color, influencedByBackground && !glassItem)
                 .padding(all = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {

@@ -29,7 +29,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonColors
 import androidx.compose.material3.RadioButtonDefaults
-import androidx.compose.material3.Surface
+
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -41,6 +41,21 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.movtery.zalithlauncher.ui.theme.itemColor
 import com.movtery.zalithlauncher.ui.theme.onItemColor
+import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
+
+/**
+ * Radio button colors: pure white while Liquid Glass is active, Material defaults otherwise.
+ */
+@Composable
+fun glassRadioColors(): RadioButtonColors {
+    if (liquidGlassBackdrop() == null) return RadioButtonDefaults.colors()
+    return RadioButtonDefaults.colors(
+        selectedColor = Color.White,
+        unselectedColor = Color.White,
+        disabledSelectedColor = Color.White.copy(alpha = 0.38f),
+        disabledUnselectedColor = Color.White.copy(alpha = 0.38f)
+    )
+}
 
 @Composable
 fun RadioCard(
@@ -51,7 +66,7 @@ fun RadioCard(
     enabled: Boolean = true,
     color: Color = itemColor(false),
     contentColor: Color = onItemColor(),
-    radioColors: RadioButtonColors = RadioButtonDefaults.colors(),
+    radioColors: RadioButtonColors = glassRadioColors(),
     interactionSource: MutableInteractionSource? = null,
     textStyle: TextStyle = MaterialTheme.typography.bodyMedium,
 ) {
@@ -81,7 +96,7 @@ fun RadioCard(
     color: Color = itemColor(false),
     contentColor: Color = onItemColor(),
     shape: Shape = MaterialTheme.shapes.large,
-    radioColors: RadioButtonColors = RadioButtonDefaults.colors(),
+    radioColors: RadioButtonColors = glassRadioColors(),
     interactionSource: MutableInteractionSource? = null,
     content: @Composable RowScope.() -> Unit,
 ) {
@@ -121,7 +136,21 @@ private fun InternalSurface(
     interactionSource: MutableInteractionSource? = null,
     content: @Composable () -> Unit
 ) {
-    if (onClick != null) {
+    val glassBackdrop = liquidGlassBackdrop()
+    if (glassBackdrop != null) {
+        LiquidGlassSurface(
+            backdrop = glassBackdrop,
+            shape = shape,
+            modifier = modifier.then(
+                if (enabled && onClick != null) Modifier.liquidGlassPressAnimation() else Modifier
+            ),
+            containerColor = color,
+            contentColor = contentColor,
+            onClick = if (enabled) onClick else null
+        ) {
+            content()
+        }
+    } else if (onClick != null) {
         Surface(
             modifier = modifier,
             color = color,

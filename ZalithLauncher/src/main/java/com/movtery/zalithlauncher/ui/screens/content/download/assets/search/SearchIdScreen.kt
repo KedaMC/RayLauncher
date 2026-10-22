@@ -37,9 +37,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import com.movtery.zalithlauncher.ui.components.IconButton
 import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -49,6 +50,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.CompositionLocalProvider
+import com.movtery.zalithlauncher.ui.screens.content.download.assets.elements.LocalInsideGlassFilter
+import com.movtery.zalithlauncher.ui.theme.cardColor
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
@@ -77,6 +82,8 @@ import com.movtery.zalithlauncher.ui.AndroidStringText
 import com.movtery.zalithlauncher.ui.androidText
 import com.movtery.zalithlauncher.ui.base.BaseScreen
 import com.movtery.zalithlauncher.ui.components.BackgroundCard
+import com.movtery.zalithlauncher.ui.components.LiquidGlassSurface
+import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
 import com.movtery.zalithlauncher.ui.components.OwnOutlinedTextField
 import com.movtery.zalithlauncher.ui.components.ScalingLabel
 import com.movtery.zalithlauncher.ui.screens.NestedNavKey
@@ -472,6 +479,26 @@ private fun ResultLayout(
 }
 
 @Composable
+private fun SearchIdGlass(content: @Composable () -> Unit) {
+    val backdrop = liquidGlassBackdrop()
+    if (backdrop != null) {
+        LiquidGlassSurface(
+            backdrop = backdrop,
+            shape = MaterialTheme.shapes.large,
+            modifier = Modifier.fillMaxWidth(),
+            containerColor = cardColor(),
+            contentColor = Color.White
+        ) {
+            CompositionLocalProvider(LocalInsideGlassFilter provides true) {
+                content()
+            }
+        }
+    } else {
+        content()
+    }
+}
+
+@Composable
 private fun ContentFilter(
     isVisible: Boolean,
     onSearch: () -> Unit,
@@ -492,9 +519,10 @@ private fun ContentFilter(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        OwnOutlinedTextField(
-            modifier = Modifier.fillMaxWidth(),
-            value = projectId,
+        SearchIdGlass {
+            OwnOutlinedTextField(
+                modifier = Modifier.fillMaxWidth(),
+                value = projectId,
             onValueChange = onProjectIdChange,
             singleLine = true,
             label = {
@@ -518,13 +546,26 @@ private fun ContentFilter(
                     onSearch()
                 }
             ),
-            shape = MaterialTheme.shapes.large
-        )
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    disabledContainerColor = Color.Transparent,
+                    errorContainerColor = Color.Transparent,
+                    focusedBorderColor = Color.Transparent,
+                    unfocusedBorderColor = Color.Transparent,
+                    disabledBorderColor = Color.Transparent,
+                    errorBorderColor = Color.Transparent
+                ),
+                shape = MaterialTheme.shapes.large
+            )
+        }
 
-        PlatformListLayout(
-            modifier = Modifier.fillMaxWidth(),
-            searchPlatform = searchPlatform,
-            onPlatformChange = onPlatformChange,
-        )
+        SearchIdGlass {
+            PlatformListLayout(
+                modifier = Modifier.fillMaxWidth(),
+                searchPlatform = searchPlatform,
+                onPlatformChange = onPlatformChange,
+            )
+        }
     }
 }

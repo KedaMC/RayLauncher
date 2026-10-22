@@ -308,6 +308,17 @@ private fun GameActionContent(
                 enabled = AllSettings.showMenuBall.state
             )
         }
+        //Liquid Glass 开关
+        item {
+            MenuSwitchButton(
+                modifier = Modifier.fillMaxWidth(),
+                text = stringResource(R.string.game_menu_option_liquid_glass),
+                switch = AllSettings.launcherLiquidGlass.state,
+                onSwitch = { AllSettings.launcherLiquidGlass.save(it) },
+                color = color,
+                contentColor = contentColor
+            )
+        }
 
         item {
             Spacer(modifier = Modifier.height(8.dp))

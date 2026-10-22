@@ -19,6 +19,7 @@
 package com.movtery.zalithlauncher.ui.screens.main.control_editor
 
 import androidx.compose.animation.AnimatedVisibility
+import com.movtery.zalithlauncher.ui.components.glassRadioColors
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandVertically
@@ -47,7 +48,7 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SingleChoiceSegmentedButtonRowScope
-import androidx.compose.material3.Surface
+import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -209,6 +210,7 @@ fun <E> InfoLayoutListItem(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     RadioButton(
+                                        colors = glassRadioColors(),
                                         selected = selectedItem == item,
                                         onClick = {
                                             onClick(item)

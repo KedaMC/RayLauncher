@@ -32,7 +32,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Surface
+
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -57,6 +57,8 @@ import androidx.compose.ui.unit.dp
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.ui.screens.content.elements.backgroundGlass
+import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
+import com.movtery.zalithlauncher.ui.components.liquidGlassPressAnimation
 import com.movtery.zalithlauncher.ui.theme.itemColor
 import com.movtery.zalithlauncher.ui.theme.onItemColor
 import com.movtery.zalithlauncher.utils.animation.getAnimateTween
@@ -181,13 +183,16 @@ fun SimpleListItem(
     enabled: Boolean = true,
     onClick: () -> Unit = {}
 ) {
+    val useGlassPressAnimation = liquidGlassBackdrop() != null && enabled
     Row(
         modifier = modifier
             .clip(shape = MaterialTheme.shapes.large)
-            .clickable(enabled = enabled, onClick = onClick),
+            .clickable(enabled = enabled, onClick = onClick)
+            .liquidGlassPressAnimation(enabled = useGlassPressAnimation),
         verticalAlignment = Alignment.CenterVertically
     ) {
         RadioButton(
+            colors = glassRadioColors(),
             selected = selected,
             onClick = onClick
         )
@@ -212,12 +217,14 @@ fun SimpleListItem(
     summary: (@Composable () -> Unit)? = null,
     enabled: Boolean = true
 ) {
+    val useGlassPressAnimation = liquidGlassBackdrop() != null && enabled
     Row(
         modifier = modifier
             .clip(shape = MaterialTheme.shapes.large)
             .clickable(enabled = enabled) {
                 onCheckedChange(!checked)
-            },
+            }
+            .liquidGlassPressAnimation(enabled = useGlassPressAnimation),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Checkbox(

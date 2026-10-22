@@ -41,12 +41,12 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
+import com.movtery.zalithlauncher.ui.components.Button
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.FilledTonalButton
+import com.movtery.zalithlauncher.ui.components.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.nonInteractiveScrollbar
 import androidx.compose.runtime.Composable
@@ -62,6 +62,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CheckboxDefaults
+import com.movtery.zalithlauncher.ui.components.GlassItemSurface
+import com.movtery.zalithlauncher.ui.components.LiquidGlassSurface
+import com.movtery.zalithlauncher.ui.components.ScalingActionButton
+import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
@@ -69,7 +75,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
+import com.movtery.zalithlauncher.ui.components.GlassDialog as Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.movtery.zalithlauncher.R
@@ -276,15 +282,11 @@ private fun DownloadDialog(
                     .fillMaxHeight(),
                 contentAlignment = Alignment.Center
             ) {
-                Surface(
+                DialogCardSurface(
                     modifier = Modifier
                         .padding(all = 6.dp)
                         .heightIn(max = (maxHeight - 12.dp).coerceAtMost(rememberDialogMaxHeight()))
-                        .wrapContentHeight(),
-                    shape = MaterialTheme.shapes.extraLarge,
-                    color = cardColor(false),
-                    contentColor = onCardColor(),
-                    shadowElevation = 6.dp
+                        .wrapContentHeight()
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
@@ -374,47 +376,108 @@ private fun DownloadDialog(
                             }
                         }
 
+                        val doInstall: () -> Unit = {
+                            if (selectedVersions.isNotEmpty()) {
+                                onInstall(
+                                    selectedVersions,
+                                    dependencyEntries.mapNotNull { entry ->
+                                        val project = entry.project ?: return@mapNotNull null
+                                        if (entry.dependency.cacheKey() !in selectedDependencyKeys) {
+                                            return@mapNotNull null
+                                        }
+                                        DependencyRequest(
+                                            platform = entry.dependency.platform,
+                                            projectId = project.platformId(),
+                                            versionId = entry.dependency.versionId,
+                                            classes = project.platformClasses(classes),
+                                            projectTitle = project.platformTitle()
+                                        )
+                                    }
+                                )
+                            }
+                        }
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            FilledTonalButton(
-                                modifier = Modifier.weight(0.5f),
-                                onClick = onDismiss
-                            ) {
-                                MarqueeText(text = stringResource(R.string.generic_cancel))
-                            }
-                            Button(
-                                modifier = Modifier.weight(0.5f),
-                                enabled = selectedVersions.isNotEmpty(),
-                                onClick = {
-                                    if (selectedVersions.isNotEmpty()) {
-                                        onInstall(
-                                            selectedVersions,
-                                            dependencyEntries.mapNotNull { entry ->
-                                                val project = entry.project ?: return@mapNotNull null
-                                                if (entry.dependency.cacheKey() !in selectedDependencyKeys) {
-                                                    return@mapNotNull null
-                                                }
-                                                DependencyRequest(
-                                                    platform = entry.dependency.platform,
-                                                    projectId = project.platformId(),
-                                                    versionId = entry.dependency.versionId,
-                                                    classes = project.platformClasses(classes),
-                                                    projectTitle = project.platformTitle()
-                                                )
-                                            }
-                                        )
-                                    }
+                            if (liquidGlassBackdrop() != null) {
+                                // Glass buttons: neutral card tint for Cancel, primary tint for Install
+                                ScalingActionButton(
+                                    modifier = Modifier.weight(0.5f),
+                                    onClick = onDismiss,
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = cardColor(false),
+                                        contentColor = Color.White
+                                    )
+                                ) {
+                                    MarqueeText(text = stringResource(R.string.generic_cancel))
                                 }
-                            ) {
-                                MarqueeText(text = stringResource(R.string.download_install))
+                                ScalingActionButton(
+                                    modifier = Modifier.weight(0.5f),
+                                    enabled = selectedVersions.isNotEmpty(),
+                                    onClick = doInstall,
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.primary,
+                                        contentColor = Color.White,
+                                        disabledContainerColor = cardColor(false),
+                                        disabledContentColor = Color.White.copy(alpha = 0.5f)
+                                    )
+                                ) {
+                                    MarqueeText(text = stringResource(R.string.download_install))
+                                }
+                            } else {
+                                FilledTonalButton(
+                                    modifier = Modifier.weight(0.5f),
+                                    onClick = onDismiss
+                                ) {
+                                    MarqueeText(text = stringResource(R.string.generic_cancel))
+                                }
+                                Button(
+                                    modifier = Modifier.weight(0.5f),
+                                    enabled = selectedVersions.isNotEmpty(),
+                                    onClick = doInstall
+                                ) {
+                                    MarqueeText(text = stringResource(R.string.download_install))
+                                }
                             }
                         }
                     }
                 }
             }
         }
+    }
+}
+
+/**
+ * Outer card of the install dialog. Same recipe as the wrapper card of the Controls layout
+ * list: a Liquid Glass card (card tint, white text) holding glass boxes of its own.
+ */
+@Composable
+private fun DialogCardSurface(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    val backdrop = liquidGlassBackdrop()
+    if (backdrop != null) {
+        LiquidGlassSurface(
+            backdrop = backdrop,
+            shape = MaterialTheme.shapes.extraLarge,
+            modifier = modifier,
+            containerColor = cardColor(),
+            contentColor = Color.White
+        ) {
+            content()
+        }
+    } else {
+        Surface(
+            modifier = modifier,
+            shape = MaterialTheme.shapes.extraLarge,
+            color = cardColor(false),
+            contentColor = onCardColor(),
+            shadowElevation = 6.dp,
+            content = content
+        )
     }
 }
 
@@ -465,11 +528,13 @@ private fun SelectVersionListItem(
     color: Color = itemColor(false),
     contentColor: Color = onItemColor(),
 ) {
-    Surface(
+    val glassItem = liquidGlassBackdrop() != null
+    // Each version choice is its own Liquid Glass box (same recipe as the mod list entries)
+    GlassItemSurface(
         modifier = modifier,
         shape = shape,
-        color = color,
-        contentColor = contentColor,
+        color = if (glassItem) cardColor(false) else color,
+        contentColor = if (glassItem) Color.White else contentColor,
         onClick = {
             if (checked) {
                 onCancel()
@@ -483,6 +548,15 @@ private fun SelectVersionListItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Checkbox(
+                colors = if (glassItem) {
+                    CheckboxDefaults.colors(
+                        checkedColor = Color.White,
+                        uncheckedColor = Color.White,
+                        checkmarkColor = Color.Black.copy(alpha = 0.7f)
+                    )
+                } else {
+                    CheckboxDefaults.colors()
+                },
                 checked = checked,
                 onCheckedChange = {
                     if (it) {
@@ -581,7 +655,7 @@ private fun AssetsUnavailableDependencyItem(
     color: Color = itemColor(false),
     contentColor: Color = onItemColor(),
 ) {
-    Surface(
+    GlassItemSurface(
         modifier = modifier,
         shape = shape,
         color = color,
@@ -654,7 +728,7 @@ private fun AssetsVersionDependencyItem(
     val modLoaders = remember { project.platformModLoaders() }
     val classes = remember { project.platformClasses(defaultClasses) }
 
-    Surface(
+    GlassItemSurface(
         modifier = modifier,
         onClick = onClick,
         shape = shape,

@@ -103,6 +103,7 @@ import com.movtery.zalithlauncher.ui.control.input.HidableInputLayout
 import com.movtery.zalithlauncher.ui.control.input.TextInputMode
 import com.movtery.zalithlauncher.ui.screens.game.elements.OpenFolderLayer
 import com.movtery.zalithlauncher.ui.screens.game.elements.OpenFolderOperation
+import com.movtery.zalithlauncher.ui.components.GameGlassBackdrop
 import com.movtery.zalithlauncher.ui.theme.ZalithLauncherTheme
 import com.movtery.zalithlauncher.ui.toAndroidString
 import com.movtery.zalithlauncher.utils.computeGameDisplayLayout
@@ -360,8 +361,22 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener, SurfaceHolde
         return vmViewModel.session.launcher.block()
     }
 
+    /**
+     * Prismal's App Startup initializer only runs in the main process, but this activity lives
+     * in the `:game` process. Bind the AGSL assets manually so glass can be drawn here.
+     */
+    private fun bindPrismalAssets() {
+        runCatching {
+            val clazz = Class.forName("com.styropyr0.prismal.internal.PrismalAgslAssets")
+            val instance = clazz.getField("INSTANCE").get(null)
+            clazz.getMethod("bind", android.content.res.AssetManager::class.java)
+                .invoke(instance, applicationContext.assets)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        bindPrismalAssets()
         //加载渲染器
         Renderers.init()
         //加载插件
@@ -473,8 +488,9 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener, SurfaceHolde
         }
 
         setContent {
-            ZalithLauncherTheme {
+            ZalithLauncherTheme(forceGlassLayer = true) {
                 ObserveFullScreenSetting(AllSettings.gameFullScreen.state)
+                GameGlassBackdrop(modifier = Modifier.fillMaxSize())
                 Screen {
                     withHandler {
                         ComposableLayout(vmViewModel.textInputMode)

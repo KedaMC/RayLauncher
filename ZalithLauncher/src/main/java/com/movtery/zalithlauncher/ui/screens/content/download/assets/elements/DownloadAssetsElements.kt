@@ -42,7 +42,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -54,6 +54,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.foundation.layout.RowScope
+import com.movtery.zalithlauncher.ui.components.GlassItemSurface
+import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
@@ -366,20 +369,8 @@ private fun AssetsVersionListItem(
     installed: InstalledMod? = null,
     onClick: () -> Unit = {}
 ) {
-    Row(
-        modifier = modifier
-            .clip(shape = MaterialTheme.shapes.medium)
-            .background(
-                color = if (installed != null) {
-                    MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f)
-                } else {
-                    Color.Transparent
-                },
-                shape = MaterialTheme.shapes.medium
-            )
-            .clickable(onClick = onClick),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+    val glassItem = liquidGlassBackdrop() != null
+    val itemContent: @Composable RowScope.() -> Unit = {
         //直观的版本状态
         val releaseType = remember { version.platformReleaseType() }
         val displayName = remember { version.platformDisplayName() }
@@ -467,6 +458,43 @@ private fun AssetsVersionListItem(
                 }
             }
         }
+    }
+
+    if (glassItem) {
+        // Each version choice is its own Liquid Glass box (same recipe as the mod list entries)
+        GlassItemSurface(
+            modifier = modifier,
+            shape = MaterialTheme.shapes.large,
+            color = if (installed != null) {
+                MaterialTheme.colorScheme.tertiary.copy(alpha = 0.6f)
+            } else {
+                cardColor()
+            },
+            contentColor = onCardColor(),
+            onClick = onClick
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                content = itemContent
+            )
+        }
+    } else {
+        Row(
+            modifier = modifier
+                .clip(shape = MaterialTheme.shapes.medium)
+                .background(
+                    color = if (installed != null) {
+                        MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f)
+                    } else {
+                        Color.Transparent
+                    },
+                    shape = MaterialTheme.shapes.medium
+                )
+                .clickable(onClick = onClick),
+            verticalAlignment = Alignment.CenterVertically,
+            content = itemContent
+        )
     }
 }
 

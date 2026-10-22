@@ -21,6 +21,12 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        //PrismalAGSL (Liquid Glass) is only published on JitPack
+        maven("https://jitpack.io") {
+            content {
+                includeGroupByRegex("com\\.github\\.styropyr0.*")
+            }
+        }
     }
 }
 

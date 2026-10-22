@@ -26,6 +26,8 @@ import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
+import com.movtery.zalithlauncher.ui.components.liquidGlassPressAnimation
 
 @Composable
 fun ContentCheckBox(
@@ -37,6 +39,7 @@ fun ContentCheckBox(
     interactionSource: MutableInteractionSource? = null,
     content: @Composable () -> Unit
 ) {
+    val glassEnabled = liquidGlassBackdrop() != null
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically
@@ -44,6 +47,9 @@ fun ContentCheckBox(
         Checkbox(
             checked = checked,
             onCheckedChange = onCheckedChange,
+            modifier = Modifier.then(
+                if (glassEnabled && enabled) Modifier.liquidGlassPressAnimation() else Modifier
+            ),
             enabled = enabled,
             colors = colors,
             interactionSource = interactionSource

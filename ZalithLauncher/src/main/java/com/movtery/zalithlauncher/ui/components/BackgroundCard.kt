@@ -22,12 +22,12 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.Card
+
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CardElevation
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Surface
+
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.UiComposable
@@ -55,8 +55,23 @@ fun BackgroundCard(
     elevation: CardElevation = CardDefaults.cardElevation(),
     blur: Int = AllSettings.backgroundBlur.state,
     border: BorderStroke? = null,
+    liquidGlass: Boolean = AllSettings.launcherLiquidGlass.state,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val glassBackdrop = if (liquidGlass) liquidGlassBackdrop() else null
+    if (glassBackdrop != null) {
+        LiquidGlassSurface(
+            backdrop = glassBackdrop,
+            shape = shape,
+            modifier = modifier,
+            containerColor = colors.containerColor,
+            contentColor = if (AllSettings.launcherLiquidGlass.state) Color.White else colors.contentColor
+        ) {
+            Column(content = content)
+        }
+        return
+    }
+
     Card(
         modifier = modifier,
         shape = shape,
@@ -88,10 +103,26 @@ fun BackgroundCard(
     elevation: CardElevation = CardDefaults.cardElevation(),
     blur: Int = AllSettings.backgroundBlur.state,
     border: BorderStroke? = null,
+    liquidGlass: Boolean = AllSettings.launcherLiquidGlass.state,
     onClick: () -> Unit,
     enabled: Boolean = true,
     content: @Composable @UiComposable ColumnScope.() -> Unit
 ) {
+    val glassBackdrop = if (liquidGlass) liquidGlassBackdrop() else null
+    if (glassBackdrop != null) {
+        LiquidGlassSurface(
+            backdrop = glassBackdrop,
+            shape = shape,
+            modifier = modifier,
+            containerColor = colors.containerColor,
+            contentColor = if (AllSettings.launcherLiquidGlass.state) Color.White else colors.contentColor,
+            onClick = if (enabled) onClick else null
+        ) {
+            Column(content = content)
+        }
+        return
+    }
+
     Card(
         modifier = modifier,
         shape = shape,

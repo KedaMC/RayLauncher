@@ -21,7 +21,11 @@ package com.movtery.zalithlauncher.ui.components
 import androidx.annotation.IntRange
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
@@ -29,18 +33,20 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderColors
 import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.Surface
+
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSliderState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.layout.Layout
@@ -50,6 +56,7 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.ui.screens.content.elements.DisabledAlpha
+import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
 import com.movtery.zalithlauncher.utils.math.addBigDecimal
 import com.movtery.zalithlauncher.utils.math.subtractBigDecimal
 import java.text.DecimalFormat
@@ -101,55 +108,47 @@ fun SimpleTextSlider(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if (shorter) {
-            IndicatorSlider(
-                value = value,
-                enabled = enabled,
-                onValueChange = { changeValue(it, false) },
-                onValueChangeFinished = onValueChangeFinished,
-                valueRange = valueRange,
-                steps = steps,
-                modifier = Modifier.weight(1f)
-            )
-        } else {
-            Slider(
-                value = value,
-                enabled = enabled,
-                onValueChange = { changeValue(it, false) },
-                onValueChangeFinished = onValueChangeFinished,
-                valueRange = valueRange,
-                steps = steps,
-                modifier = Modifier.weight(1f)
-            )
+        GlassSliderTrack(modifier = Modifier.weight(1f), enabled = enabled) {
+            if (shorter) {
+                IndicatorSlider(
+                    value = value,
+                    enabled = enabled,
+                    onValueChange = { changeValue(it, false) },
+                    onValueChangeFinished = onValueChangeFinished,
+                    valueRange = valueRange,
+                    steps = steps,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = glassSliderColors()
+                )
+            } else {
+                Slider(
+                    value = value,
+                    enabled = enabled,
+                    onValueChange = { changeValue(it, false) },
+                    onValueChangeFinished = onValueChangeFinished,
+                    valueRange = valueRange,
+                    steps = steps,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = glassSliderColors()
+                )
+            }
         }
-        Surface(
-            modifier = Modifier
-                .alpha(alpha = if (enabled) 1f else DisabledAlpha)
-                .padding(start = 12.dp)
-                .align(Alignment.CenterVertically),
-            shape = MaterialTheme.shapes.medium,
-            color = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary
-        ) {
+
+        val backdrop = liquidGlassBackdrop()
+        val valueTextColor = if (backdrop != null) Color.White else MaterialTheme.colorScheme.onPrimary
+        val valueContent: @Composable () -> Unit = {
             Row(
                 modifier = Modifier.padding(PaddingValues(horizontal = 8.dp, vertical = 4.dp)),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(
-                    modifier = Modifier
-                        .then(
-                            if (onTextClick != null) {
-                                Modifier.clickable(enabled = enabled, onClick = onTextClick)
-                            } else Modifier
-                        )
-                ) {
-                    Text(
-                        text = getTextString(value),
-                        color = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.then(
+                        if (onTextClick != null) Modifier.clickable(enabled = enabled, onClick = onTextClick)
+                        else Modifier
                     )
-                    suffix?.let { text ->
-                        Text(text = text)
-                    }
+                ) {
+                    Text(text = getTextString(value), color = valueTextColor)
+                    suffix?.let { text -> Text(text = text, color = valueTextColor) }
                 }
                 if (fineTuningControl) {
                     Spacer(modifier = Modifier.width(8.dp))
@@ -158,17 +157,11 @@ fun SimpleTextSlider(
                         modifier = Modifier.size(26.dp),
                         onClick = {
                             val newValue = value.subtractBigDecimal(fineTuningStep)
-                            if (newValue <= valueRange.start) {
-                                changeValue(valueRange.start, true)
-                            } else {
-                                changeValue(newValue, true)
-                            }
+                            if (newValue <= valueRange.start) changeValue(valueRange.start, true)
+                            else changeValue(newValue, true)
                         }
                     ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_arrow_left_rounded),
-                            contentDescription = null
-                        )
+                        Icon(painter = painterResource(R.drawable.ic_arrow_left_rounded), contentDescription = null)
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     IconButton(
@@ -176,22 +169,92 @@ fun SimpleTextSlider(
                         modifier = Modifier.size(26.dp),
                         onClick = {
                             val newValue = value.addBigDecimal(fineTuningStep)
-                            if (newValue >= valueRange.endInclusive) {
-                                changeValue(valueRange.endInclusive, true)
-                            } else {
-                                changeValue(newValue, true)
-                            }
+                            if (newValue >= valueRange.endInclusive) changeValue(valueRange.endInclusive, true)
+                            else changeValue(newValue, true)
                         }
                     ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_arrow_right_rounded),
-                            contentDescription = null
-                        )
+                        Icon(painter = painterResource(R.drawable.ic_arrow_right_rounded), contentDescription = null)
                     }
                 }
             }
         }
+
+        val valueModifier = Modifier
+            .alpha(if (enabled) 1f else DisabledAlpha)
+            .padding(start = 12.dp)
+            .align(Alignment.CenterVertically)
+        if (backdrop != null) {
+            LiquidGlassSurface(
+                backdrop = backdrop,
+                shape = MaterialTheme.shapes.medium,
+                modifier = valueModifier,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = Color.White,
+                blurRadius = 6.dp
+            ) { valueContent() }
+        } else {
+            Surface(
+                modifier = valueModifier,
+                shape = MaterialTheme.shapes.medium,
+                color = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            ) { valueContent() }
+        }
         appendContent()
+    }
+}
+
+/** Height of the glass capsule behind a slider; matches the visible track, not the 48dp touch area. */
+private val GlassSliderHeight = 24.dp
+
+/**
+ * Slider colors that read well on Liquid Glass: white thumb and active track over a faint
+ * white inactive track. Falls back to the Material defaults when glass is off.
+ */
+@Composable
+fun glassSliderColors(): SliderColors {
+    if (liquidGlassBackdrop() == null) return SliderDefaults.colors()
+    return SliderDefaults.colors(
+        thumbColor = Color.White,
+        activeTrackColor = Color.White.copy(alpha = 0.92f),
+        activeTickColor = Color.Black.copy(alpha = 0.35f),
+        inactiveTrackColor = Color.White.copy(alpha = 0.28f),
+        inactiveTickColor = Color.White.copy(alpha = 0.6f),
+        disabledThumbColor = Color.White.copy(alpha = 0.5f),
+        disabledActiveTrackColor = Color.White.copy(alpha = 0.4f),
+        disabledActiveTickColor = Color.Black.copy(alpha = 0.2f),
+        disabledInactiveTrackColor = Color.White.copy(alpha = 0.15f),
+        disabledInactiveTickColor = Color.White.copy(alpha = 0.3f)
+    )
+}
+
+@Composable
+private fun GlassSliderTrack(
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    content: @Composable BoxScope.() -> Unit
+) {
+    val backdrop = liquidGlassBackdrop()
+    // Touch handling stays on the whole slider area; only the glass capsule animates.
+    val press = if (backdrop != null && enabled) rememberGlassPress(CircleShape) else null
+    Box(
+        modifier = modifier.then(press?.gesture ?: Modifier),
+        contentAlignment = Alignment.Center
+    ) {
+        if (backdrop != null) {
+            LiquidGlassSurface(
+                backdrop = backdrop,
+                shape = CircleShape,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(GlassSliderHeight)
+                    .then(press?.visual ?: Modifier),
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = Color.White,
+                blurRadius = 8.dp
+            ) {}
+        }
+        content()
     }
 }
 
@@ -206,7 +269,7 @@ fun IndicatorSlider(
     onValueChangeFinished: (() -> Unit)? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     @IntRange(from = 0) steps: Int = 0,
-    colors: SliderColors = SliderDefaults.colors()
+    colors: SliderColors = glassSliderColors()
 ) {
     /** Slider顶部需要裁切的像素 */
     val sliderTopCut = with(LocalDensity.current) { 8.dp.toPx().toInt() }

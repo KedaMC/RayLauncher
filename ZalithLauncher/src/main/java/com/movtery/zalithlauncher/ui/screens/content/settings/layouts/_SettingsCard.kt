@@ -214,6 +214,7 @@ fun SettingsCard(
     BackgroundCard(
         modifier = modifier,
         shape = shape,
+        liquidGlass = true,
         content = content
     )
 }
@@ -233,6 +234,7 @@ fun SettingsCard(
     BackgroundCard(
         modifier = modifier,
         shape = shape,
+        liquidGlass = true,
         onClick = onClick,
         enabled = enabled,
         content = content
@@ -259,6 +261,7 @@ fun SettingsCard(
     BackgroundCard(
         modifier = modifier,
         shape = shape,
+        liquidGlass = true,
         onClick = onClick,
         enabled = enabled
     ) {

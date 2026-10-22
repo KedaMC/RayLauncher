@@ -47,6 +47,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.ui.screens.content.elements.DisabledAlpha
 
 /**
@@ -76,8 +77,8 @@ fun TextRailItem(
     unSelectedPadding: PaddingValues = selectedPadding,
     shape: Shape = MaterialTheme.shapes.extraLarge,
     backgroundColor: Color = MaterialTheme.colorScheme.secondaryContainer,
-    selectedContentColor: Color = MaterialTheme.colorScheme.onSecondaryContainer,
-    unselectedContentColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    selectedContentColor: Color = if (AllSettings.launcherLiquidGlass.state) Color.White else MaterialTheme.colorScheme.onSecondaryContainer,
+    unselectedContentColor: Color = if (AllSettings.launcherLiquidGlass.state) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
     enabled: Boolean = true
 ) {
     val animationProgress by animateFloatAsState(
@@ -92,25 +93,28 @@ fun TextRailItem(
             .clickable(enabled = enabled, onClick = onClick)
             .alpha(if (enabled) 1f else DisabledAlpha)
     ) {
-        //背景扩散动画
-        Canvas(
-            modifier = Modifier
-                .matchParentSize()
-                .alpha(animationProgress)
-        ) {
-            val maxWidth = size.width
-            val minWidth = 0f
-            val currentWidth = minWidth + (maxWidth - minWidth) * animationProgress
-
-            val left = (maxWidth - currentWidth) / 2
-
-            //绘制胶囊形状背景
-            drawRoundRect(
-                color = backgroundColor,
-                topLeft = Offset(left, 0f),
-                size = Size(currentWidth, size.height),
-                cornerRadius = CornerRadius(size.height / 2, size.height / 2)
-            )
+        val glassBackdrop = liquidGlassBackdrop()
+        if (glassBackdrop != null) {
+            LiquidGlassSurface(
+                backdrop = glassBackdrop,
+                shape = shape,
+                modifier = Modifier.matchParentSize().alpha(animationProgress),
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = Color.White,
+                blurRadius = 10.dp
+            ) {}
+        } else {
+            Canvas(modifier = Modifier.matchParentSize().alpha(animationProgress)) {
+                val currentWidth = size.width * animationProgress
+                val left = (size.width - currentWidth) / 2
+                val selectedColor = if (AllSettings.launcherLiquidGlass.state) Color.White.copy(alpha = 0.18f) else backgroundColor
+                drawRoundRect(
+                    color = selectedColor,
+                    topLeft = Offset(left, 0f),
+                    size = Size(currentWidth, size.height),
+                    cornerRadius = CornerRadius(size.height / 2, size.height / 2)
+                )
+            }
         }
 
         val paddingLeft by animateDpAsState(
