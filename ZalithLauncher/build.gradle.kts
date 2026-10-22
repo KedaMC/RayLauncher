@@ -30,13 +30,11 @@ val defaultCurseForgeApiKey = project.findProperty("curseforge_api_key") as? Str
 val projectArch: String = System.getProperty("arch", "all")
 
 fun getKeyFromLocal(envKey: String, fileName: String? = null, default: String? = null): String {
-    //An unset GitHub secret is exported as an empty string, so blank values must count as "not set".
-    //Values are trimmed as well, because a trailing newline in a key file breaks the OAuth request.
-    val key = System.getenv(envKey)?.trim()?.takeIf { it.isNotEmpty() }
+    val key = System.getenv(envKey)
     return key ?: fileName?.let {
         val file = File(rootDir, fileName)
-        if (file.canRead() && file.isFile) file.readText().trim().takeIf { text -> text.isNotEmpty() } else null
-    } ?: default?.trim()?.takeIf { it.isNotEmpty() } ?: run {
+        if (file.canRead() && file.isFile) file.readText() else null
+    } ?: default ?: run {
         logger.warn("BUILD: $envKey not set; related features may throw exceptions.")
         ""
     }
