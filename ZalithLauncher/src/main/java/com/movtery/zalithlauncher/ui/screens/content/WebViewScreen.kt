@@ -146,6 +146,15 @@ fun WebViewScreen(
                             }
 
                             settings.javaScriptEnabled = true
+                            //Microsoft sign-in hops between login.microsoftonline.com and login.live.com and keeps its
+                            //flow state in cookies / DOM storage. WebView blocks third-party cookies by default, which
+                            //makes the flow lose its context ("must include a 'client_id' input parameter").
+                            settings.domStorageEnabled = true
+                            val webView = this
+                            CookieManager.getInstance().apply {
+                                setAcceptCookie(true)
+                                setAcceptThirdPartyCookies(webView, true)
+                            }
                             settings.cacheMode = WebSettings.LOAD_NO_CACHE
                             loadUrl(key.url)
                             webViewHolder.value = this
