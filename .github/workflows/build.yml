@@ -83,12 +83,37 @@ jobs:
           chmod +x gradlew
           ./gradlew ZalithLauncher:assemble${{ env.BUILD_VARIANT }} -Darch=arm64
 
+      - name: Rename APK with branch and build date
+        shell: bash
+        run: |
+          set -euo pipefail
+          VARIANT="${BUILD_VARIANT:-${{ inputs.variant || 'Release' }}}"
+          if [[ "$VARIANT" == "Release" ]]; then
+            APK_DIR="ZalithLauncher/build/outputs/apk/release"
+          else
+            APK_DIR="ZalithLauncher/build/outputs/apk/debug"
+          fi
+
+          mapfile -t APKS < <(find "$APK_DIR" -maxdepth 1 -type f -name '*.apk' ! -name 'Ray-*.apk' | sort)
+          if [[ "${#APKS[@]}" -ne 1 ]]; then
+            echo "Expected exactly one APK in $APK_DIR, found ${#APKS[@]}."
+            exit 1
+          fi
+
+          BRANCH_NAME="${GITHUB_REF_NAME//\//-}"
+          BUILD_DATE="$(date -u +%Y%m%d)"
+          ARTIFACT_NAME="Ray-${BRANCH_NAME}-${BUILD_DATE}"
+          APK_NAME="${ARTIFACT_NAME}.apk"
+          mv "${APKS[0]}" "$APK_DIR/$APK_NAME"
+          echo "APK_NAME=$APK_NAME" >> "$GITHUB_ENV"
+          echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> "$GITHUB_ENV"
+
       - name: Upload Release APK for arm64-v8a
         if: env.BUILD_VARIANT == 'Release'
         uses: actions/upload-artifact@v7
         with:
-          name: release apk (arm64)
-          path: ZalithLauncher/build/outputs/apk/release/*.apk
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ZalithLauncher/build/outputs/apk/release/Ray-*.apk
 
       - name: Upload Release Mapping for arm64-v8a
         if: env.BUILD_VARIANT == 'Release'
@@ -103,5 +128,5 @@ jobs:
         continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
-          name: debug apk (arm64)
-          path: ZalithLauncher/build/outputs/apk/debug/*.apk
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ZalithLauncher/build/outputs/apk/debug/Ray-*.apk
