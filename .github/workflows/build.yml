@@ -100,9 +100,15 @@ jobs:
             exit 1
           fi
 
-          BRANCH_NAME="${GITHUB_REF_NAME//\//-}"
+          RAW_BRANCH="${GITHUB_REF_NAME##*/}"
+          if [[ "$GITHUB_REF_NAME" == "ray-launcher" ]]; then
+            BRANCH_NAME="launcher"
+          else
+            BRANCH_NAME="${RAW_BRANCH//-/}"
+          fi
+          COMMIT_SHORT="${GITHUB_SHA:0:7}"
           BUILD_DATE="$(date -u +%Y%m%d)"
-          ARTIFACT_NAME="Ray-${BRANCH_NAME}-${BUILD_DATE}"
+          ARTIFACT_NAME="Ray-${BRANCH_NAME}-${COMMIT_SHORT}-${BUILD_DATE}"
           APK_NAME="${ARTIFACT_NAME}.apk"
           mv "${APKS[0]}" "$APK_DIR/$APK_NAME"
           echo "APK_NAME=$APK_NAME" >> "$GITHUB_ENV"
