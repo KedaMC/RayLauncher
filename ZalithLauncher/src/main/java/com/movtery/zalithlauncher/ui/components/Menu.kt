@@ -179,6 +179,18 @@ fun MenuSubscreen(
     }
 }
 
+/**
+ * Panel tint. In game with Liquid Glass on, panels use the same tint as the floating toolbar
+ * ([FloatingBall]) so both look identical; otherwise the regular themed color.
+ */
+@Composable
+private fun menuPanelColor(): Color =
+    if (LocalLiquidGlassInGame.current && liquidGlassBackdrop() != null) {
+        Color.Black.copy(alpha = 0.25f)
+    } else {
+        backgroundColor()
+    }
+
 @Composable
 fun DualMenuSubscreen(
     state: MenuState,
@@ -237,7 +249,7 @@ fun DualMenuSubscreen(
                     influencedByBackground = false,
                     modifier = Modifier.fillMaxSize(),
                     colors = CardDefaults.cardColors(
-                        containerColor = backgroundColor(),
+                        containerColor = menuPanelColor(),
                         contentColor = onBackgroundColor()
                     ),
                     content = {
@@ -274,7 +286,7 @@ fun DualMenuSubscreen(
                     influencedByBackground = false,
                     modifier = Modifier.fillMaxSize(),
                     colors = CardDefaults.cardColors(
-                        containerColor = backgroundColor(),
+                        containerColor = menuPanelColor(),
                         contentColor = onBackgroundColor()
                     ),
                     content = {
@@ -565,7 +577,7 @@ fun MenuSliderLayout(
     onValueChangeFinished: (Int) -> Unit = {},
     suffix: String? = null,
     influencedByBackground: Boolean = false,
-    colors: SliderColors = SliderDefaults.colors(),
+    colors: SliderColors = glassSliderColors(),
     shape: Shape = MaterialTheme.shapes.large,
     color: Color = itemColor(influencedByBackground),
     contentColor: Color = onItemColor(),
@@ -645,7 +657,7 @@ fun MenuSliderLayout(
     suffix: String? = null,
     decimalFormat: String = "#0.00",
     influencedByBackground: Boolean = false,
-    colors: SliderColors = SliderDefaults.colors(),
+    colors: SliderColors = glassSliderColors(),
     shape: Shape = MaterialTheme.shapes.large,
     color: Color = itemColor(influencedByBackground),
     contentColor: Color = onItemColor(),
