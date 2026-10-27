@@ -362,6 +362,12 @@ object AllSettings : SettingsRegistry() {
     val launcherLiquidGlass = boolSetting("launcherLiquidGlass", false)
 
     /**
+     * In-game Liquid Glass switch (game menu panels). Only takes effect while [launcherLiquidGlass]
+     * is on, and never changes how the launcher UI itself looks.
+     */
+    val gameLiquidGlass = boolSetting("gameLiquidGlass", true)
+
+    /**
      * 动画倍速
      */
     val launcherAnimateSpeed = intSetting("launcherAnimateSpeed", 5, 0..10)

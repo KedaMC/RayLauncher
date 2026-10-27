@@ -330,8 +330,8 @@ private fun GameActionContent(
             MenuSwitchButton(
                 modifier = Modifier.fillMaxWidth(),
                 text = stringResource(R.string.game_menu_option_liquid_glass),
-                switch = AllSettings.launcherLiquidGlass.state,
-                onSwitch = { AllSettings.launcherLiquidGlass.save(it) },
+                switch = AllSettings.gameLiquidGlass.state,
+                onSwitch = { AllSettings.gameLiquidGlass.save(it) },
                 color = color,
                 contentColor = contentColor
             )

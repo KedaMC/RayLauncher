@@ -46,6 +46,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -121,6 +122,20 @@ import kotlin.coroutines.resume
  * 仅当设置开启且背景可被采样（图片背景）时由 MainActivity 提供，否则为 null
  */
 val LocalLiquidGlassBackdrop = staticCompositionLocalOf<PrismalGlassLayer?> { null }
+
+/** True for UI hosted in the game activity (menu panels), false for the launcher itself. */
+val LocalLiquidGlassInGame = staticCompositionLocalOf { false }
+
+/**
+ * Whether Liquid Glass styling is on for the UI being composed. In the launcher this is the launcher
+ * setting. In game it additionally needs the in-game switch, so turning glass off from the game menu
+ * leaves the launcher's own glass untouched.
+ */
+@Composable
+@ReadOnlyComposable
+fun liquidGlassEnabled(): Boolean =
+    AllSettings.launcherLiquidGlass.state &&
+            (!LocalLiquidGlassInGame.current || AllSettings.gameLiquidGlass.state)
 
 /**
  * What glass surfaces actually sample. Normally this is [LocalLiquidGlassBackdrop] itself; inside a
@@ -357,7 +372,7 @@ private suspend fun captureWindowSnapshots(window: Window, sampler: DialogWindow
 @Composable
 private fun rememberGlassWindowSampler(): DialogWindowBackdrop? {
     val record = LocalLiquidGlassBackdrop.current
-    if (record == null || !AllSettings.launcherLiquidGlass.state) return null
+    if (record == null || !liquidGlassEnabled()) return null
 
     val page = LocalLiquidGlassPage.current
     if (page != null) {
@@ -426,7 +441,7 @@ private const val GLASS_SURFACE_ALPHA = 0.3f
  */
 @Composable
 fun liquidGlassBackdrop(): PrismalBackdrop? {
-    if (!AllSettings.launcherLiquidGlass.state) return null
+    if (!liquidGlassEnabled()) return null
     return LocalLiquidGlassSampler.current ?: LocalLiquidGlassBackdrop.current
 }
 
@@ -747,7 +762,7 @@ fun DropdownMenu(
     matchAnchorWidth: Boolean = false,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val glass = LocalLiquidGlassBackdrop.current != null && AllSettings.launcherLiquidGlass.state
+    val glass = LocalLiquidGlassBackdrop.current != null && liquidGlassEnabled()
     if (!glass) {
         androidx.compose.material3.DropdownMenu(
             expanded = expanded,

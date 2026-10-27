@@ -60,6 +60,7 @@ fun FloatingBall(
     color: Color = Color.Black.copy(alpha = 0.25f),
     contentColor: Color = Color.White.copy(alpha = 0.95f),
     shape: Shape = MaterialTheme.shapes.medium,
+    glass: Boolean = false,
     content: @Composable () -> Unit
 ) {
     var ballSize by remember { mutableStateOf(IntSize.Zero) }
@@ -95,8 +96,7 @@ fun FloatingBall(
         val parentWidth by rememberUpdatedState(constraints.maxWidth)
         val parentHeight by rememberUpdatedState(constraints.maxHeight)
 
-        Surface(
-            modifier = Modifier
+        val ballModifier = Modifier
                 .onSizeChanged { size ->
                     ballSize = size
                     if (isInitialized || currentPosition != Offset.Zero) return@onSizeChanged
@@ -168,12 +168,28 @@ fun FloatingBall(
                             }
                         }
                     }
-                }.then(modifier),
-            color = color,
-            contentColor = contentColor,
-            shape = shape
-        ) {
-            content()
+                }.then(modifier)
+
+        val glassBackdrop = if (glass) liquidGlassBackdrop() else null
+        if (glassBackdrop != null) {
+            LiquidGlassSurface(
+                backdrop = glassBackdrop,
+                shape = shape,
+                modifier = ballModifier,
+                containerColor = color,
+                contentColor = contentColor
+            ) {
+                content()
+            }
+        } else {
+            Surface(
+                modifier = ballModifier,
+                color = color,
+                contentColor = contentColor,
+                shape = shape
+            ) {
+                content()
+            }
         }
     }
 }

@@ -44,6 +44,7 @@ import com.movtery.zalithlauncher.utils.festival.Festival
 import com.movtery.zalithlauncher.utils.festival.LocalFestivals
 import com.movtery.zalithlauncher.ui.components.GlassPageCapture
 import com.movtery.zalithlauncher.ui.components.LocalLiquidGlassBackdrop
+import com.movtery.zalithlauncher.ui.components.LocalLiquidGlassInGame
 import com.movtery.zalithlauncher.ui.components.LocalLiquidGlassPage
 import com.movtery.zalithlauncher.viewmodel.BackgroundViewModel
 import com.movtery.zalithlauncher.viewmodel.LocalBackgroundViewModel
@@ -681,9 +682,11 @@ fun ZalithLauncherTheme(
 
     //Liquid Glass：仅在设置开启且存在有效背景媒体时提供可采样的背景图层
     val glassLayer = rememberPrismalGlassLayer()
+    //forceGlassLayer is only set by the game activity: there the in-game switch applies as well
+    val glassEnabled = AllSettings.launcherLiquidGlass.state &&
+            (!forceGlassLayer || AllSettings.gameLiquidGlass.state)
     val activeGlassLayer = glassLayer.takeIf {
-        AllSettings.launcherLiquidGlass.state &&
-                (backgroundViewModel?.isValid == true || forceGlassLayer)
+        glassEnabled && (backgroundViewModel?.isValid == true || forceGlassLayer)
     }
 
     //Second layer that records the whole page (wallpaper + UI) while a dialog is open
@@ -695,6 +698,7 @@ fun ZalithLauncherTheme(
         LocalBackgroundViewModel provides backgroundViewModel,
         LocalFestivals provides festivals,
         LocalLiquidGlassBackdrop provides activeGlassLayer,
+        LocalLiquidGlassInGame provides forceGlassLayer,
         LocalLiquidGlassPage provides activePageCapture
     ) {
         MaterialExpressiveTheme(

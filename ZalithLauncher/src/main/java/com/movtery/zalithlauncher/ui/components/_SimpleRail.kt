@@ -77,8 +77,8 @@ fun TextRailItem(
     unSelectedPadding: PaddingValues = selectedPadding,
     shape: Shape = MaterialTheme.shapes.extraLarge,
     backgroundColor: Color = MaterialTheme.colorScheme.secondaryContainer,
-    selectedContentColor: Color = if (AllSettings.launcherLiquidGlass.state) Color.White else MaterialTheme.colorScheme.onSecondaryContainer,
-    unselectedContentColor: Color = if (AllSettings.launcherLiquidGlass.state) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+    selectedContentColor: Color = if (liquidGlassEnabled()) Color.White else MaterialTheme.colorScheme.onSecondaryContainer,
+    unselectedContentColor: Color = if (liquidGlassEnabled()) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
     enabled: Boolean = true
 ) {
     val animationProgress by animateFloatAsState(
@@ -94,6 +94,7 @@ fun TextRailItem(
             .alpha(if (enabled) 1f else DisabledAlpha)
     ) {
         val glassBackdrop = liquidGlassBackdrop()
+        val liquidGlassEnabled = liquidGlassEnabled()
         if (glassBackdrop != null) {
             LiquidGlassSurface(
                 backdrop = glassBackdrop,
@@ -107,7 +108,7 @@ fun TextRailItem(
             Canvas(modifier = Modifier.matchParentSize().alpha(animationProgress)) {
                 val currentWidth = size.width * animationProgress
                 val left = (size.width - currentWidth) / 2
-                val selectedColor = if (AllSettings.launcherLiquidGlass.state) Color.White.copy(alpha = 0.18f) else backgroundColor
+                val selectedColor = if (liquidGlassEnabled) Color.White.copy(alpha = 0.18f) else backgroundColor
                 drawRoundRect(
                     color = selectedColor,
                     topLeft = Offset(left, 0f),
