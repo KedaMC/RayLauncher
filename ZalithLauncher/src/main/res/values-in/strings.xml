@@ -796,6 +796,11 @@
     <string name="account_change_cape_apply_success">Berhasil mengubah jubah Anda menjadi: %s</string>
     <string name="account_change_cape_apply_reset">Berhasil mereset cape kamu</string>
     <string name="account_change_cape_apply_failed">(%d) Gagal mengganti jubah</string>
+    <string name="account_capes_import">Impor jubah</string>
+    <string name="account_capes_import_success">Jubah berhasil diimpor</string>
+    <string name="account_capes_import_invalid">Gambar jubah tidak valid. Gunakan gambar dengan rasio 2:1, misalnya 64x32 (maksimal 2048x1024), di bawah 8 MB.</string>
+    <string name="account_capes_import_failed">Gagal mengimpor jubah: %s</string>
+    <string name="account_capes_delete_message">Hapus \"%s\" dari koleksi jubah?</string>
     <string name="versions_config_microphone_check_summary">Cek apakah mikrofon sistem tersedia atau pastikan launcher sudah dikasih izin mikrofon. Pengecekan ini buat memastikan Anda bisa pakai mod seperti Simple Voice Chat yang butuh mikrofon.</string>
     <string name="microphone_check_volume">Volume: %d</string>
     <string name="error_import_file">Terjadi kesalahan saat mengimpor file</string>

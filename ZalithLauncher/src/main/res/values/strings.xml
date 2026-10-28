@@ -538,6 +538,11 @@
     <string name="account_change_cape_apply_success">Successfully changed your cape to: %s</string>
     <string name="account_change_cape_apply_reset">Successfully reset your cape</string>
     <string name="account_change_cape_apply_failed">(%d) Failed to change cape</string>
+    <string name="account_capes_import">Import cape</string>
+    <string name="account_capes_import_success">Cape imported</string>
+    <string name="account_capes_import_invalid">Invalid cape image. Use an image with a 2:1 ratio, such as 64x32 (up to 2048x1024), under 8 MB.</string>
+    <string name="account_capes_import_failed">Failed to import cape: %s</string>
+    <string name="account_capes_delete_message">Remove \"%s\" from your cape collection?</string>
     <string name="account_supporting_username_invalid_title">Invalid Username</string>
     <string name="account_supporting_username_invalid_local_message_hint1">Valid usernames only support letters (case-insensitive), numbers, and underscores, with length between 3 and 16 characters.</string>
     <string name="account_supporting_username_invalid_local_message_hint2">Otherwise, the game may not run properly.</string>

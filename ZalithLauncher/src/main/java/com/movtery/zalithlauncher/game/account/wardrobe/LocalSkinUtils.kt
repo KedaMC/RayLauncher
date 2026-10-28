@@ -20,6 +20,7 @@ package com.movtery.zalithlauncher.game.account.wardrobe
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import java.io.ByteArrayOutputStream
 import androidx.core.graphics.alpha
 import com.movtery.zalithlauncher.utils.image.isColorMatch
 import com.movtery.zalithlauncher.utils.image.recycleIfLarge
@@ -76,6 +77,29 @@ fun getLocalUUIDWithSkinModel(userName: String, skinModelType: SkinModelType): S
     }
 
     return prefix + suffix.toString(16).padStart(5, '0').uppercase()
+}
+
+/**
+ * Re-encode a picked skin image (PNG, JPEG, WebP...) to PNG in place, keeping transparency.
+ * The game and the skin server only accept PNG, and the picked file may be any image format.
+ *
+ * @return false if the file can't be decoded as an image
+ */
+suspend fun normalizeSkinToPng(skinFile: File): Boolean = withContext(Dispatchers.IO) {
+    val bitmap = BitmapFactory.decodeFile(
+        skinFile.absolutePath,
+        BitmapFactory.Options().apply { inScaled = false }
+    ) ?: return@withContext false
+    try {
+        val png = ByteArrayOutputStream().use { out ->
+            if (!bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)) return@withContext false
+            out.toByteArray()
+        }
+        skinFile.writeBytes(png)
+        true
+    } finally {
+        bitmap.recycle()
+    }
 }
 
 /**

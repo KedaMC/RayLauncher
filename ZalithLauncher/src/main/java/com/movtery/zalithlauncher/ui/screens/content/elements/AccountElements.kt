@@ -79,6 +79,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -1328,6 +1329,12 @@ fun ChangeSkinDialog(
 
     var showCapeSelector by remember { mutableStateOf(false) }
 
+    //offline accounts: cape collection dialog and a key that reloads the preview after changes
+    var showLocalCapeDialog by remember { mutableStateOf(false) }
+    var localCapeKey by remember { mutableIntStateOf(0) }
+    //offline cape changes are saved immediately, remember it so Confirm can close the dialog
+    var localCapeChanged by remember { mutableStateOf(false) }
+
     var isFetchingCapes by remember { mutableStateOf(false) }
 
     var currentCapeToLoad by remember { mutableStateOf(EmptyCape) }
@@ -1416,12 +1423,15 @@ fun ChangeSkinDialog(
                         modifier = Modifier.weight(1f),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Box(
+                        Surface(
                             modifier = Modifier
                                 .fillMaxHeight()
-                                .weight(1f)
-                                .clip(MaterialTheme.shapes.large)
-                                .background(itemColor(false)),
+                                .weight(1f),
+                            shape = MaterialTheme.shapes.large,
+                            color = itemColor(false)
+                        ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
                             var pageFinished by remember { mutableStateOf(false) }
@@ -1486,6 +1496,25 @@ fun ChangeSkinDialog(
                                     }
                                 }
                             }
+
+                            //离线账号：预览本地披风合集中正在使用的披风
+                            //skinState 作为 key：重置皮肤预览会同时清除披风预览，需要重新加载
+                            LaunchedEffect(pageFinished, localCapeKey, skinState) {
+                                if (!pageFinished || !account.isLocalAccount()) return@LaunchedEffect
+                                val capeFile = account.getCapeFile()
+                                if (capeFile.exists()) {
+                                    runCatching {
+                                        capeFile.inputStream().use { stream ->
+                                            playerSkin.loadCape(stream)
+                                        }
+                                    }.onFailure {
+                                        playerSkin.loadCape(EmptyCape)
+                                    }
+                                } else {
+                                    playerSkin.loadCape(EmptyCape)
+                                }
+                            }
+                        }
                         }
 
                         Column(
@@ -1516,7 +1545,7 @@ fun ChangeSkinDialog(
                                             }
                                         },
                                         onClick = {
-                                            skinPicker.launch(arrayOf("image/png"))
+                                            skinPicker.launch(arrayOf("image/*"))
                                         },
                                         enabled = !isImportingSkin
                                     )
@@ -1595,6 +1624,24 @@ fun ChangeSkinDialog(
                                 )
                             }
 
+                            //离线账号：管理本地披风合集
+                            if (account.isLocalAccount()) {
+                                InfoLayoutTextItem(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    title = stringResource(R.string.account_change_cape),
+                                    icon = {
+                                        Icon(
+                                            modifier = Modifier.size(22.dp),
+                                            painter = painterResource(R.drawable.ic_styler),
+                                            contentDescription = null
+                                        )
+                                    },
+                                    onClick = {
+                                        showLocalCapeDialog = true
+                                    }
+                                )
+                            }
+
                             //离线账号重置皮肤
                             if (account.isLocalAccount() && account.hasSkinFile && skinState != ChangeSkin.ResetSkin) {
                                 InfoLayoutTextItem(
@@ -1628,7 +1675,7 @@ fun ChangeSkinDialog(
 
                         Button(
                             modifier = Modifier.weight(1f),
-                            enabled = skinState != ChangeSkin.None || capeState != ChangeCape.None,
+                            enabled = skinState != ChangeSkin.None || capeState != ChangeCape.None || localCapeChanged,
                             onClick = {
                                 when (skinState) {
                                     is ChangeSkin.ChangeSkinData -> {
@@ -1655,6 +1702,18 @@ fun ChangeSkinDialog(
                 }
             }
         }
+    }
+
+    if (showLocalCapeDialog) {
+        LocalCapeDialog(
+            accountUUID = account.uniqueUUID,
+            onDismiss = { showLocalCapeDialog = false },
+            onCapeChanged = {
+                localCapeKey++
+                localCapeChanged = true
+                AccountsManager.refreshWardrobe()
+            }
+        )
     }
 
     if (showCapeSelector) {
