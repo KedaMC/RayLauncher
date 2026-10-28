@@ -53,7 +53,7 @@ fun BackgroundCard(
         contentColor = onCardColor()
     ),
     elevation: CardElevation = CardDefaults.cardElevation(),
-    blur: Int = AllSettings.backgroundBlur.state,
+    blur: Int = effectiveBackgroundBlur(),
     border: BorderStroke? = null,
     liquidGlass: Boolean = liquidGlassEnabled(),
     content: @Composable ColumnScope.() -> Unit
@@ -101,7 +101,7 @@ fun BackgroundCard(
         disabledContainerColor = cardColor(influencedByBackground)
     ),
     elevation: CardElevation = CardDefaults.cardElevation(),
-    blur: Int = AllSettings.backgroundBlur.state,
+    blur: Int = effectiveBackgroundBlur(),
     border: BorderStroke? = null,
     liquidGlass: Boolean = liquidGlassEnabled(),
     onClick: () -> Unit,
@@ -153,7 +153,7 @@ fun CardTitleLayout(
         enabled = influencedByBackground
     ),
     contentColor: Color = onCardColor(),
-    blur: Int = AllSettings.backgroundBlur.state,
+    blur: Int = effectiveBackgroundBlur(),
     content: @Composable @UiComposable ColumnScope.() -> Unit
 ) {
     Column(

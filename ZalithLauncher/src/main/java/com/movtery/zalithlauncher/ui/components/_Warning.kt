@@ -67,7 +67,7 @@ fun WarningCard(
     outerShapeSize: Dp = 12.dp,
     innerShapeSize: Dp = 4.dp,
     influencedByBackground: Boolean = true,
-    blur: Int = AllSettings.backgroundBlur.state,
+    blur: Int = effectiveBackgroundBlur(),
     containerColor: Color = influencedByBackgroundColor(
         color = MaterialTheme.colorScheme.secondaryContainer,
         enabled = influencedByBackground

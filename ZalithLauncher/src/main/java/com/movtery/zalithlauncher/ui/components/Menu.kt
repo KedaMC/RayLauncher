@@ -735,7 +735,7 @@ fun MenuButtonLayout(
     shape: Shape = MaterialTheme.shapes.large,
     color: Color = itemColor(influencedByBackground),
     contentColor: Color = onItemColor(),
-    blur: Int = AllSettings.backgroundBlur.state,
+    blur: Int = effectiveBackgroundBlur(),
     onClick: () -> Unit = {},
     horizontalArrangement: Arrangement.Horizontal = Arrangement.Start,
     verticalAlignment: Alignment.Vertical = Alignment.Top,

@@ -18,6 +18,7 @@
 
 package com.movtery.zalithlauncher.viewmodel
 
+import com.movtery.zalithlauncher.ui.components.effectiveBackgroundBlurNow
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
@@ -175,7 +176,7 @@ class BackgroundGlassBlur(private val backgroundFile: File) {
     }
 
     private fun frameRadius(scale: Float): Float =
-        (AllSettings.backgroundBlur.state * GlobalContext.resources.displayMetrics.density * scale)
+        (effectiveBackgroundBlurNow() * GlobalContext.resources.displayMetrics.density * scale)
             .coerceIn(0.5f, 25f)
 
     private fun downscaleFactor(radiusPx: Float, maxDim: Float): Float {

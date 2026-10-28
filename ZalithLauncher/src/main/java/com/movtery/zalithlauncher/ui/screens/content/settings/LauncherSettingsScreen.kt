@@ -243,6 +243,8 @@ fun LauncherSettingsScreen(
 
             //启动器背景设置板块
             LocalBackgroundViewModel.current?.let { backgroundViewModel ->
+                //Liquid Glass manages background opacity/blur itself, see effectiveBackgroundOpacity()
+                val liquidGlassOn = AllSettings.launcherLiquidGlass.state
                 AnimatedItem(scope) { yOffset ->
                     SettingsCardColumn(
                         modifier = Modifier
@@ -265,10 +267,11 @@ fun LauncherSettingsScreen(
                             position = CardPosition.Middle,
                             unit = AllSettings.launcherBackgroundOpacity,
                             title = stringResource(R.string.settings_launcher_background_opacity_title),
-                            summary = stringResource(R.string.settings_launcher_background_opacity_summary),
+                            summary = if (liquidGlassOn) stringResource(R.string.settings_launcher_background_liquid_glass_managed)
+                            else stringResource(R.string.settings_launcher_background_opacity_summary),
                             valueRange = AllSettings.launcherBackgroundOpacity.floatRange,
                             suffix = "%",
-                            enabled = backgroundViewModel.isValid,
+                            enabled = backgroundViewModel.isValid && !liquidGlassOn,
                             fineTuningControl = true
                         )
 
@@ -289,10 +292,11 @@ fun LauncherSettingsScreen(
                             position = CardPosition.Bottom,
                             unit = AllSettings.backgroundBlur,
                             title = stringResource(R.string.settings_title_blur),
-                            summary = stringResource(R.string.settings_launcher_background_blur_summary),
+                            summary = if (liquidGlassOn) stringResource(R.string.settings_launcher_background_liquid_glass_managed)
+                            else stringResource(R.string.settings_launcher_background_blur_summary),
                             valueRange = AllSettings.backgroundBlur.floatRange,
                             suffix = "Dp",
-                            enabled = backgroundViewModel.isValid,
+                            enabled = backgroundViewModel.isValid && !liquidGlassOn,
                             fineTuningControl = true,
                             appendContent = {
                                 val unit = AllSettings.backgroundBlurType
@@ -310,7 +314,7 @@ fun LauncherSettingsScreen(
                                     onClick = {
                                         unit.save(state.switch())
                                     },
-                                    enabled = backgroundViewModel.isValid,
+                                    enabled = backgroundViewModel.isValid && !liquidGlassOn,
                                 ) {
                                     Crossfade(
                                         targetState = state

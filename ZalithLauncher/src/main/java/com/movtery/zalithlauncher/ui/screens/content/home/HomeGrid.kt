@@ -18,6 +18,7 @@
 
 package com.movtery.zalithlauncher.ui.screens.content.home
 
+import com.movtery.zalithlauncher.ui.components.effectiveBackgroundBlur
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -233,7 +234,7 @@ fun HomeGrid(
                 contentColor = onCardColor(),
                 cardBackground = { base ->
                     base.backgroundGlass(
-                        blur = AllSettings.backgroundBlur.state,
+                        blur = effectiveBackgroundBlur(),
                         color = cardColor(),
                         enabled = true
                     )

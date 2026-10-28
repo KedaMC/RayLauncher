@@ -18,6 +18,7 @@
 
 package com.movtery.zalithlauncher.ui.screens.content.download.assets.favorites
 
+import com.movtery.zalithlauncher.ui.components.effectiveBackgroundBlur
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -363,7 +364,7 @@ private fun FavoritesContent(
                     }
                     .offset { IntOffset(x = 0, y = topAppBarState.heightOffset.roundToInt()) }
             ) {
-                val blur = AllSettings.backgroundBlur.state
+                val blur = effectiveBackgroundBlur()
                 val barColor = cardColor()
                 BaseFilterLayout(
                     modifier = Modifier.padding(all = 12.dp),

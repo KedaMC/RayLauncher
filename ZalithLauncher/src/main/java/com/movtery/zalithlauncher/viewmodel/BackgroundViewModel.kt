@@ -18,6 +18,10 @@
 
 package com.movtery.zalithlauncher.viewmodel
 
+import com.movtery.zalithlauncher.ui.components.effectiveBackgroundBlur
+import com.movtery.zalithlauncher.ui.components.effectiveBackgroundBlurNow
+import com.movtery.zalithlauncher.ui.components.effectiveBackgroundOpacity
+import com.movtery.zalithlauncher.ui.components.effectiveBackgroundOpacityNow
 import android.content.Context
 import android.net.Uri
 import android.os.Build
@@ -145,9 +149,9 @@ class BackgroundViewModel: ViewModel() {
         viewModelScope.launch {
             snapshotFlow {
                 BlurConfig(
-                    blur = AllSettings.backgroundBlur.state,
+                    blur = effectiveBackgroundBlurNow(),
                     blurType = AllSettings.backgroundBlurType.state,
-                    opacity = AllSettings.launcherBackgroundOpacity.state,
+                    opacity = effectiveBackgroundOpacityNow(),
                     valid = isValid,
                     isImage = isImage,
                     generation = refreshTrigger
@@ -224,5 +228,5 @@ fun <E> influencedByBackground(
 
 @Composable
 fun backgroundVisible(): Boolean {
-    return LocalBackgroundViewModel.current?.isValid == true && AllSettings.launcherBackgroundOpacity.state < 100
+    return LocalBackgroundViewModel.current?.isValid == true && effectiveBackgroundOpacity() < 100
 }

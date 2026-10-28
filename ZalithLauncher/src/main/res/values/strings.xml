@@ -1132,6 +1132,7 @@
     <string name="settings_launcher_background_opacity_summary">Adjust the opacity of background elements for better visuals and to avoid conflicts with the background</string>
     <string name="settings_launcher_background_video_volume_title">Background Video Volume</string>
     <string name="settings_launcher_background_video_volume_summary">When the background is a video, you can adjust the volume using this option.</string>
+    <string name="settings_launcher_background_liquid_glass_managed">Managed automatically while Liquid Glass is on (your saved value is kept)</string>
     <string name="settings_launcher_background_blur_summary">Adjust the background blur effect. This option consumes significant performance.</string>
     <string name="settings_launcher_festivals_effects_title">Festival Easter Eggs</string>
     <string name="settings_launcher_festivals_effects_summary">Display persistent easter egg effects during specific time periods</string>
