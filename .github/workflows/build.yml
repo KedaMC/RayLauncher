@@ -3,22 +3,14 @@ name: Build APK
 on:
   push:
     branches:
-      - feature/liquid-glass
+      - fix/add-account-crash
   workflow_dispatch:
-    inputs:
-      variant:
-        description: Build variant
-        required: true
-        type: choice
-        options:
-          - Release
-          - Debug
-        default: Release
   workflow_call:
     inputs:
-      variant:
-        required: true
+      ref:
+        required: false
         type: string
+        default: ""
     secrets:
       KEY_PASSWORD:
         required: false
@@ -39,15 +31,17 @@ on:
 
 jobs:
   build:
-    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        arch: ["arm64"]
+        include:
+          - arch: arm64
+            abi: arm64-v8a
+          - arch: arm
+            abi: armeabi-v7a
       fail-fast: false
 
     env:
-      BUILD_VARIANT: ${{ inputs.variant || 'Release' }}
       KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
       STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
       OAUTH_CLIENT_ID: ${{ secrets.OAUTH_CLIENT_ID }}
@@ -61,6 +55,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
+          ref: ${{ inputs.ref || github.ref }}
           submodules: recursive
 
       - name: Set up JDK 21
@@ -78,61 +73,43 @@ jobs:
         if: env.RAY_KEYSTORE_BASE64 != ''
         run: echo "$RAY_KEYSTORE_BASE64" | base64 -d > ZalithLauncher/ray_release.jks
 
-      - name: Build APK for arm64-v8a
+      - name: Build APK for ${{ matrix.abi }}
         run: |
           chmod +x gradlew
-          ./gradlew ZalithLauncher:assemble${{ env.BUILD_VARIANT }} -Darch=arm64
+          ./gradlew ZalithLauncher:assembleRelease -Darch=${{ matrix.arch }}
 
-      - name: Rename APK with branch and build date
+      - name: Rename APK (Ray-<branch>-<commit>-<date>-<abi>.apk)
         shell: bash
+        env:
+          ABI: ${{ matrix.abi }}
         run: |
           set -euo pipefail
-          VARIANT="${BUILD_VARIANT:-${{ inputs.variant || 'Release' }}}"
-          if [[ "$VARIANT" == "Release" ]]; then
-            APK_DIR="ZalithLauncher/build/outputs/apk/release"
-          else
-            APK_DIR="ZalithLauncher/build/outputs/apk/debug"
-          fi
-
-          mapfile -t APKS < <(find "$APK_DIR" -maxdepth 1 -type f -name '*.apk' ! -name 'Ray-*.apk' | sort)
+          APK_DIR="ZalithLauncher/build/outputs/apk/release"
+          RAW_BRANCH="$GITHUB_REF_NAME"
+          BRANCH_NAME="${RAW_BRANCH//\//-}"
+          BRANCH_NAME="$(echo "$BRANCH_NAME" | sed -E 's/[^A-Za-z0-9._-]//g')"
+          COMMIT_SHORT="${GITHUB_SHA:0:7}"
+          BUILD_DATE="$(date -u +%Y%m%d)"
+          ARTIFACT_NAME="Ray-${BRANCH_NAME}-${COMMIT_SHORT}-${BUILD_DATE}-${ABI}"
+          mapfile -t APKS < <(find "$APK_DIR" -maxdepth 1 -type f -name '*.apk' | sort)
           if [[ "${#APKS[@]}" -ne 1 ]]; then
             echo "Expected exactly one APK in $APK_DIR, found ${#APKS[@]}."
             exit 1
           fi
-
-          RAW_BRANCH="${GITHUB_REF_NAME##*/}"
-          if [[ "$GITHUB_REF_NAME" == "ray-launcher" ]]; then
-            BRANCH_NAME="launcher"
-          else
-            BRANCH_NAME="${RAW_BRANCH//-/}"
-          fi
-          COMMIT_SHORT="${GITHUB_SHA:0:7}"
-          BUILD_DATE="$(date -u +%Y%m%d)"
-          ARTIFACT_NAME="Ray-${BRANCH_NAME}-${COMMIT_SHORT}-${BUILD_DATE}"
           APK_NAME="${ARTIFACT_NAME}.apk"
           mv "${APKS[0]}" "$APK_DIR/$APK_NAME"
           echo "APK_NAME=$APK_NAME" >> "$GITHUB_ENV"
           echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> "$GITHUB_ENV"
 
-      - name: Upload Release APK for arm64-v8a
-        if: env.BUILD_VARIANT == 'Release'
+      - name: Upload Release APK for ${{ matrix.abi }}
         uses: actions/upload-artifact@v7
         with:
           name: ${{ env.ARTIFACT_NAME }}
-          path: ZalithLauncher/build/outputs/apk/release/Ray-*.apk
+          path: ZalithLauncher/build/outputs/apk/release/${{ env.APK_NAME }}
 
-      - name: Upload Release Mapping for arm64-v8a
-        if: env.BUILD_VARIANT == 'Release'
+      - name: Upload Release Mapping for ${{ matrix.abi }}
         continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
-          name: mapping (arm64)
+          name: mapping (${{ matrix.arch }})
           path: ZalithLauncher/build/outputs/mapping/release/mapping.txt
-
-      - name: Upload Debug APK for arm64-v8a
-        if: env.BUILD_VARIANT == 'Debug'
-        continue-on-error: true
-        uses: actions/upload-artifact@v7
-        with:
-          name: ${{ env.ARTIFACT_NAME }}
-          path: ZalithLauncher/build/outputs/apk/debug/Ray-*.apk
