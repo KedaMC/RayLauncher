@@ -5,25 +5,8 @@ on:
     branches:
       - feature/liquid-glass
   workflow_dispatch:
-    inputs:
-      variant:
-        description: Build variant
-        required: true
-        type: choice
-        options:
-          - Release
-          - Debug
-        default: Release
-      ref:
-        description: Branch, tag or SHA to build (empty = the branch this workflow runs on)
-        required: false
-        type: string
-        default: feature/liquid-glass
   workflow_call:
     inputs:
-      variant:
-        required: true
-        type: string
       ref:
         required: false
         type: string
@@ -48,7 +31,6 @@ on:
 
 jobs:
   build:
-    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -60,7 +42,6 @@ jobs:
       fail-fast: false
 
     env:
-      BUILD_VARIANT: ${{ inputs.variant || 'Release' }}
       KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
       STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
       OAUTH_CLIENT_ID: ${{ secrets.OAUTH_CLIENT_ID }}
@@ -95,64 +76,40 @@ jobs:
       - name: Build APK for ${{ matrix.abi }}
         run: |
           chmod +x gradlew
-          ./gradlew ZalithLauncher:assemble${{ env.BUILD_VARIANT }} -Darch=${{ matrix.arch }}
+          ./gradlew ZalithLauncher:assembleRelease -Darch=${{ matrix.arch }}
 
-      - name: Rename APK (RayLauncher-<upstream>-<patch>-<abi>.apk)
+      - name: Rename APK (Ray-<branch>-<commit>-<date>-<abi>.apk)
         shell: bash
         env:
           ABI: ${{ matrix.abi }}
         run: |
           set -euo pipefail
-          VARIANT="${BUILD_VARIANT:-Release}"
-          if [[ "$VARIANT" == "Release" ]]; then
-            APK_DIR="ZalithLauncher/build/outputs/apk/release"
-            SUFFIX=""
-          else
-            APK_DIR="ZalithLauncher/build/outputs/apk/debug"
-            SUFFIX="-debug"
-          fi
-
-          # launcher_version_name format: "<upstream version> Ray <ray patch>", e.g. "2.7.2 Ray Alpha5"
-          RAW_VERSION="$(grep -E '^launcher_version_name=' ZalithLauncher/gradle.properties | head -n1 | cut -d= -f2- | tr -d '\r')"
-          if [[ ! "$RAW_VERSION" =~ ^([0-9][0-9A-Za-z._]*)[[:space:]]+Ray[[:space:]]+(.+)$ ]]; then
-            echo "launcher_version_name must look like '<upstream> Ray <patch>', got: '$RAW_VERSION'"
-            exit 1
-          fi
-          UPSTREAM="${BASH_REMATCH[1]}"
-          PATCH="$(echo "${BASH_REMATCH[2]}" | sed -E 's/[[:space:]]+/-/g; s/[^A-Za-z0-9._-]//g')"
-
-          mapfile -t APKS < <(find "$APK_DIR" -maxdepth 1 -type f -name '*.apk' ! -name 'RayLauncher-*.apk' | sort)
+          APK_DIR="ZalithLauncher/build/outputs/apk/release"
+          RAW_BRANCH="$GITHUB_REF_NAME"
+          BRANCH_NAME="${RAW_BRANCH//\//-}"
+          BRANCH_NAME="$(echo "$BRANCH_NAME" | sed -E 's/[^A-Za-z0-9._-]//g')"
+          COMMIT_SHORT="${GITHUB_SHA:0:7}"
+          BUILD_DATE="$(date -u +%Y%m%d)"
+          ARTIFACT_NAME="Ray-${BRANCH_NAME}-${COMMIT_SHORT}-${BUILD_DATE}-${ABI}"
+          mapfile -t APKS < <(find "$APK_DIR" -maxdepth 1 -type f -name '*.apk' | sort)
           if [[ "${#APKS[@]}" -ne 1 ]]; then
             echo "Expected exactly one APK in $APK_DIR, found ${#APKS[@]}."
             exit 1
           fi
-
-          ARTIFACT_NAME="RayLauncher-${UPSTREAM}-${PATCH}-${ABI}${SUFFIX}"
           APK_NAME="${ARTIFACT_NAME}.apk"
           mv "${APKS[0]}" "$APK_DIR/$APK_NAME"
           echo "APK_NAME=$APK_NAME" >> "$GITHUB_ENV"
           echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> "$GITHUB_ENV"
 
       - name: Upload Release APK for ${{ matrix.abi }}
-        if: env.BUILD_VARIANT == 'Release'
         uses: actions/upload-artifact@v7
         with:
           name: ${{ env.ARTIFACT_NAME }}
-          path: ZalithLauncher/build/outputs/apk/release/RayLauncher-*.apk
+          path: ZalithLauncher/build/outputs/apk/release/${{ env.APK_NAME }}
 
-      # Keep the "mapping (<arch>)" naming: release_ci.yml parses it.
       - name: Upload Release Mapping for ${{ matrix.abi }}
-        if: env.BUILD_VARIANT == 'Release'
         continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
           name: mapping (${{ matrix.arch }})
           path: ZalithLauncher/build/outputs/mapping/release/mapping.txt
-
-      - name: Upload Debug APK for ${{ matrix.abi }}
-        if: env.BUILD_VARIANT == 'Debug'
-        continue-on-error: true
-        uses: actions/upload-artifact@v7
-        with:
-          name: ${{ env.ARTIFACT_NAME }}
-          path: ZalithLauncher/build/outputs/apk/debug/RayLauncher-*.apk
