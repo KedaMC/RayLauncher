@@ -78,7 +78,7 @@ jobs:
           chmod +x gradlew
           ./gradlew ZalithLauncher:assembleRelease -Darch=${{ matrix.arch }}
 
-      - name: Rename APK (Ray-<branch>-<commit>-<date>-<abi>.apk)
+      - name: Rename APK (RayLauncher-<upstream>-<patch>-<abi>.apk)
         shell: bash
         env:
           ABI: ${{ matrix.abi }}
