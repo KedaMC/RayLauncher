@@ -280,9 +280,9 @@ private fun CardSlot(
                 .fillMaxSize()
                 .then(if (state.isSessionCard(card.id)) Modifier.graphicsLayer { alpha = GhostAlpha } else Modifier),
             shape = card.type.shape ?: MaterialTheme.shapes.extraLarge,
-            containerColor = containerColor,
+            containerColor = if (card.type.transparent) Color.Transparent else containerColor,
             contentColor = contentColor,
-            cardBackground = cardBackground,
+            cardBackground = if (card.type.transparent) null else cardBackground,
             selected = adjusting
         ) {
             CompositionLocalProvider(LocalLayoutDirection provides contentDirection) {

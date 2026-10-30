@@ -19,9 +19,10 @@
 package com.movtery.zalithlauncher.ui.screens.content.settings
 
 import android.os.Build
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
-import com.movtery.zalithlauncher.ui.components.OverlayManager
+import com.movtery.zalithlauncher.ui.screens.content.home.overlay.OverlayCardManager
 import com.movtery.zalithlauncher.setting.enums.GlassTier
 import com.movtery.zalithlauncher.ui.components.launcherGlassOn
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -771,9 +772,7 @@ private fun OverlaySettings(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-    val kind = OverlayManager.kind
-    val hasOverlay = kind != OverlayManager.Kind.NONE
+    val cards by OverlayCardManager.cards.collectAsStateWithLifecycle()
 
     val importErrorText = stringResource(R.string.error_import_image)
     val gifUnsupportedText = stringResource(R.string.settings_launcher_overlay_gif_unsupported)
@@ -791,10 +790,9 @@ private fun OverlaySettings(
                     dispatcher = Dispatchers.IO,
                     task = { task ->
                         task.updateMessage(androidText(importingText))
-                        OverlayManager.import(context, result[0], gifUnsupportedText)
+                        OverlayCardManager.addFromUri(context, result[0], gifUnsupportedText)
                     },
                     onError = { th ->
-                        OverlayManager.remove()
                         submitError(
                             ErrorViewModel.ThrowableMessage(
                                 title = androidText(importErrorText),
@@ -808,68 +806,21 @@ private fun OverlaySettings(
     }
 
     SettingsCardColumn(modifier = modifier) {
-        SwitchSettingsCard(
+        SettingsCard(
             modifier = Modifier.fillMaxWidth(),
             position = CardPosition.Top,
-            unit = AllSettings.launcherOverlayEnabled,
-            title = stringResource(R.string.settings_launcher_overlay_title),
-            summary = stringResource(R.string.settings_launcher_overlay_summary)
-        )
-
-        SettingsCard(
-            modifier = Modifier.fillMaxWidth(),
-            position = CardPosition.Middle,
             title = stringResource(R.string.settings_launcher_overlay_import),
-            summary = when (kind) {
-                OverlayManager.Kind.IMAGE -> stringResource(R.string.settings_launcher_overlay_current_image)
-                OverlayManager.Kind.VIDEO -> stringResource(R.string.settings_launcher_overlay_current_video)
-                OverlayManager.Kind.NONE -> stringResource(R.string.settings_launcher_overlay_import_summary)
-            },
+            summary = stringResource(R.string.settings_launcher_overlay_import_summary),
             onClick = { filePicker.launch(Unit) }
-        )
-
-        IntSliderSettingsCard(
-            modifier = Modifier.fillMaxWidth(),
-            position = CardPosition.Middle,
-            unit = AllSettings.launcherOverlayScale,
-            title = stringResource(R.string.settings_launcher_overlay_scale),
-            valueRange = AllSettings.launcherOverlayScale.floatRange,
-            suffix = "%",
-            enabled = hasOverlay,
-            fineTuningControl = true
-        )
-
-        IntSliderSettingsCard(
-            modifier = Modifier.fillMaxWidth(),
-            position = CardPosition.Middle,
-            unit = AllSettings.launcherOverlayOpacity,
-            title = stringResource(R.string.settings_launcher_overlay_opacity),
-            valueRange = AllSettings.launcherOverlayOpacity.floatRange,
-            suffix = "%",
-            enabled = hasOverlay,
-            fineTuningControl = true
-        )
-
-        SettingsCard(
-            modifier = Modifier.fillMaxWidth(),
-            position = CardPosition.Middle,
-            title = stringResource(R.string.settings_launcher_overlay_reset_position),
-            enabled = hasOverlay,
-            onClick = {
-                AllSettings.launcherOverlayX.save(AllSettings.launcherOverlayX.defaultValue)
-                AllSettings.launcherOverlayY.save(AllSettings.launcherOverlayY.defaultValue)
-            }
         )
 
         SettingsCard(
             modifier = Modifier.fillMaxWidth(),
             position = CardPosition.Bottom,
-            title = stringResource(R.string.settings_launcher_overlay_remove),
-            summary = if (hasOverlay) null else stringResource(R.string.settings_launcher_overlay_none),
-            enabled = hasOverlay,
-            onClick = {
-                coroutineScope.launch { OverlayManager.remove() }
-            }
+            title = stringResource(R.string.settings_launcher_overlay_remove_all),
+            summary = if (cards.isEmpty()) stringResource(R.string.settings_launcher_overlay_none) else null,
+            enabled = cards.isNotEmpty(),
+            onClick = { OverlayCardManager.removeAll() }
         )
     }
 }

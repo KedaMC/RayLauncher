@@ -381,23 +381,6 @@ object AllSettings : SettingsRegistry() {
     val gameGlassTier = enumSetting("gameGlassTier", GlassTier.FULL)
 
     /**
-     * Decorative overlay (image or video imported from the gallery) drawn above the launcher UI.
-     */
-    val launcherOverlayEnabled = boolSetting("launcherOverlayEnabled", true)
-
-    /** Overlay horizontal position in per-mille of the free space: 0 = left edge, 1000 = right edge. */
-    val launcherOverlayX = intSetting("launcherOverlayPosX", 1000, 0..1000)
-
-    /** Overlay vertical position in per-mille of the free space: 0 = top edge, 1000 = bottom edge. */
-    val launcherOverlayY = intSetting("launcherOverlayPosY", 1000, 0..1000)
-
-    /** Overlay width in percent of the screen width. */
-    val launcherOverlayScale = intSetting("launcherOverlayScale", 30, 5..100)
-
-    /** Overlay opacity in percent. */
-    val launcherOverlayOpacity = intSetting("launcherOverlayOpacity", 100, 10..100)
-
-    /**
      * 动画倍速
      */
     val launcherAnimateSpeed = intSetting("launcherAnimateSpeed", 5, 0..10)
