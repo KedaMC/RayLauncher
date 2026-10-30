@@ -18,6 +18,9 @@
 
 package com.movtery.zalithlauncher.ui.screens.content.elements
 
+import com.movtery.zalithlauncher.ui.components.effectiveBackgroundOpacity
+import com.movtery.zalithlauncher.ui.components.effectiveBackgroundBlurNow
+import com.movtery.zalithlauncher.ui.components.effectiveBackgroundOpacityNow
 import android.graphics.Matrix
 import android.os.Build
 import androidx.compose.runtime.Composable
@@ -76,7 +79,7 @@ fun Modifier.backgroundGlass(
     if (AllSettings.backgroundBlurType.state == BackgroundBlur.Background) return this
     if (!enabled) return this
     val background = LocalBackgroundViewModel.current?.takeIf { it.isValid } ?: return this
-    if (blur <= 0 || AllSettings.launcherBackgroundOpacity.state >= 100) return this
+    if (blur <= 0 || effectiveBackgroundOpacity() >= 100) return this
     return this then GlassElement(blur, color, background)
 }
 
@@ -153,7 +156,7 @@ private class GlassNode(
     }
 
     private fun DrawScope.drawGlass() {
-        if (blur <= 0 || AllSettings.launcherBackgroundOpacity.state >= 100) return
+        if (blur <= 0 || effectiveBackgroundOpacityNow() >= 100) return
         val bounds = store.backgroundBounds
         if (bounds.isEmpty || !hasOrigin) return
 
@@ -312,8 +315,8 @@ private class BackgroundCaptureNode(
             captureJob = coroutineScope.launch {
                 snapshotFlow {
                     store.isValid && store.captureLayer != null &&
-                        AllSettings.backgroundBlur.state > 0 &&
-                        AllSettings.launcherBackgroundOpacity.state < 100
+                        effectiveBackgroundBlurNow() > 0 &&
+                        effectiveBackgroundOpacityNow() < 100
                 }.collectLatest { active ->
                     if (!active) return@collectLatest
                     while (currentCoroutineContext().isActive) {

@@ -18,6 +18,10 @@
 
 package com.movtery.zalithlauncher.viewmodel
 
+import com.movtery.zalithlauncher.ui.components.effectiveBackgroundBlur
+import com.movtery.zalithlauncher.ui.components.effectiveBackgroundBlurNow
+import com.movtery.zalithlauncher.ui.components.effectiveBackgroundOpacity
+import com.movtery.zalithlauncher.ui.components.effectiveBackgroundOpacityNow
 import android.content.Context
 import android.net.Uri
 import android.os.Build
@@ -83,7 +87,28 @@ class BackgroundViewModel: ViewModel() {
     var backgroundBounds by mutableStateOf(Rect.Zero)
         private set
 
-    private val glassBlur = BackgroundGlassBlur(backgroundFile)
+    /**
+     * Wallpaper of the selected version's theme, or null to use the global [backgroundFile]
+     */
+    private var profileFile by mutableStateOf<File?>(null)
+
+    /**
+     * The file that is actually shown as background: the profile wallpaper when there is one
+     */
+    val activeFile: File get() = profileFile ?: backgroundFile
+
+    private val glassBlur = BackgroundGlassBlur { activeFile }
+
+    /**
+     * Switches to the wallpaper of the selected version's theme (null = global background)
+     */
+    fun setProfileWallpaper(file: File?) {
+        if (profileFile == file) return
+        profileFile = file
+        viewModelScope.launch(Dispatchers.Main) {
+            updateState()
+        }
+    }
 
     /**
      * Android 12+ 上由背景捕获节点维护的共享预模糊 GPU 层
@@ -122,17 +147,18 @@ class BackgroundViewModel: ViewModel() {
     }
 
     private suspend fun updateState() {
+        val file = activeFile
         val (isImage0, isVideo0) = withContext(Dispatchers.IO) {
-            val isImage = backgroundFile.isImageFile()
+            val isImage = file.isImageFile()
             //如果文件是图片，则不检查是否为视频
-            val isVideo = if (!isImage) backgroundFile.isVideoFile() else false
+            val isVideo = if (!isImage) file.isVideoFile() else false
             isImage to isVideo
         }
         //更新状态
         withContext(Dispatchers.Main) {
             isImage = isImage0
             isVideo = isVideo0
-            isValid = backgroundFile.exists() && (isImage0 || isVideo0)
+            isValid = file.exists() && (isImage0 || isVideo0)
             refreshTrigger = !refreshTrigger
         }
     }
@@ -145,9 +171,9 @@ class BackgroundViewModel: ViewModel() {
         viewModelScope.launch {
             snapshotFlow {
                 BlurConfig(
-                    blur = AllSettings.backgroundBlur.state,
+                    blur = effectiveBackgroundBlurNow(),
                     blurType = AllSettings.backgroundBlurType.state,
-                    opacity = AllSettings.launcherBackgroundOpacity.state,
+                    opacity = effectiveBackgroundOpacityNow(),
                     valid = isValid,
                     isImage = isImage,
                     generation = refreshTrigger
@@ -224,5 +250,5 @@ fun <E> influencedByBackground(
 
 @Composable
 fun backgroundVisible(): Boolean {
-    return LocalBackgroundViewModel.current?.isValid == true && AllSettings.launcherBackgroundOpacity.state < 100
+    return LocalBackgroundViewModel.current?.isValid == true && effectiveBackgroundOpacity() < 100
 }

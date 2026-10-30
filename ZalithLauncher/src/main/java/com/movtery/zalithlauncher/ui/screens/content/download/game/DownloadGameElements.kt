@@ -18,6 +18,7 @@
 
 package com.movtery.zalithlauncher.ui.screens.content.download.game
 
+import com.movtery.zalithlauncher.ui.components.effectiveBackgroundBlur
 import androidx.compose.animation.AnimatedVisibility
 import com.movtery.zalithlauncher.ui.components.glassRadioColors
 import androidx.compose.animation.core.animateFloatAsState
@@ -200,7 +201,7 @@ fun <E> AddonListLayout(
     influencedByBackground: Boolean = true,
     color: Color = cardColor(influencedByBackground),
     contentColor: Color = onCardColor(),
-    blur: Int = AllSettings.backgroundBlur.state,
+    blur: Int = effectiveBackgroundBlur(),
 ) {
     var selectedItem by remember { mutableStateOf<E?>(null) }
 
@@ -467,7 +468,7 @@ fun AddonWarningItem(
         enabled = true
     ),
     contentColor: Color = MaterialTheme.colorScheme.onErrorContainer,
-    blur: Int = AllSettings.backgroundBlur.state,
+    blur: Int = effectiveBackgroundBlur(),
 ) {
     Surface(
         modifier = modifier,

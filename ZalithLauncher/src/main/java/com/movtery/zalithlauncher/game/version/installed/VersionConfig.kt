@@ -25,6 +25,7 @@ import com.google.gson.annotations.SerializedName
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.game.support.touch_controller.VibrationHandler
 import com.movtery.zalithlauncher.setting.AllSettings
+import com.movtery.zalithlauncher.setting.enums.GlassTier
 import com.movtery.zalithlauncher.utils.GSON
 import com.movtery.zalithlauncher.utils.logging.Logger
 import com.movtery.zalithlauncher.utils.string.getStringNotNull
@@ -104,6 +105,13 @@ class VersionConfig(
     @SerializedName("touchVibrateKind")
     var touchVibrateKind: VibrationHandler.VibrateKind? = null
 
+    /** Per-profile theme: accent color (ARGB), null follows the launcher theme */
+    @SerializedName("themeAccent")
+    var themeAccent: Int? = null
+    /** Per-profile theme: glass tier, null follows the launcher setting */
+    @SerializedName("themeGlassTier")
+    var themeGlassTier: GlassTier? = null
+
     constructor(
         filePath: File,
         isolationType: SettingState = SettingState.FOLLOW_GLOBAL,
@@ -122,6 +130,8 @@ class VersionConfig(
         ramAllocation: Int = -1,
         touchVibrateDuration: Int = 100,
         touchVibrateKind: VibrationHandler.VibrateKind? = null,
+        themeAccent: Int? = null,
+        themeGlassTier: GlassTier? = null,
     ) : this(filePath) {
         this.isolationType = isolationType
         this.skipGameIntegrityCheck = skipGameIntegrityCheck
@@ -139,6 +149,8 @@ class VersionConfig(
         this.ramAllocation = ramAllocation
         this.touchVibrateDuration = touchVibrateDuration
         this.touchVibrateKind = touchVibrateKind
+        this.themeAccent = themeAccent
+        this.themeGlassTier = themeGlassTier
     }
 
     fun copy(): VersionConfig = VersionConfig(
@@ -159,6 +171,8 @@ class VersionConfig(
         ramAllocation,
         touchVibrateDuration,
         touchVibrateKind,
+        themeAccent,
+        themeGlassTier,
     )
 
     fun save() {
@@ -219,6 +233,9 @@ class VersionConfig(
             writeInt(ramAllocation)
             writeInt(touchVibrateDuration)
             writeInt(touchVibrateKind?.ordinal ?: -1)
+            writeInt(if (themeAccent != null) 1 else 0)
+            writeInt(themeAccent ?: 0)
+            writeInt(themeGlassTier?.ordinal ?: -1)
         }
     }
 
@@ -241,6 +258,9 @@ class VersionConfig(
             val ramAllocation = parcel.readInt()
             val touchVibrateDuration = parcel.readInt()
             val touchVibrateKind = VibrationHandler.VibrateKind.entries.getOrNull(parcel.readInt())
+            val hasThemeAccent = parcel.readInt() == 1
+            val themeAccentValue = parcel.readInt()
+            val themeGlassTier = GlassTier.entries.getOrNull(parcel.readInt())
 
             return VersionConfig(
                 versionPath,
@@ -260,6 +280,8 @@ class VersionConfig(
                 ramAllocation,
                 touchVibrateDuration,
                 touchVibrateKind,
+                if (hasThemeAccent) themeAccentValue else null,
+                themeGlassTier,
             )
         }
 

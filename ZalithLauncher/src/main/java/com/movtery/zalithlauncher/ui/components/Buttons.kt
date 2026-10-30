@@ -279,7 +279,8 @@ fun BaseIconTextButton(
         LiquidGlassSurface(
             backdrop = glassBackdrop,
             shape = shape,
-            modifier = modifier,
+            // 玻璃按钮自带背景与边框，相邻按钮会紧贴在一起，这里留出水平间距
+            modifier = modifier.padding(horizontal = 4.dp),
             containerColor = MaterialTheme.colorScheme.surface,
             contentColor = LocalContentColor.current,
             blurRadius = 8.dp

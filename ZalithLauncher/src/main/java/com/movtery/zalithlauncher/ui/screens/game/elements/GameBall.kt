@@ -78,7 +78,8 @@ fun DraggableGameBall(
         onPositionChanged = onPositionChanged,
         onSavePos = onSavePos,
         onClick = onClick,
-        alpha = alpha
+        alpha = alpha,
+        glass = true
     ) {
         GameBallContent(
             gameFps = gameFps,

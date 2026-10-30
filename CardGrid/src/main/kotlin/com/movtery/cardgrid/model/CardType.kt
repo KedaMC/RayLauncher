@@ -30,6 +30,7 @@ typealias CardContent = @Composable CardState.(cardId: String) -> Unit
  * @param defaultSpan 默认跨度
  * @param limits 尺寸边界限制
  * @param shape 形状
+ * @param transparent 为 true 时卡片没有容器底色与背景装饰，内容直接绘制在网格上（仍按 [shape] 裁剪）
  * @param content 该卡片的 UI 内容
  */
 class CardType(
@@ -37,5 +38,6 @@ class CardType(
     val defaultSpan: IntOffset,
     val limits: CardLimits = CardLimits.DEFAULT,
     val shape: Shape? = null,
+    val transparent: Boolean = false,
     val content: CardContent
 )

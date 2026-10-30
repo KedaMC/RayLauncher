@@ -203,6 +203,11 @@ androidComponents {
                 }
 
                 (output.getFilter(ABI)?.identifier ?: "all").let { abi ->
+                    //Ray: same package for every ABI; the 32-bit build gets a lower versionCode so it can
+                    //never replace an arm64-v8a install on a 64-bit device. arm64-v8a/all keep the base code.
+                    if (abi == "armeabi-v7a") {
+                        output.versionCode.set(launcherVersionCode - 1)
+                    }
                     val baseName = "$launcherName-${if (variant.buildType == "release") launcherVersionName else "Debug-$launcherVersionName"}"
                     output.outputFileName = if (abi == "all") "$baseName.apk" else "$baseName-$abi.apk"
                 }

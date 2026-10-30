@@ -34,6 +34,7 @@ import com.movtery.zalithlauncher.setting.enums.BackgroundBlur
 import com.movtery.zalithlauncher.setting.enums.DarkMode
 import com.movtery.zalithlauncher.setting.enums.FpsDisplayMode
 import com.movtery.zalithlauncher.setting.enums.GamepadInputMode
+import com.movtery.zalithlauncher.setting.enums.GlassTier
 import com.movtery.zalithlauncher.setting.enums.GestureActionType
 import com.movtery.zalithlauncher.setting.enums.MirrorSourceType
 import com.movtery.zalithlauncher.setting.enums.MouseControlMode
@@ -360,6 +361,24 @@ object AllSettings : SettingsRegistry() {
      * Liquid Glass 效果（PrismalAGSL），默认关闭
      */
     val launcherLiquidGlass = boolSetting("launcherLiquidGlass", false)
+
+    /**
+     * In-game Liquid Glass switch (game menu panels). Only takes effect while [launcherLiquidGlass]
+     * is on, and never changes how the launcher UI itself looks.
+     */
+    val gameLiquidGlass = boolSetting("gameLiquidGlass", true)
+
+    /**
+     * Glass quality used while [launcherLiquidGlass] is on in the launcher (LITE or FULL).
+     * A per-profile theme can override it.
+     */
+    val launcherGlassTier = enumSetting("launcherGlassTier", GlassTier.FULL)
+
+    /**
+     * Glass quality of the in-game menu panels (LITE or FULL), independent from the launcher tier.
+     * Glass in game is switched on/off with [gameLiquidGlass].
+     */
+    val gameGlassTier = enumSetting("gameGlassTier", GlassTier.FULL)
 
     /**
      * 动画倍速

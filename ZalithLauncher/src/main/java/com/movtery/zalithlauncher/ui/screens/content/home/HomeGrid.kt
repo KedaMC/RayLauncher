@@ -18,6 +18,7 @@
 
 package com.movtery.zalithlauncher.ui.screens.content.home
 
+import com.movtery.zalithlauncher.ui.components.effectiveBackgroundBlur
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -72,11 +73,13 @@ import com.movtery.cardgrid.ui.CardGridAutoScroll
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.ui.screens.content.elements.backgroundGlass
+import com.movtery.zalithlauncher.ui.screens.content.home.overlay.OverlayCardManager
 import com.movtery.zalithlauncher.ui.screens.content.home.server.ServerCardManager
 import com.movtery.zalithlauncher.ui.screens.content.home.server.ServerCardSettingsHost
 import com.movtery.zalithlauncher.ui.screens.content.home.version.VersionCardManager
 import com.movtery.zalithlauncher.ui.theme.cardColor
 import com.movtery.zalithlauncher.ui.theme.onCardColor
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 
 /** 主页网格的卡片操作 */
@@ -137,6 +140,7 @@ fun HomeGrid(
         state.onCardRemoved = { cardId ->
             VersionCardManager.removeCard(cardId)
             ServerCardManager.removeCard(cardId)
+            OverlayCardManager.removeCard(cardId)
         }
     }
 
@@ -149,6 +153,24 @@ fun HomeGrid(
                 }
             }
         }
+    }
+
+    // 装饰叠加卡片：记录存在而网格缺卡时补齐，网格中的叠加卡片没有记录时移除。
+    // 网格卡片数量变化（如播种完成）时也重新对齐一次
+    LaunchedEffect(Unit) {
+        snapshotFlow { state.cards.size }
+            .combine(OverlayCardManager.cards) { _, records -> records }
+            .collect { records ->
+                records.forEach { record ->
+                    if (state.cards.none { it.id == record.cardId }) {
+                        state.addCard(HomeCards.overlayCardType(), record.cardId)
+                    }
+                }
+                state.cards
+                    .filter { it.type.typeId == HomeCards.OVERLAY_CARD_TYPE_ID }
+                    .filter { card -> records.none { it.cardId == card.id } }
+                    .forEach { state.removeCard(it.id) }
+            }
     }
 
     // 与服务器卡片记录保持同步：记录存在而网格缺卡时补齐
@@ -233,7 +255,7 @@ fun HomeGrid(
                 contentColor = onCardColor(),
                 cardBackground = { base ->
                     base.backgroundGlass(
-                        blur = AllSettings.backgroundBlur.state,
+                        blur = effectiveBackgroundBlur(),
                         color = cardColor(),
                         enabled = true
                     )

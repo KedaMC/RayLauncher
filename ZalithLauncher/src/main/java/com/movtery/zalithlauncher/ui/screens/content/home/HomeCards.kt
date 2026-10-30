@@ -38,6 +38,7 @@ import com.movtery.zalithlauncher.BuildConfig
 import com.movtery.zalithlauncher.BuildKeys
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.ui.components.BackgroundCard
+import com.movtery.zalithlauncher.ui.screens.content.home.overlay.OverlayCardContent
 import com.movtery.zalithlauncher.ui.screens.content.home.server.ServerCardContent
 import com.movtery.zalithlauncher.ui.screens.content.home.version.VersionCardContent
 
@@ -58,6 +59,9 @@ object HomeCards {
 
     /** 服务器卡片的类型 id */
     const val SERVER_CARD_TYPE_ID = "server_card"
+
+    /** 装饰叠加（图片/视频）卡片的类型 id */
+    const val OVERLAY_CARD_TYPE_ID = "overlay_card"
 
     private val versionCardType = CardType(
         typeId = VERSION_CARD_TYPE_ID,
@@ -86,14 +90,32 @@ object HomeCards {
         }
     )
 
+    /** 装饰叠加卡片类型：无底色，图片/视频直接铺满卡片 */
+    private val overlayCardType = CardType(
+        typeId = OVERLAY_CARD_TYPE_ID,
+        defaultSpan = IntOffset(10, 8),
+        limits = CardLimits(
+            minWidth = 4,
+            minHeight = 4,
+            maxHeight = 40
+        ),
+        transparent = true,
+        content = { cardId ->
+            OverlayCardContent(cardId)
+        }
+    )
+
     /** 版本卡片类型 */
     fun versionCardType(): CardType = versionCardType
 
     /** 服务器卡片类型 */
     fun serverCardType(): CardType = serverCardType
 
+    /** 装饰叠加卡片类型 */
+    fun overlayCardType(): CardType = overlayCardType
+
     /** 用户卡片类型注册表 */
-    val userCardTypes: List<CardType> = listOf(versionCardType, serverCardType)
+    val userCardTypes: List<CardType> = listOf(versionCardType, serverCardType, overlayCardType)
 
     /** 系统卡片（不可变更） */
     fun systemCards(): List<SystemCard> = buildList {

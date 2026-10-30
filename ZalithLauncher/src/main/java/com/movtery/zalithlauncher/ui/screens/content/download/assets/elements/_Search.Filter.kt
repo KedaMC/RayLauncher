@@ -18,6 +18,7 @@
 
 package com.movtery.zalithlauncher.ui.screens.content.download.assets.elements
 
+import com.movtery.zalithlauncher.ui.components.effectiveBackgroundBlur
 import androidx.compose.animation.AnimatedVisibility
 import com.movtery.zalithlauncher.ui.components.glassRadioColors
 import androidx.compose.animation.animateContentSize
@@ -425,7 +426,7 @@ fun BaseFilterLayout(
     influencedByBackground: Boolean = true,
     color: Color = cardColor(influencedByBackground),
     contentColor: Color = onCardColor(),
-    blur: Int = AllSettings.backgroundBlur.state,
+    blur: Int = effectiveBackgroundBlur(),
     glassBlur: Dp = 10.dp,
     onClick: (() -> Unit)? = null,
     content: @Composable () -> Unit

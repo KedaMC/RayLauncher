@@ -18,6 +18,7 @@
 
 package com.movtery.zalithlauncher.ui.screens.content.versions
 
+import com.movtery.zalithlauncher.ui.components.effectiveBackgroundBlur
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
@@ -848,7 +849,7 @@ private fun ModifyTipItem(
     ) {
         Row(
             modifier = Modifier
-                .backgroundGlass(AllSettings.backgroundBlur.state, color)
+                .backgroundGlass(effectiveBackgroundBlur(), color)
                 .padding(horizontal = 16.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {

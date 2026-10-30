@@ -70,7 +70,7 @@ fun ScalingLabel(
     shape: Shape = MaterialTheme.shapes.extraLarge,
     color: Color = itemColor(influencedByBackground),
     contentColor: Color = onItemColor(),
-    blur: Int = AllSettings.backgroundBlur.state,
+    blur: Int = effectiveBackgroundBlur(),
 ) {
     val scale = remember { Animatable(initialValue = 0.95f) }
     LaunchedEffect(Unit) {

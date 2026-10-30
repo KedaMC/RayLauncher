@@ -18,6 +18,8 @@
 
 package com.movtery.zalithlauncher.ui.screens.content.elements
 
+import com.movtery.zalithlauncher.ui.components.effectiveBackgroundBlur
+import com.movtery.zalithlauncher.ui.components.effectiveBackgroundOpacity
 import android.app.Activity
 import android.net.Uri
 import android.os.Build
@@ -548,8 +550,8 @@ fun Background(
     modifier: Modifier = Modifier,
     allowVideo: Boolean = true
 ) {
-    val blur = AllSettings.backgroundBlur.state
-    val opacity = AllSettings.launcherBackgroundOpacity.state
+    val blur = effectiveBackgroundBlur()
+    val opacity = effectiveBackgroundOpacity()
     val backgroundMode = AllSettings.backgroundBlurType.state == BackgroundBlur.Background
     val backgroundBlurEnabled = backgroundMode && blur > 0 && opacity < 100
     val layerCapture = !backgroundMode && blur > 0 && opacity < 100 && viewModel.isValid
@@ -580,7 +582,7 @@ fun Background(
             when {
                 viewModel.isVideo && allowVideo -> {
                     VideoPlayer(
-                        videoUri = Uri.fromFile(viewModel.backgroundFile),
+                        videoUri = Uri.fromFile(viewModel.activeFile),
                         modifier = Modifier.fillMaxSize(),
                         refreshTrigger = viewModel.refreshTrigger,
                         volume = AllSettings.videoBackgroundVolume.state / 100f
@@ -598,7 +600,7 @@ fun Background(
                     } else {
                         BackgroundImage(
                             modifier = Modifier.fillMaxSize(),
-                            imageFile = viewModel.backgroundFile,
+                            imageFile = viewModel.activeFile,
                             refreshTrigger = viewModel.refreshTrigger
                         )
                     }

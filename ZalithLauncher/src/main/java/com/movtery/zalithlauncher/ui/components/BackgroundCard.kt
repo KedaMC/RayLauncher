@@ -53,9 +53,9 @@ fun BackgroundCard(
         contentColor = onCardColor()
     ),
     elevation: CardElevation = CardDefaults.cardElevation(),
-    blur: Int = AllSettings.backgroundBlur.state,
+    blur: Int = effectiveBackgroundBlur(),
     border: BorderStroke? = null,
-    liquidGlass: Boolean = AllSettings.launcherLiquidGlass.state,
+    liquidGlass: Boolean = liquidGlassEnabled(),
     content: @Composable ColumnScope.() -> Unit
 ) {
     val glassBackdrop = if (liquidGlass) liquidGlassBackdrop() else null
@@ -65,7 +65,7 @@ fun BackgroundCard(
             shape = shape,
             modifier = modifier,
             containerColor = colors.containerColor,
-            contentColor = if (AllSettings.launcherLiquidGlass.state) Color.White else colors.contentColor
+            contentColor = Color.White
         ) {
             Column(content = content)
         }
@@ -101,9 +101,9 @@ fun BackgroundCard(
         disabledContainerColor = cardColor(influencedByBackground)
     ),
     elevation: CardElevation = CardDefaults.cardElevation(),
-    blur: Int = AllSettings.backgroundBlur.state,
+    blur: Int = effectiveBackgroundBlur(),
     border: BorderStroke? = null,
-    liquidGlass: Boolean = AllSettings.launcherLiquidGlass.state,
+    liquidGlass: Boolean = liquidGlassEnabled(),
     onClick: () -> Unit,
     enabled: Boolean = true,
     content: @Composable @UiComposable ColumnScope.() -> Unit
@@ -115,7 +115,7 @@ fun BackgroundCard(
             shape = shape,
             modifier = modifier,
             containerColor = colors.containerColor,
-            contentColor = if (AllSettings.launcherLiquidGlass.state) Color.White else colors.contentColor,
+            contentColor = Color.White,
             onClick = if (enabled) onClick else null
         ) {
             Column(content = content)
@@ -153,7 +153,7 @@ fun CardTitleLayout(
         enabled = influencedByBackground
     ),
     contentColor: Color = onCardColor(),
-    blur: Int = AllSettings.backgroundBlur.state,
+    blur: Int = effectiveBackgroundBlur(),
     content: @Composable @UiComposable ColumnScope.() -> Unit
 ) {
     Column(
