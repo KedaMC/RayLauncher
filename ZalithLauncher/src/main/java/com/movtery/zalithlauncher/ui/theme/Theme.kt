@@ -693,7 +693,7 @@ fun ZalithLauncherTheme(
     if (!forceGlassLayer) {
         //Follow the selected version so its theme (accent, glass tier, wallpaper) is applied
         LaunchedEffect(Unit) {
-            VersionsManager.currentVersion.collect { ProfileTheme.setVersion(it) }
+            VersionsManager.currentVersion.collect { ProfileTheme.selectVersion(it) }
         }
         val profileWallpaper = remember(ProfileTheme.stamp) { ProfileTheme.wallpaperFile }
         LaunchedEffect(backgroundViewModel, profileWallpaper) {

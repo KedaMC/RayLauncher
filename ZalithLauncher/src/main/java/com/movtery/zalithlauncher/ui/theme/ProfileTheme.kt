@@ -44,7 +44,7 @@ object ProfileTheme {
     private var revision by mutableIntStateOf(0)
 
     /** Called with the currently selected version (null when there is none). */
-    fun setVersion(newVersion: Version?) {
+    fun selectVersion(newVersion: Version?) {
         version = newVersion
     }
 
