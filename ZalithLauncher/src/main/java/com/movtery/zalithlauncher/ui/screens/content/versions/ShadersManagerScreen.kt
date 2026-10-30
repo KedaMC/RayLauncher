@@ -529,6 +529,8 @@ private fun ShadersActionsHeader(
                         )
                         .widthIn(max = this@BoxWithConstraints.maxWidth / 2)
                         .horizontalScroll(scrollState),
+                    // Import and Download glass boxes used to touch; extra gap shifts Import left and trims the search box
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Spacer(modifier = Modifier.width(6.dp))
