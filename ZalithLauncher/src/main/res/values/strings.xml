@@ -1553,4 +1553,42 @@
     <!-- Next-step hint shown near a screen corner during the final guide step; tapping any blank area finishes the whole guide -->
     <string name="guide_tip_finish">Tap any blank area to finish the guide</string>
     <string name="launcher_unofficial_notice">Raylauncher (Unofficial Modified Version)</string>
+    <!-- Glass tier, per-profile theme and decoration overlay -->
+    <string name="glass_tier_lite">Lite</string>
+    <string name="glass_tier_full">Full</string>
+    <string name="settings_launcher_glass_tier_title">Glass quality</string>
+    <string name="settings_launcher_glass_tier_summary">Lite uses a lighter blur and a cheaper backdrop for dialogs. Pick it on weaker devices. Never changes by itself</string>
+    <string name="settings_game_glass_tier_title">In-game glass quality</string>
+    <string name="settings_game_glass_tier_summary">Quality of the glass in the game menu panels, separate from the launcher</string>
+    <string name="settings_launcher_overlay_title">Decoration overlay</string>
+    <string name="settings_launcher_overlay_summary">Show an image or video from your gallery above the launcher UI. It never blocks touches</string>
+    <string name="settings_launcher_overlay_import">Import overlay</string>
+    <string name="settings_launcher_overlay_import_summary">Pick a PNG/WebP/JPG image or a video. GIF is not supported</string>
+    <string name="settings_launcher_overlay_importing">Importing overlay file</string>
+    <string name="settings_launcher_overlay_remove">Remove overlay</string>
+    <string name="settings_launcher_overlay_current_image">Current overlay: image</string>
+    <string name="settings_launcher_overlay_current_video">Current overlay: video</string>
+    <string name="settings_launcher_overlay_none">No overlay imported</string>
+    <string name="settings_launcher_overlay_gif_unsupported">GIF is not supported. Pick a PNG/WebP/JPG image or a video</string>
+    <string name="settings_launcher_overlay_position_x">Horizontal position</string>
+    <string name="settings_launcher_overlay_position_y">Vertical position</string>
+    <string name="settings_launcher_overlay_scale">Size</string>
+    <string name="settings_launcher_overlay_opacity">Opacity</string>
+    <string name="versions_config_theme_title">Profile theme</string>
+    <string name="versions_config_theme_summary">Applied to the launcher while this version is selected</string>
+    <string name="versions_config_theme_accent_title">Accent color</string>
+    <string name="versions_config_theme_accent_summary">Tap to pick a color for this version. Follows the launcher color when not set</string>
+    <string name="versions_config_theme_glass_title">Glass quality</string>
+    <string name="versions_config_theme_glass_summary">Off, Lite or Full only for this version</string>
+    <string name="versions_config_theme_wallpaper_title">Wallpaper</string>
+    <string name="versions_config_theme_wallpaper_set">Pick an image or video for this version</string>
+    <string name="versions_config_theme_wallpaper_clear">Remove the wallpaper of this version</string>
+    <string name="versions_config_theme_export">Export theme</string>
+    <string name="versions_config_theme_export_summary">Save accent color, glass quality and wallpaper as one file</string>
+    <string name="versions_config_theme_import">Import theme</string>
+    <string name="versions_config_theme_import_summary">Load a theme file into this version</string>
+    <string name="versions_config_theme_reset">Reset theme</string>
+    <string name="versions_config_theme_exported">Theme exported</string>
+    <string name="versions_config_theme_imported">Theme imported</string>
+    <string name="versions_config_theme_error">Theme operation failed</string>
 </resources>

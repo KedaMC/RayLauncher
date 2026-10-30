@@ -63,6 +63,7 @@ import com.movtery.zalithlauncher.ui.buildAppendedText
 import com.movtery.zalithlauncher.ui.components.GlobalDialogHost
 import com.movtery.zalithlauncher.ui.components.GlobalDialogs
 import com.movtery.zalithlauncher.ui.components.SimpleAlertDialog
+import com.movtery.zalithlauncher.ui.components.LauncherOverlay
 import com.movtery.zalithlauncher.ui.components.glassPageCapture
 import com.movtery.zalithlauncher.ui.screens.NestedNavKey
 import com.movtery.zalithlauncher.ui.screens.NormalNavKey
@@ -328,6 +329,9 @@ class MainActivity : BaseAppCompatActivity() {
                             modifier = Modifier.fillMaxSize(),
                             festivals = festivals
                         )
+
+                        //Decoration overlay imported from the gallery (touches pass through)
+                        LauncherOverlay(modifier = Modifier.fillMaxSize())
                     }
 
                     //Message dialogs requested from non-Compose code (errors, permissions, links)

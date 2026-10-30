@@ -21,6 +21,8 @@ package com.movtery.zalithlauncher.ui.components
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import com.movtery.zalithlauncher.setting.AllSettings
+import com.movtery.zalithlauncher.setting.enums.GlassTier
+import com.movtery.zalithlauncher.ui.theme.ProfileTheme
 
 /**
  * Background opacity (element opacity) used while Liquid Glass is on.
@@ -30,10 +32,24 @@ import com.movtery.zalithlauncher.setting.AllSettings
 const val LIQUID_GLASS_BACKGROUND_OPACITY = 20
 
 /**
- * Whether the launcher-level Liquid Glass switch is on. For code that cannot call composables
+ * Effective glass tier of the launcher UI: the selected version's theme wins, otherwise the global
+ * switch decides ([GlassTier.OFF] when off, else the chosen tier). Reads snapshot state, so it works
+ * in composables, draw nodes and snapshotFlow alike.
+ */
+fun launcherGlassTier(): GlassTier {
+    ProfileTheme.glassTier?.let { return it }
+    if (!AllSettings.launcherLiquidGlass.state) return GlassTier.OFF
+    return AllSettings.launcherGlassTier.state.takeIf { it != GlassTier.OFF } ?: GlassTier.FULL
+}
+
+/** Whether Liquid Glass is on for the launcher UI (see [launcherGlassTier]). */
+fun launcherGlassOn(): Boolean = launcherGlassTier() != GlassTier.OFF
+
+/**
+ * Whether Liquid Glass is on for the launcher UI. For code that cannot call composables
  * (draw nodes, snapshotFlow, view models). Only used inside the launcher background pipeline.
  */
-fun liquidGlassOverridesBackground(): Boolean = AllSettings.launcherLiquidGlass.state
+fun liquidGlassOverridesBackground(): Boolean = launcherGlassOn()
 
 /**
  * Effective background blur. Liquid Glass does its own blur/refraction, so the global

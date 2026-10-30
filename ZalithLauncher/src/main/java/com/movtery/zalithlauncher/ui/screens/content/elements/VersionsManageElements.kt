@@ -19,6 +19,7 @@
 package com.movtery.zalithlauncher.ui.screens.content.elements
 
 import com.movtery.zalithlauncher.ui.components.effectiveBackgroundBlur
+import com.movtery.zalithlauncher.ui.components.launcherGlassOn
 import androidx.annotation.DrawableRes
 import com.movtery.zalithlauncher.ui.components.glassRadioColors
 import androidx.compose.animation.Crossfade
@@ -182,12 +183,12 @@ fun GamePathItemLayout(
         NavigationDrawerItem(
         modifier = Modifier.fillMaxWidth(),
         colors = NavigationDrawerItemDefaults.colors(
-            selectedContainerColor = if (glassBackdrop != null) Color.Transparent else if (AllSettings.launcherLiquidGlass.state) Color.White.copy(alpha = 0.16f) else MaterialTheme.colorScheme.secondaryContainer,
+            selectedContainerColor = if (glassBackdrop != null) Color.Transparent else if (launcherGlassOn()) Color.White.copy(alpha = 0.16f) else MaterialTheme.colorScheme.secondaryContainer,
             unselectedContainerColor = Color.Transparent,
-            selectedTextColor = if (AllSettings.launcherLiquidGlass.state) Color.White else MaterialTheme.colorScheme.onSecondaryContainer,
-            unselectedTextColor = if (AllSettings.launcherLiquidGlass.state) Color.White else MaterialTheme.colorScheme.onSurface,
-            selectedIconColor = if (AllSettings.launcherLiquidGlass.state) Color.White else MaterialTheme.colorScheme.onSecondaryContainer,
-            unselectedIconColor = if (AllSettings.launcherLiquidGlass.state) Color.White else MaterialTheme.colorScheme.onSurface
+            selectedTextColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.onSecondaryContainer,
+            unselectedTextColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.onSurface,
+            selectedIconColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.onSecondaryContainer,
+            unselectedIconColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.onSurface
         ),
         label = {
             Column(

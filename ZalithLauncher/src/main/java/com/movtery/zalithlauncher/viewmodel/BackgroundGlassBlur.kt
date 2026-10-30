@@ -48,7 +48,9 @@ private const val TAG = "BackgroundGlassBlur"
 /**
  * 背景玻璃模糊管线
  */
-class BackgroundGlassBlur(private val backgroundFile: File) {
+class BackgroundGlassBlur(private val fileProvider: () -> File) {
+    private val backgroundFile: File get() = fileProvider()
+
     var glassLayer by mutableStateOf<GraphicsLayer?>(null)
         private set
 

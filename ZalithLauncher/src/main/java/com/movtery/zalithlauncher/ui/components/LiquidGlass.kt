@@ -107,6 +107,7 @@ import com.styropyr0.prismal.PrismalBackdrop
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.movtery.zalithlauncher.setting.AllSettings
+import com.movtery.zalithlauncher.setting.enums.GlassTier
 import com.movtery.zalithlauncher.viewmodel.LocalBackgroundViewModel
 import com.styropyr0.prismal.PrismalGlassSurface
 import com.styropyr0.prismal.sources.PrismalGlassLayer
@@ -134,8 +135,22 @@ val LocalLiquidGlassInGame = staticCompositionLocalOf { false }
 @Composable
 @ReadOnlyComposable
 fun liquidGlassEnabled(): Boolean =
-    AllSettings.launcherLiquidGlass.state &&
-            (!LocalLiquidGlassInGame.current || AllSettings.gameLiquidGlass.state)
+    if (LocalLiquidGlassInGame.current) {
+        AllSettings.launcherLiquidGlass.state && AllSettings.gameLiquidGlass.state
+    } else {
+        launcherGlassOn()
+    }
+
+/**
+ * Quality of the glass being composed: the in-game tier in game, otherwise the launcher tier
+ * (selected version's theme first). Never [GlassTier.OFF]; use [liquidGlassEnabled] for on/off.
+ */
+@Composable
+@ReadOnlyComposable
+fun liquidGlassTier(): GlassTier {
+    val tier = if (LocalLiquidGlassInGame.current) AllSettings.gameGlassTier.state else launcherGlassTier()
+    return if (tier == GlassTier.OFF) GlassTier.FULL else tier
+}
 
 /**
  * What glass surfaces actually sample. Normally this is [LocalLiquidGlassBackdrop] itself; inside a
@@ -287,6 +302,13 @@ private const val SNAPSHOT_DOWNSCALE = 4
 /** At most ~30 snapshots per second. */
 private const val SNAPSHOT_MIN_INTERVAL_NANOS = 30_000_000L
 
+/** Lite tier: 1/8 size and at most ~15 snapshots per second. */
+private const val LITE_SNAPSHOT_DOWNSCALE = 8
+private const val LITE_SNAPSHOT_MIN_INTERVAL_NANOS = 66_000_000L
+
+/** Lite tier uses half of the requested blur radius. */
+private const val LITE_BLUR_FACTOR = 0.5f
+
 private tailrec fun Context.findHostWindow(): Window? = when (this) {
     is Activity -> window
     is ContextWrapper -> baseContext.findHostWindow()
@@ -327,7 +349,12 @@ private suspend fun copyWindowInto(window: Window, target: Bitmap, handler: Hand
  * Keeps [sampler] supplied with fresh copies of the launcher [window] until cancelled.
  * Two bitmaps alternate so the one being drawn is never the one being written.
  */
-private suspend fun captureWindowSnapshots(window: Window, sampler: DialogWindowBackdrop) {
+private suspend fun captureWindowSnapshots(
+    window: Window,
+    sampler: DialogWindowBackdrop,
+    downscale: Int,
+    minIntervalNanos: Long
+) {
     val handler = Handler(Looper.getMainLooper())
     val location = IntArray(2)
     var shown: Bitmap? = null
@@ -336,14 +363,14 @@ private suspend fun captureWindowSnapshots(window: Window, sampler: DialogWindow
     var lastFailure = PixelCopy.SUCCESS
     while (true) {
         val now = withFrameNanos { it }
-        if (now - lastStartNanos < SNAPSHOT_MIN_INTERVAL_NANOS) continue
+        if (now - lastStartNanos < minIntervalNanos) continue
         val decor = window.peekDecorView() ?: continue
         val width = decor.width
         val height = decor.height
         if (width <= 0 || height <= 0 || !decor.isAttachedToWindow) continue
 
-        val bitmapWidth = (width / SNAPSHOT_DOWNSCALE).coerceAtLeast(1)
-        val bitmapHeight = (height / SNAPSHOT_DOWNSCALE).coerceAtLeast(1)
+        val bitmapWidth = (width / downscale).coerceAtLeast(1)
+        val bitmapHeight = (height / downscale).coerceAtLeast(1)
         val target = spare?.takeIf { it.width == bitmapWidth && it.height == bitmapHeight }
             ?: Bitmap.createBitmap(bitmapWidth, bitmapHeight, Bitmap.Config.ARGB_8888)
 
@@ -389,9 +416,15 @@ private fun rememberGlassWindowSampler(): DialogWindowBackdrop? {
     val background = LocalBackgroundViewModel.current
     val videoBehindDialog = background != null && background.isValid && background.isVideo
     val hostWindow = LocalContext.current.findHostWindow()
+    val lite = liquidGlassTier() == GlassTier.LITE
     if (videoBehindDialog && hostWindow != null) {
-        LaunchedEffect(sampler, hostWindow) {
-            captureWindowSnapshots(hostWindow, sampler)
+        LaunchedEffect(sampler, hostWindow, lite) {
+            captureWindowSnapshots(
+                window = hostWindow,
+                sampler = sampler,
+                downscale = if (lite) LITE_SNAPSHOT_DOWNSCALE else SNAPSHOT_DOWNSCALE,
+                minIntervalNanos = if (lite) LITE_SNAPSHOT_MIN_INTERVAL_NANOS else SNAPSHOT_MIN_INTERVAL_NANOS
+            )
         }
     }
     return sampler
@@ -484,7 +517,7 @@ fun LiquidGlassSurface(
         modifier = modifier,
         shape = { shape },
         onClick = stableOnClick,
-        blurRadius = blurRadius,
+        blurRadius = if (liquidGlassTier() == GlassTier.LITE) blurRadius * LITE_BLUR_FACTOR else blurRadius,
         surfaceColor = if (containerColor.isSpecified) {
             containerColor.copy(alpha = GLASS_SURFACE_ALPHA)
         } else {

@@ -34,6 +34,7 @@ import com.movtery.zalithlauncher.setting.enums.BackgroundBlur
 import com.movtery.zalithlauncher.setting.enums.DarkMode
 import com.movtery.zalithlauncher.setting.enums.FpsDisplayMode
 import com.movtery.zalithlauncher.setting.enums.GamepadInputMode
+import com.movtery.zalithlauncher.setting.enums.GlassTier
 import com.movtery.zalithlauncher.setting.enums.GestureActionType
 import com.movtery.zalithlauncher.setting.enums.MirrorSourceType
 import com.movtery.zalithlauncher.setting.enums.MouseControlMode
@@ -366,6 +367,35 @@ object AllSettings : SettingsRegistry() {
      * is on, and never changes how the launcher UI itself looks.
      */
     val gameLiquidGlass = boolSetting("gameLiquidGlass", true)
+
+    /**
+     * Glass quality used while [launcherLiquidGlass] is on in the launcher (LITE or FULL).
+     * A per-profile theme can override it.
+     */
+    val launcherGlassTier = enumSetting("launcherGlassTier", GlassTier.FULL)
+
+    /**
+     * Glass quality of the in-game menu panels (LITE or FULL), independent from the launcher tier.
+     * Glass in game is switched on/off with [gameLiquidGlass].
+     */
+    val gameGlassTier = enumSetting("gameGlassTier", GlassTier.FULL)
+
+    /**
+     * Decorative overlay (image or video imported from the gallery) drawn above the launcher UI.
+     */
+    val launcherOverlayEnabled = boolSetting("launcherOverlayEnabled", true)
+
+    /** Overlay horizontal position, 0 = left edge, 100 = right edge. */
+    val launcherOverlayX = intSetting("launcherOverlayX", 100, 0..100)
+
+    /** Overlay vertical position, 0 = top edge, 100 = bottom edge. */
+    val launcherOverlayY = intSetting("launcherOverlayY", 100, 0..100)
+
+    /** Overlay width in percent of the screen width. */
+    val launcherOverlayScale = intSetting("launcherOverlayScale", 30, 5..100)
+
+    /** Overlay opacity in percent. */
+    val launcherOverlayOpacity = intSetting("launcherOverlayOpacity", 100, 10..100)
 
     /**
      * 动画倍速

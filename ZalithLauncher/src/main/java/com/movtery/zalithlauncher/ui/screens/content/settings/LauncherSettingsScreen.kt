@@ -19,6 +19,11 @@
 package com.movtery.zalithlauncher.ui.screens.content.settings
 
 import android.os.Build
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
+import com.movtery.zalithlauncher.ui.components.OverlayManager
+import com.movtery.zalithlauncher.setting.enums.GlassTier
+import com.movtery.zalithlauncher.ui.components.launcherGlassOn
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -233,10 +238,31 @@ fun LauncherSettingsScreen(
 
                     SwitchSettingsCard(
                         modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Bottom,
+                        position = CardPosition.Middle,
                         unit = AllSettings.launcherLiquidGlass,
                         title = stringResource(R.string.settings_launcher_liquid_glass_title),
                         summary = stringResource(R.string.settings_launcher_liquid_glass_summary)
+                    )
+
+                    ListSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Middle,
+                        unit = AllSettings.launcherGlassTier,
+                        items = glassTierChoices,
+                        title = stringResource(R.string.settings_launcher_glass_tier_title),
+                        summary = stringResource(R.string.settings_launcher_glass_tier_summary),
+                        getItemText = { stringResource(it.textRes) },
+                        enabled = AllSettings.launcherLiquidGlass.state
+                    )
+
+                    ListSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Bottom,
+                        unit = AllSettings.gameGlassTier,
+                        items = glassTierChoices,
+                        title = stringResource(R.string.settings_game_glass_tier_title),
+                        summary = stringResource(R.string.settings_game_glass_tier_summary),
+                        getItemText = { stringResource(it.textRes) }
                     )
                 }
             }
@@ -244,7 +270,7 @@ fun LauncherSettingsScreen(
             //启动器背景设置板块
             LocalBackgroundViewModel.current?.let { backgroundViewModel ->
                 //Liquid Glass manages background opacity/blur itself, see effectiveBackgroundOpacity()
-                val liquidGlassOn = AllSettings.launcherLiquidGlass.state
+                val liquidGlassOn = launcherGlassOn()
                 AnimatedItem(scope) { yOffset ->
                     SettingsCardColumn(
                         modifier = Modifier
@@ -333,6 +359,16 @@ fun LauncherSettingsScreen(
                         )
                     }
                 }
+            }
+
+            //Decoration overlay (image/video from the gallery above the UI)
+            AnimatedItem(scope) { yOffset ->
+                OverlaySettings(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .offset { IntOffset(x = 0, y = yOffset.roundToPx()) },
+                    submitError = submitError
+                )
             }
 
             //动画设置板块
@@ -721,6 +757,129 @@ private fun CustomThemeDialog(
                     colorController.setColor(newColor.copy(alpha = 1f))
                     editHex = false
                 }
+            }
+        )
+    }
+}
+
+/** Glass tiers the user can choose in settings; [GlassTier.OFF] is the Liquid Glass switch itself. */
+private val glassTierChoices = listOf(GlassTier.LITE, GlassTier.FULL)
+
+@Composable
+private fun OverlaySettings(
+    submitError: (ErrorViewModel.ThrowableMessage) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val kind = OverlayManager.kind
+    val hasOverlay = kind != OverlayManager.Kind.NONE
+
+    val importErrorText = stringResource(R.string.error_import_image)
+    val gifUnsupportedText = stringResource(R.string.settings_launcher_overlay_gif_unsupported)
+    val importingText = stringResource(R.string.settings_launcher_overlay_importing)
+    val filePicker = rememberLauncherForActivityResult(
+        contract = MediaPickerContract(
+            allowImages = true,
+            allowVideos = true,
+            allowMultiple = false
+        )
+    ) { result ->
+        if (result != null) {
+            TaskSystem.submitTask(
+                Task.runTask(
+                    dispatcher = Dispatchers.IO,
+                    task = { task ->
+                        task.updateMessage(androidText(importingText))
+                        OverlayManager.import(context, result[0], gifUnsupportedText)
+                    },
+                    onError = { th ->
+                        OverlayManager.remove()
+                        submitError(
+                            ErrorViewModel.ThrowableMessage(
+                                title = androidText(importErrorText),
+                                message = androidText(th.getMessageOrToString())
+                            )
+                        )
+                    }
+                )
+            )
+        }
+    }
+
+    SettingsCardColumn(modifier = modifier) {
+        SwitchSettingsCard(
+            modifier = Modifier.fillMaxWidth(),
+            position = CardPosition.Top,
+            unit = AllSettings.launcherOverlayEnabled,
+            title = stringResource(R.string.settings_launcher_overlay_title),
+            summary = stringResource(R.string.settings_launcher_overlay_summary)
+        )
+
+        SettingsCard(
+            modifier = Modifier.fillMaxWidth(),
+            position = CardPosition.Middle,
+            title = stringResource(R.string.settings_launcher_overlay_import),
+            summary = when (kind) {
+                OverlayManager.Kind.IMAGE -> stringResource(R.string.settings_launcher_overlay_current_image)
+                OverlayManager.Kind.VIDEO -> stringResource(R.string.settings_launcher_overlay_current_video)
+                OverlayManager.Kind.NONE -> stringResource(R.string.settings_launcher_overlay_import_summary)
+            },
+            onClick = { filePicker.launch(Unit) }
+        )
+
+        IntSliderSettingsCard(
+            modifier = Modifier.fillMaxWidth(),
+            position = CardPosition.Middle,
+            unit = AllSettings.launcherOverlayX,
+            title = stringResource(R.string.settings_launcher_overlay_position_x),
+            valueRange = AllSettings.launcherOverlayX.floatRange,
+            suffix = "%",
+            enabled = hasOverlay,
+            fineTuningControl = true
+        )
+
+        IntSliderSettingsCard(
+            modifier = Modifier.fillMaxWidth(),
+            position = CardPosition.Middle,
+            unit = AllSettings.launcherOverlayY,
+            title = stringResource(R.string.settings_launcher_overlay_position_y),
+            valueRange = AllSettings.launcherOverlayY.floatRange,
+            suffix = "%",
+            enabled = hasOverlay,
+            fineTuningControl = true
+        )
+
+        IntSliderSettingsCard(
+            modifier = Modifier.fillMaxWidth(),
+            position = CardPosition.Middle,
+            unit = AllSettings.launcherOverlayScale,
+            title = stringResource(R.string.settings_launcher_overlay_scale),
+            valueRange = AllSettings.launcherOverlayScale.floatRange,
+            suffix = "%",
+            enabled = hasOverlay,
+            fineTuningControl = true
+        )
+
+        IntSliderSettingsCard(
+            modifier = Modifier.fillMaxWidth(),
+            position = CardPosition.Middle,
+            unit = AllSettings.launcherOverlayOpacity,
+            title = stringResource(R.string.settings_launcher_overlay_opacity),
+            valueRange = AllSettings.launcherOverlayOpacity.floatRange,
+            suffix = "%",
+            enabled = hasOverlay,
+            fineTuningControl = true
+        )
+
+        SettingsCard(
+            modifier = Modifier.fillMaxWidth(),
+            position = CardPosition.Bottom,
+            title = stringResource(R.string.settings_launcher_overlay_remove),
+            summary = if (hasOverlay) null else stringResource(R.string.settings_launcher_overlay_none),
+            enabled = hasOverlay,
+            onClick = {
+                coroutineScope.launch { OverlayManager.remove() }
             }
         )
     }

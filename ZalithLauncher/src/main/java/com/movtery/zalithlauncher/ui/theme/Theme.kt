@@ -42,7 +42,9 @@ import com.movtery.zalithlauncher.setting.enums.isLauncherInDarkTheme
 import com.movtery.zalithlauncher.ui.theme.components.activeMaskView
 import com.movtery.zalithlauncher.utils.festival.Festival
 import com.movtery.zalithlauncher.utils.festival.LocalFestivals
+import com.movtery.zalithlauncher.game.version.installed.VersionsManager
 import com.movtery.zalithlauncher.ui.components.GlassPageCapture
+import com.movtery.zalithlauncher.ui.components.launcherGlassOn
 import com.movtery.zalithlauncher.ui.components.LocalLiquidGlassBackdrop
 import com.movtery.zalithlauncher.ui.components.LocalLiquidGlassInGame
 import com.movtery.zalithlauncher.ui.components.LocalLiquidGlassPage
@@ -622,8 +624,16 @@ fun ZalithLauncherTheme(
 
     val context = LocalContext.current
 
-    val targetColorScheme = remember(darkTheme, dynamicColor, colorTheme, customColor, customPaletteStyle) {
+    //Per-profile theme: the selected version may bring its own accent color (launcher only, not in game)
+    val profileAccent = if (forceGlassLayer) null else ProfileTheme.accent
+
+    val targetColorScheme = remember(darkTheme, dynamicColor, colorTheme, customColor, customPaletteStyle, profileAccent) {
         when {
+            profileAccent != null -> {
+                val accent = Color(profileAccent)
+                if (darkTheme) customDark(accent, customPaletteStyle) else customLight(accent, customPaletteStyle)
+            }
+
             dynamicColor && colorTheme == ColorThemeType.DYNAMIC && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
                 if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
             }
@@ -680,11 +690,25 @@ fun ZalithLauncherTheme(
         }
     }
 
+    if (!forceGlassLayer) {
+        //Follow the selected version so its theme (accent, glass tier, wallpaper) is applied
+        LaunchedEffect(Unit) {
+            VersionsManager.currentVersion.collect { ProfileTheme.setVersion(it) }
+        }
+        val profileWallpaper = remember(ProfileTheme.stamp) { ProfileTheme.wallpaperFile }
+        LaunchedEffect(backgroundViewModel, profileWallpaper) {
+            backgroundViewModel?.setProfileWallpaper(profileWallpaper)
+        }
+    }
+
     //Liquid Glass：仅在设置开启且存在有效背景媒体时提供可采样的背景图层
     val glassLayer = rememberPrismalGlassLayer()
     //forceGlassLayer is only set by the game activity: there the in-game switch applies as well
-    val glassEnabled = AllSettings.launcherLiquidGlass.state &&
-            (!forceGlassLayer || AllSettings.gameLiquidGlass.state)
+    val glassEnabled = if (forceGlassLayer) {
+        AllSettings.launcherLiquidGlass.state && AllSettings.gameLiquidGlass.state
+    } else {
+        launcherGlassOn()
+    }
     val activeGlassLayer = glassLayer.takeIf {
         glassEnabled && (backgroundViewModel?.isValid == true || forceGlassLayer)
     }

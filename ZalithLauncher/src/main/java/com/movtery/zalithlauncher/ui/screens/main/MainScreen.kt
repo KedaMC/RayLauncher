@@ -19,6 +19,7 @@
 package com.movtery.zalithlauncher.ui.screens.main
 
 import com.movtery.zalithlauncher.ui.components.effectiveBackgroundOpacity
+import com.movtery.zalithlauncher.ui.components.launcherGlassOn
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -272,7 +273,7 @@ private fun <E: TitledNavKey> TopBar(
     val inSettingsScreen = mainScreenKey is NestedNavKey.Settings
 
     CompositionLocalProvider(
-        LocalContentColor provides if (AllSettings.launcherLiquidGlass.state) Color.White else contentColor
+        LocalContentColor provides if (launcherGlassOn()) Color.White else contentColor
     ) {
         ConstraintLayout(modifier = modifier) {
             val (backCenter, title, endButtons, headerGlass) = createRefs()
