@@ -385,11 +385,11 @@ object AllSettings : SettingsRegistry() {
      */
     val launcherOverlayEnabled = boolSetting("launcherOverlayEnabled", true)
 
-    /** Overlay horizontal position, 0 = left edge, 100 = right edge. */
-    val launcherOverlayX = intSetting("launcherOverlayX", 100, 0..100)
+    /** Overlay horizontal position in per-mille of the free space: 0 = left edge, 1000 = right edge. */
+    val launcherOverlayX = intSetting("launcherOverlayPosX", 1000, 0..1000)
 
-    /** Overlay vertical position, 0 = top edge, 100 = bottom edge. */
-    val launcherOverlayY = intSetting("launcherOverlayY", 100, 0..100)
+    /** Overlay vertical position in per-mille of the free space: 0 = top edge, 1000 = bottom edge. */
+    val launcherOverlayY = intSetting("launcherOverlayPosY", 1000, 0..1000)
 
     /** Overlay width in percent of the screen width. */
     val launcherOverlayScale = intSetting("launcherOverlayScale", 30, 5..100)

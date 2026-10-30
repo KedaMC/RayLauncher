@@ -831,28 +831,6 @@ private fun OverlaySettings(
         IntSliderSettingsCard(
             modifier = Modifier.fillMaxWidth(),
             position = CardPosition.Middle,
-            unit = AllSettings.launcherOverlayX,
-            title = stringResource(R.string.settings_launcher_overlay_position_x),
-            valueRange = AllSettings.launcherOverlayX.floatRange,
-            suffix = "%",
-            enabled = hasOverlay,
-            fineTuningControl = true
-        )
-
-        IntSliderSettingsCard(
-            modifier = Modifier.fillMaxWidth(),
-            position = CardPosition.Middle,
-            unit = AllSettings.launcherOverlayY,
-            title = stringResource(R.string.settings_launcher_overlay_position_y),
-            valueRange = AllSettings.launcherOverlayY.floatRange,
-            suffix = "%",
-            enabled = hasOverlay,
-            fineTuningControl = true
-        )
-
-        IntSliderSettingsCard(
-            modifier = Modifier.fillMaxWidth(),
-            position = CardPosition.Middle,
             unit = AllSettings.launcherOverlayScale,
             title = stringResource(R.string.settings_launcher_overlay_scale),
             valueRange = AllSettings.launcherOverlayScale.floatRange,
@@ -870,6 +848,17 @@ private fun OverlaySettings(
             suffix = "%",
             enabled = hasOverlay,
             fineTuningControl = true
+        )
+
+        SettingsCard(
+            modifier = Modifier.fillMaxWidth(),
+            position = CardPosition.Middle,
+            title = stringResource(R.string.settings_launcher_overlay_reset_position),
+            enabled = hasOverlay,
+            onClick = {
+                AllSettings.launcherOverlayX.save(AllSettings.launcherOverlayX.defaultValue)
+                AllSettings.launcherOverlayY.save(AllSettings.launcherOverlayY.defaultValue)
+            }
         )
 
         SettingsCard(

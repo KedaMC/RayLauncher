@@ -23,6 +23,8 @@ import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import androidx.annotation.OptIn
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
@@ -38,13 +40,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.PointerEvent
 import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.node.PointerInputModifierNode
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.media3.common.util.UnstableApi
@@ -153,8 +158,8 @@ object OverlayManager {
 
 /**
  * Decoration drawn above the launcher UI: an image or a muted, looping video from the gallery.
- * Position, size and opacity come from the launcher settings. It never takes touches: they pass
- * through to the UI underneath.
+ * Size and opacity come from the launcher settings; the position is set by long-pressing the overlay
+ * and dragging it. Normal touches are never swallowed: they pass through to the UI underneath.
  */
 @OptIn(UnstableApi::class)
 @Composable
@@ -169,8 +174,11 @@ fun LauncherOverlay(modifier: Modifier = Modifier) {
     val density = LocalDensity.current
     val generation = OverlayManager.generation
     val aspectRatio = OverlayManager.aspectRatio.coerceIn(0.05f, 20f)
-    val positionX = AllSettings.launcherOverlayX.state / 100f
-    val positionY = AllSettings.launcherOverlayY.state / 100f
+    val positionX = AllSettings.launcherOverlayX.state / 1000f
+    val positionY = AllSettings.launcherOverlayY.state / 1000f
+    val haptics = LocalHapticFeedback.current
+    var dragging by remember { mutableStateOf(false) }
+    val pickUpScale by animateFloatAsState(targetValue = if (dragging) 1.06f else 1f, label = "OverlayPickUp")
     val scale = AllSettings.launcherOverlayScale.state / 100f
     val opacity = AllSettings.launcherOverlayOpacity.state / 100f
 
@@ -195,8 +203,44 @@ fun LauncherOverlay(modifier: Modifier = Modifier) {
                     width = with(density) { overlayWidth.toDp() },
                     height = with(density) { overlayHeight.toDp() }
                 )
-                .graphicsLayer { alpha = opacity }
+                .graphicsLayer {
+                    alpha = opacity
+                    scaleX = pickUpScale
+                    scaleY = pickUpScale
+                }
                 .then(PassThroughPointerElement)
+                //Long-press then drag moves the overlay anywhere, like an icon on a home screen
+                .pointerInput(containerWidth, containerHeight, overlayWidth, overlayHeight) {
+                    val rangeX = containerWidth - overlayWidth
+                    val rangeY = containerHeight - overlayHeight
+                    var pixelX = 0f
+                    var pixelY = 0f
+                    detectDragGesturesAfterLongPress(
+                        onDragStart = {
+                            pixelX = rangeX * AllSettings.launcherOverlayX.state / 1000f
+                            pixelY = rangeY * AllSettings.launcherOverlayY.state / 1000f
+                            dragging = true
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        },
+                        onDrag = { change, amount ->
+                            change.consume()
+                            pixelX = (pixelX + amount.x).coerceIn(0f, rangeX.coerceAtLeast(0f))
+                            pixelY = (pixelY + amount.y).coerceIn(0f, rangeY.coerceAtLeast(0f))
+                            if (rangeX > 0f) AllSettings.launcherOverlayX.updateState((pixelX / rangeX * 1000f).roundToInt())
+                            if (rangeY > 0f) AllSettings.launcherOverlayY.updateState((pixelY / rangeY * 1000f).roundToInt())
+                        },
+                        onDragEnd = {
+                            dragging = false
+                            AllSettings.launcherOverlayX.save(AllSettings.launcherOverlayX.state)
+                            AllSettings.launcherOverlayY.save(AllSettings.launcherOverlayY.state)
+                        },
+                        onDragCancel = {
+                            dragging = false
+                            AllSettings.launcherOverlayX.save(AllSettings.launcherOverlayX.state)
+                            AllSettings.launcherOverlayY.save(AllSettings.launcherOverlayY.state)
+                        }
+                    )
+                }
         ) {
             when (kind) {
                 OverlayManager.Kind.IMAGE -> {
