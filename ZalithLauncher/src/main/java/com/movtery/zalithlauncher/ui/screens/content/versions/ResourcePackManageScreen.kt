@@ -544,10 +544,9 @@ private fun ResourcePackHeader(
                             length = 32.dp,
                             direction = EdgeDirection.Horizontal
                         )
-                        .widthIn(max = this@BoxWithConstraints.maxWidth / 2)
                         .horizontalScroll(scrollState),
                     // Import and Download glass boxes used to touch; extra gap shifts Import left and trims the search box
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(3.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     ContentCheckBox(
@@ -560,7 +559,7 @@ private fun ResourcePackHeader(
                         )
                     }
 
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(2.dp))
 
                     val taskBuilder = rememberMultipleUriImportTaskBuilder(
                         id = "ContentManager.ResourcePacks.Import",
