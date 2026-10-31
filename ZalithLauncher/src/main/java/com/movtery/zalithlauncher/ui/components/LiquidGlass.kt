@@ -470,6 +470,16 @@ fun GlassDialog(
 private const val GLASS_SURFACE_ALPHA = 0.3f
 
 /**
+ * Cheap stand-in for [LiquidGlassSurface]: the same tint at the same opacity, but no blur, refraction
+ * or backdrop sampling. Use it for glass that is mostly covered by other content or that belongs to a
+ * disabled control, where the full effect costs GPU time without being noticeable.
+ */
+internal fun Modifier.flatGlass(shape: Shape, containerColor: Color): Modifier =
+    this
+        .clip(shape)
+        .background(containerColor.copy(alpha = GLASS_SURFACE_ALPHA), shape)
+
+/**
  * 当前可用的 Liquid Glass 背景图层；为 null 表示应使用普通样式
  */
 @Composable

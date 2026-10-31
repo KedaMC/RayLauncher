@@ -184,7 +184,7 @@ fun SimpleTextSlider(
             .alpha(if (enabled) 1f else DisabledAlpha)
             .padding(start = 12.dp)
             .align(Alignment.CenterVertically)
-        if (backdrop != null) {
+        if (backdrop != null && enabled) {
             LiquidGlassSurface(
                 backdrop = backdrop,
                 shape = MaterialTheme.shapes.medium,
@@ -192,6 +192,11 @@ fun SimpleTextSlider(
                 containerColor = itemColor(),
                 contentColor = Color.White,
                 blurRadius = 8.dp
+            ) { valueContent() }
+        } else if (backdrop != null) {
+            //Disabled control (e.g. values managed by Liquid Glass): same look, no blur pass
+            Box(
+                modifier = valueModifier.flatGlass(MaterialTheme.shapes.medium, itemColor())
             ) { valueContent() }
         } else {
             Surface(
@@ -243,17 +248,15 @@ private fun GlassSliderTrack(
         contentAlignment = Alignment.Center
     ) {
         if (backdrop != null) {
-            LiquidGlassSurface(
-                backdrop = backdrop,
-                shape = CircleShape,
+            //Flat on purpose: the slider's own track is drawn over most of this capsule, so a blur pass
+            //per slider costs GPU time for almost no visible difference.
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(GlassSliderHeight)
-                    .then(press?.visual ?: Modifier),
-                containerColor = itemColor(),
-                contentColor = Color.White,
-                blurRadius = 8.dp
-            ) {}
+                    .then(press?.visual ?: Modifier)
+                    .flatGlass(CircleShape, itemColor())
+            )
         }
         content()
     }

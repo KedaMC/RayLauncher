@@ -35,8 +35,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -59,6 +61,7 @@ import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.nonInteractiveScrollbar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -93,7 +96,8 @@ import com.movtery.zalithlauncher.setting.enums.applyLanguage
 import com.movtery.zalithlauncher.setting.unit.floatRange
 import com.movtery.zalithlauncher.ui.androidText
 import com.movtery.zalithlauncher.ui.base.BaseScreen
-import com.movtery.zalithlauncher.ui.components.AnimatedColumn
+import com.movtery.zalithlauncher.ui.components.AnimatedLazyColumn
+import com.movtery.zalithlauncher.ui.components.lazyScrollWithBar
 import com.movtery.zalithlauncher.ui.components.IconTextButton
 import com.movtery.zalithlauncher.ui.components.MarqueeText
 import com.movtery.zalithlauncher.ui.components.RadioCard
@@ -113,6 +117,7 @@ import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.CardPositi
 import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.EnumSettingsCard
 import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.IntSliderSettingsCard
 import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.ListSettingsCard
+import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.LocalFlatSettingsCards
 import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.SettingsCard
 import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.SettingsCardColumn
 import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.SwitchSettingsCard
@@ -152,14 +157,20 @@ fun LauncherSettingsScreen(
         Triple(key, mainScreenKey, false),
         Triple(NormalNavKey.Settings.Launcher, settingsScreenKey, false)
     ) { isVisible ->
-        AnimatedColumn(
+        //Lazy list: every card is a glass surface, so only the groups near the viewport may be composed.
+        //Composable reads (CompositionLocal) must happen here, the list content below is not composable.
+        val listState = rememberLazyListState()
+        val backgroundViewModel = LocalBackgroundViewModel.current
+
+        AnimatedLazyColumn(
             modifier = Modifier
-                .fillMaxWidth()
-                .verticalScrollWithBar(state = rememberScrollState())
-                .padding(all = 12.dp),
-            isVisible = isVisible
+                .fillMaxSize()
+                .lazyScrollWithBar(listState),
+            state = listState,
+            isVisible = isVisible,
+            contentPadding = PaddingValues(all = 12.dp)
         ) { scope ->
-            AnimatedItem(scope) { yOffset ->
+            animatedItem(scope) { yOffset ->
                 SettingsCardColumn(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -269,10 +280,10 @@ fun LauncherSettingsScreen(
             }
 
             //启动器背景设置板块
-            LocalBackgroundViewModel.current?.let { backgroundViewModel ->
-                //Liquid Glass manages background opacity/blur itself, see effectiveBackgroundOpacity()
-                val liquidGlassOn = launcherGlassOn()
-                AnimatedItem(scope) { yOffset ->
+            if (backgroundViewModel != null) {
+                animatedItem(scope) { yOffset ->
+                    //Liquid Glass manages background opacity/blur itself, see effectiveBackgroundOpacity()
+                    val liquidGlassOn = launcherGlassOn()
                     SettingsCardColumn(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -289,18 +300,21 @@ fun LauncherSettingsScreen(
                             )
                         }
 
-                        IntSliderSettingsCard(
-                            modifier = Modifier.fillMaxWidth(),
-                            position = CardPosition.Middle,
-                            unit = AllSettings.launcherBackgroundOpacity,
-                            title = stringResource(R.string.settings_launcher_background_opacity_title),
-                            summary = if (liquidGlassOn) stringResource(R.string.settings_launcher_background_liquid_glass_managed)
-                            else stringResource(R.string.settings_launcher_background_opacity_summary),
-                            valueRange = AllSettings.launcherBackgroundOpacity.floatRange,
-                            suffix = "%",
-                            enabled = backgroundViewModel.isValid && !liquidGlassOn,
-                            fineTuningControl = true
-                        )
+                        //Locked while Liquid Glass is on, so its card is drawn flat instead of as a blurred glass
+                        CompositionLocalProvider(LocalFlatSettingsCards provides liquidGlassOn) {
+                            IntSliderSettingsCard(
+                                modifier = Modifier.fillMaxWidth(),
+                                position = CardPosition.Middle,
+                                unit = AllSettings.launcherBackgroundOpacity,
+                                title = stringResource(R.string.settings_launcher_background_opacity_title),
+                                summary = if (liquidGlassOn) stringResource(R.string.settings_launcher_background_liquid_glass_managed)
+                                else stringResource(R.string.settings_launcher_background_opacity_summary),
+                                valueRange = AllSettings.launcherBackgroundOpacity.floatRange,
+                                suffix = "%",
+                                enabled = backgroundViewModel.isValid && !liquidGlassOn,
+                                fineTuningControl = true
+                            )
+                        }
 
                         IntSliderSettingsCard(
                             modifier = Modifier.fillMaxWidth(),
@@ -314,56 +328,58 @@ fun LauncherSettingsScreen(
                             fineTuningControl = true
                         )
 
-                        IntSliderSettingsCard(
-                            modifier = Modifier.fillMaxWidth(),
-                            position = CardPosition.Bottom,
-                            unit = AllSettings.backgroundBlur,
-                            title = stringResource(R.string.settings_title_blur),
-                            summary = if (liquidGlassOn) stringResource(R.string.settings_launcher_background_liquid_glass_managed)
-                            else stringResource(R.string.settings_launcher_background_blur_summary),
-                            valueRange = AllSettings.backgroundBlur.floatRange,
-                            suffix = "Dp",
-                            enabled = backgroundViewModel.isValid && !liquidGlassOn,
-                            fineTuningControl = true,
-                            appendContent = {
-                                val unit = AllSettings.backgroundBlurType
-                                val state = unit.state
-                                IconButton(
-                                    modifier = Modifier
-                                        .padding(start = 12.dp)
-                                        .size(32.dp),
-                                    colors = IconButtonDefaults.iconButtonColors(
-                                        containerColor = MaterialTheme.colorScheme.primary,
-                                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                                        disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = DisabledAlpha),
-                                        disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = DisabledAlpha),
-                                    ),
-                                    onClick = {
-                                        unit.save(state.switch())
-                                    },
-                                    enabled = backgroundViewModel.isValid && !liquidGlassOn,
-                                ) {
-                                    Crossfade(
-                                        targetState = state
-                                    ) { target ->
-                                        val painter = when (target) {
-                                            BackgroundBlur.Background -> painterResource(R.drawable.ic_blur_circular_outlined)
-                                            BackgroundBlur.Foreground -> painterResource(R.drawable.ic_blur_circular_filled)
+                        CompositionLocalProvider(LocalFlatSettingsCards provides liquidGlassOn) {
+                            IntSliderSettingsCard(
+                                modifier = Modifier.fillMaxWidth(),
+                                position = CardPosition.Bottom,
+                                unit = AllSettings.backgroundBlur,
+                                title = stringResource(R.string.settings_title_blur),
+                                summary = if (liquidGlassOn) stringResource(R.string.settings_launcher_background_liquid_glass_managed)
+                                else stringResource(R.string.settings_launcher_background_blur_summary),
+                                valueRange = AllSettings.backgroundBlur.floatRange,
+                                suffix = "Dp",
+                                enabled = backgroundViewModel.isValid && !liquidGlassOn,
+                                fineTuningControl = true,
+                                appendContent = {
+                                    val unit = AllSettings.backgroundBlurType
+                                    val state = unit.state
+                                    IconButton(
+                                        modifier = Modifier
+                                            .padding(start = 12.dp)
+                                            .size(32.dp),
+                                        colors = IconButtonDefaults.iconButtonColors(
+                                            containerColor = MaterialTheme.colorScheme.primary,
+                                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                                            disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = DisabledAlpha),
+                                            disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = DisabledAlpha),
+                                        ),
+                                        onClick = {
+                                            unit.save(state.switch())
+                                        },
+                                        enabled = backgroundViewModel.isValid && !liquidGlassOn,
+                                    ) {
+                                        Crossfade(
+                                            targetState = state
+                                        ) { target ->
+                                            val painter = when (target) {
+                                                BackgroundBlur.Background -> painterResource(R.drawable.ic_blur_circular_outlined)
+                                                BackgroundBlur.Foreground -> painterResource(R.drawable.ic_blur_circular_filled)
+                                            }
+                                            Icon(
+                                                painter = painter,
+                                                contentDescription = null
+                                            )
                                         }
-                                        Icon(
-                                            painter = painter,
-                                            contentDescription = null
-                                        )
                                     }
                                 }
-                            }
-                        )
+                            )
+                        }
                     }
                 }
             }
 
             //Decoration overlay (image/video from the gallery above the UI)
-            AnimatedItem(scope) { yOffset ->
+            animatedItem(scope) { yOffset ->
                 OverlaySettings(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -373,7 +389,7 @@ fun LauncherSettingsScreen(
             }
 
             //动画设置板块
-            AnimatedItem(scope) { yOffset ->
+            animatedItem(scope) { yOffset ->
                 SettingsCardColumn(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -414,7 +430,7 @@ fun LauncherSettingsScreen(
                 }
             }
 
-            AnimatedItem(scope) { yOffset ->
+            animatedItem(scope) { yOffset ->
                 SettingsCardColumn(
                     modifier = Modifier
                         .fillMaxWidth()

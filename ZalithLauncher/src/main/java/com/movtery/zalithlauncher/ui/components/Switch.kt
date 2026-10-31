@@ -107,17 +107,15 @@ fun DefaultSwitch(
         ) {
             // Draw the glass on the actual 52x32dp track, not the larger
             // minimum-touch-target bounds of Material3 Switch.
-            LiquidGlassSurface(
-                backdrop = backdrop,
-                shape = RoundedCornerShape(16.dp),
+            //Flat: the switch draws its own translucent track and border over this, so a blur pass
+            //per switch costs GPU time for almost no visible difference.
+            Box(
                 modifier = Modifier
                     .align(Alignment.Center)
                     .width(52.dp)
-                    .height(32.dp),
-                containerColor = itemColor(),
-                contentColor = Color.White,
-                blurRadius = 8.dp
-            ) {}
+                    .height(32.dp)
+                    .flatGlass(RoundedCornerShape(16.dp), itemColor())
+            )
             switchContent()
         }
     } else if (glassEnabled) {
