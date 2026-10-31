@@ -18,6 +18,7 @@
 
 package com.movtery.zalithlauncher.ui.control.mouse
 
+import android.content.Context
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxSize
@@ -43,6 +44,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.ImageLoader
 import coil3.compose.AsyncImage
 import coil3.gif.GifDecoder
+import coil3.request.ImageRequest
 import coil3.request.crossfade
 import coil3.svg.SvgDecoder
 import com.movtery.zalithlauncher.R
@@ -311,6 +313,29 @@ fun getMouseFile(
 }
 
 /**
+ * The two image loaders every [MousePointer] shares (with and without crossfade).
+ */
+private object PointerImageLoaders {
+    private var plain: ImageLoader? = null
+    private var fading: ImageLoader? = null
+
+    @Synchronized
+    fun get(context: Context, crossfade: Boolean): ImageLoader {
+        val cached = if (crossfade) fading else plain
+        if (cached != null) return cached
+        val loader = ImageLoader.Builder(context.applicationContext)
+            .components {
+                add(GifDecoder.Factory())
+                add(SvgDecoder.Factory())
+            }
+            .crossfade(crossfade)
+            .build()
+        if (crossfade) fading = loader else plain = loader
+        return loader
+    }
+}
+
+/**
  * 在屏幕上显示虚拟鼠标指针
  */
 @Composable
@@ -324,19 +349,19 @@ fun MousePointer(
     crossfade: Boolean = false
 ) {
     val context = LocalContext.current
-    val loader = remember(triggerRefresh, crossfade, mouseSize) {
-        ImageLoader.Builder(context)
-            .components {
-                add(GifDecoder.Factory())
-                add(SvgDecoder.Factory())
-            }
-            .crossfade(crossfade)
-            .build()
-    }
+    //Shared by every pointer on screen. Building an ImageLoader per pointer (and again on every size
+    //or refresh change) leaked loaders and reloaded every cursor on each slider step. Replacing the
+    //file is picked up by Coil's cache key, which includes the file's last-modified time.
+    val loader = remember(crossfade) { PointerImageLoaders.get(context, crossfade) }
 
-    val fileExists by produceState(initialValue = false, triggerRefresh, mouseFile) {
-        value = withContext(Dispatchers.IO) { mouseFile?.exists() == true }
+    //Last-modified time of the custom image, or -1 when there is none. Part of the request below, so a
+    //replaced image reloads even though the shared loader and the File itself did not change.
+    val fileStamp by produceState(initialValue = -1L, triggerRefresh, mouseFile) {
+        value = withContext(Dispatchers.IO) {
+            mouseFile?.takeIf { it.exists() }?.lastModified() ?: -1L
+        }
     }
+    val fileExists = fileStamp >= 0L
     val defaultRes = when (cursorShape) {
         CursorShape.Arrow -> R.drawable.img_mouse_pointer_arrow
         CursorShape.IBeam -> R.drawable.img_mouse_pointer_ibeam
@@ -348,8 +373,15 @@ fun MousePointer(
         CursorShape.NotAllowed -> R.drawable.img_mouse_pointer_not_allowed
     }
 
-    val model = remember(fileExists, triggerRefresh, cursorShape) {
-        if (fileExists && mouseFile != null) mouseFile else defaultRes
+    val model: Any = remember(fileStamp, cursorShape, mouseFile) {
+        if (fileExists && mouseFile != null) {
+            ImageRequest.Builder(context)
+                .data(mouseFile)
+                .memoryCacheKey("mouse_pointer:${mouseFile.path}:$fileStamp")
+                .build()
+        } else {
+            defaultRes
+        }
     }
 
     val imageAlignment = if (centerIcon) Alignment.Center else Alignment.TopStart
