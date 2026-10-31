@@ -218,16 +218,20 @@ fun AboutInfoScreen(
             }
 
             animatedItem(scope) { yOffset ->
-                ChunkLayout(
+                SectionTitleCard(
                     modifier = Modifier.offset { IntOffset(x = 0, y = yOffset.roundToPx()) },
                     title = stringResource(R.string.about_library_title)
-                ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        libraryData.forEach { info ->
-                            LibraryInfoItem(info = info, openLicense = openLicense, openLink = openLink)
-                        }
-                    }
-                }
+                )
+            }
+
+            //Every library is its own lazy item. Wrapping all of them in one glass card made the lazy list
+            //compose and blur ~40 glass surfaces plus one huge glass layer at once, which froze scrolling.
+            scope.items(
+                count = libraryData.size,
+                key = { it },
+                contentType = { "library" }
+            ) { index ->
+                LibraryInfoItem(info = libraryData[index], openLicense = openLicense, openLink = openLink)
             }
 
             PluginLoader.allPlugins.takeIf { it.isNotEmpty() }?.let { allPlugins ->
@@ -275,6 +279,27 @@ private fun ChunkLayout(
                 content()
             }
         }
+    }
+}
+
+/** Title-only glass card used as the header of a section whose items are separate lazy list items. */
+@Composable
+private fun SectionTitleCard(
+    modifier: Modifier = Modifier,
+    title: String
+) {
+    SettingsCard(
+        modifier = modifier,
+        position = CardPosition.Single
+    ) {
+        Text(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(all = 16.dp),
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 }
 
