@@ -27,24 +27,17 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.movtery.zalithlauncher.ui.components.BackgroundCard
 import com.movtery.zalithlauncher.ui.components.TitleAndSummary
-import com.movtery.zalithlauncher.ui.components.flatGlass
-import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
-import com.movtery.zalithlauncher.ui.theme.cardColor
 
 /**
  * 根据卡片在UI组中的位置，选择不同的圆角形状
@@ -218,17 +211,6 @@ fun SettingsCard(
 ) {
     val shape = rememberSettingsCardShape(position, outerShape, innerShape)
 
-    if (LocalFlatSettingsCards.current && liquidGlassBackdrop() != null) {
-        //Inert card (its value is managed by Liquid Glass): same tint and white content, no blur pass
-        CompositionLocalProvider(LocalContentColor provides Color.White) {
-            Column(
-                modifier = modifier.flatGlass(shape, cardColor()),
-                content = content
-            )
-        }
-        return
-    }
-
     BackgroundCard(
         modifier = modifier,
         shape = shape,
@@ -236,12 +218,6 @@ fun SettingsCard(
         content = content
     )
 }
-
-/**
- * While true, content-only [SettingsCard]s are drawn as flat tinted plates instead of Liquid Glass.
- * Provide it around cards that are disabled anyway, to save the blur pass.
- */
-val LocalFlatSettingsCards = compositionLocalOf { false }
 
 @Composable
 fun SettingsCard(

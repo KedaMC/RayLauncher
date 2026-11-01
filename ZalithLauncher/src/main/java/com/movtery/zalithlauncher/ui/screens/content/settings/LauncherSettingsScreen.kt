@@ -61,7 +61,6 @@ import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.nonInteractiveScrollbar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -117,7 +116,6 @@ import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.CardPositi
 import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.EnumSettingsCard
 import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.IntSliderSettingsCard
 import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.ListSettingsCard
-import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.LocalFlatSettingsCards
 import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.SettingsCard
 import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.SettingsCardColumn
 import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.SwitchSettingsCard
@@ -300,21 +298,18 @@ fun LauncherSettingsScreen(
                             )
                         }
 
-                        //Locked while Liquid Glass is on, so its card is drawn flat instead of as a blurred glass
-                        CompositionLocalProvider(LocalFlatSettingsCards provides liquidGlassOn) {
-                            IntSliderSettingsCard(
-                                modifier = Modifier.fillMaxWidth(),
-                                position = CardPosition.Middle,
-                                unit = AllSettings.launcherBackgroundOpacity,
-                                title = stringResource(R.string.settings_launcher_background_opacity_title),
-                                summary = if (liquidGlassOn) stringResource(R.string.settings_launcher_background_liquid_glass_managed)
-                                else stringResource(R.string.settings_launcher_background_opacity_summary),
-                                valueRange = AllSettings.launcherBackgroundOpacity.floatRange,
-                                suffix = "%",
-                                enabled = backgroundViewModel.isValid && !liquidGlassOn,
-                                fineTuningControl = true
-                            )
-                        }
+                        IntSliderSettingsCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            position = CardPosition.Middle,
+                            unit = AllSettings.launcherBackgroundOpacity,
+                            title = stringResource(R.string.settings_launcher_background_opacity_title),
+                            summary = if (liquidGlassOn) stringResource(R.string.settings_launcher_background_liquid_glass_managed)
+                            else stringResource(R.string.settings_launcher_background_opacity_summary),
+                            valueRange = AllSettings.launcherBackgroundOpacity.floatRange,
+                            suffix = "%",
+                            enabled = backgroundViewModel.isValid && !liquidGlassOn,
+                            fineTuningControl = true
+                        )
 
                         IntSliderSettingsCard(
                             modifier = Modifier.fillMaxWidth(),
@@ -328,52 +323,50 @@ fun LauncherSettingsScreen(
                             fineTuningControl = true
                         )
 
-                        CompositionLocalProvider(LocalFlatSettingsCards provides liquidGlassOn) {
-                            IntSliderSettingsCard(
-                                modifier = Modifier.fillMaxWidth(),
-                                position = CardPosition.Bottom,
-                                unit = AllSettings.backgroundBlur,
-                                title = stringResource(R.string.settings_title_blur),
-                                summary = if (liquidGlassOn) stringResource(R.string.settings_launcher_background_liquid_glass_managed)
-                                else stringResource(R.string.settings_launcher_background_blur_summary),
-                                valueRange = AllSettings.backgroundBlur.floatRange,
-                                suffix = "Dp",
-                                enabled = backgroundViewModel.isValid && !liquidGlassOn,
-                                fineTuningControl = true,
-                                appendContent = {
-                                    val unit = AllSettings.backgroundBlurType
-                                    val state = unit.state
-                                    IconButton(
-                                        modifier = Modifier
-                                            .padding(start = 12.dp)
-                                            .size(32.dp),
-                                        colors = IconButtonDefaults.iconButtonColors(
-                                            containerColor = MaterialTheme.colorScheme.primary,
-                                            contentColor = MaterialTheme.colorScheme.onPrimary,
-                                            disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = DisabledAlpha),
-                                            disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = DisabledAlpha),
-                                        ),
-                                        onClick = {
-                                            unit.save(state.switch())
-                                        },
-                                        enabled = backgroundViewModel.isValid && !liquidGlassOn,
-                                    ) {
-                                        Crossfade(
-                                            targetState = state
-                                        ) { target ->
-                                            val painter = when (target) {
-                                                BackgroundBlur.Background -> painterResource(R.drawable.ic_blur_circular_outlined)
-                                                BackgroundBlur.Foreground -> painterResource(R.drawable.ic_blur_circular_filled)
-                                            }
-                                            Icon(
-                                                painter = painter,
-                                                contentDescription = null
-                                            )
+                        IntSliderSettingsCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            position = CardPosition.Bottom,
+                            unit = AllSettings.backgroundBlur,
+                            title = stringResource(R.string.settings_title_blur),
+                            summary = if (liquidGlassOn) stringResource(R.string.settings_launcher_background_liquid_glass_managed)
+                            else stringResource(R.string.settings_launcher_background_blur_summary),
+                            valueRange = AllSettings.backgroundBlur.floatRange,
+                            suffix = "Dp",
+                            enabled = backgroundViewModel.isValid && !liquidGlassOn,
+                            fineTuningControl = true,
+                            appendContent = {
+                                val unit = AllSettings.backgroundBlurType
+                                val state = unit.state
+                                IconButton(
+                                    modifier = Modifier
+                                        .padding(start = 12.dp)
+                                        .size(32.dp),
+                                    colors = IconButtonDefaults.iconButtonColors(
+                                        containerColor = MaterialTheme.colorScheme.primary,
+                                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                                        disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = DisabledAlpha),
+                                        disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = DisabledAlpha),
+                                    ),
+                                    onClick = {
+                                        unit.save(state.switch())
+                                    },
+                                    enabled = backgroundViewModel.isValid && !liquidGlassOn,
+                                ) {
+                                    Crossfade(
+                                        targetState = state
+                                    ) { target ->
+                                        val painter = when (target) {
+                                            BackgroundBlur.Background -> painterResource(R.drawable.ic_blur_circular_outlined)
+                                            BackgroundBlur.Foreground -> painterResource(R.drawable.ic_blur_circular_filled)
                                         }
+                                        Icon(
+                                            painter = painter,
+                                            contentDescription = null
+                                        )
                                     }
                                 }
-                            )
-                        }
+                            }
+                        )
                     }
                 }
             }
