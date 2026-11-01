@@ -21,6 +21,8 @@ package com.movtery.zalithlauncher.ui.screens.content.settings
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -78,8 +80,12 @@ import com.movtery.zalithlauncher.ui.screens.NormalNavKey
 import com.movtery.zalithlauncher.ui.screens.TitledNavKey
 import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.CardPosition
 import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.SettingsCard
+import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.rememberSettingsCardShape
 import com.movtery.zalithlauncher.ui.theme.itemColor
 import com.movtery.zalithlauncher.ui.theme.onItemColor
+
+/** Gap between two sections, on top of the 2dp the list already puts between any two cards. */
+private val SectionGap = 8.dp
 
 @Composable
 fun AboutInfoScreen(
@@ -99,6 +105,7 @@ fun AboutInfoScreen(
         AnimatedLazyColumn(
             modifier = Modifier.fillMaxSize(),
             isVisible = isVisible,
+            verticalArrangement = Arrangement.spacedBy(2.dp),
             contentPadding = PaddingValues(all = 12.dp)
         ) { scope ->
             /** Section title card. All items of a section share [section]'s entrance delay. */
@@ -111,22 +118,31 @@ fun AboutInfoScreen(
                 }
             }
 
-            /** One row of a section; [content] receives the modifier that carries the entrance offset. */
-            fun row(itemKey: String, section: Int, content: @Composable (Modifier) -> Unit) {
+            /**
+             * One row of a section; [content] receives the modifier that carries the entrance offset.
+             * Rows are [CardPosition.Middle] unless they close their section ([last]).
+             */
+            fun row(itemKey: String, section: Int, last: Boolean = false, content: @Composable (Modifier, CardPosition) -> Unit) {
                 animatedItemDeferred(scope, key = itemKey, delay = section * 50) { yOffset ->
                     content(
                         Modifier
                             .fillMaxWidth()
-                            .offset { IntOffset(x = 0, y = yOffset.value.roundToPx()) }
+                            .offset { IntOffset(x = 0, y = yOffset.value.roundToPx()) },
+                        if (last) CardPosition.Bottom else CardPosition.Middle
                     )
                 }
             }
 
+            fun gap(itemKey: String) {
+                scope.item(key = itemKey, contentType = "gap") { Spacer(modifier = Modifier.height(SectionGap)) }
+            }
+
             //Section 0: launcher and its authors
             title("launcher_title", 0) { stringResource(R.string.about_launcher_title) }
-            row("launcher", 0) { modifier ->
+            row("launcher", 0) { modifier, position ->
                 ButtonIconItem(
                     modifier = modifier,
+                    position = position,
                     icon = painterResource(R.drawable.img_launcher),
                     title = BuildKeys.LAUNCHER_NAME,
                     text = stringResource(R.string.about_launcher_version, BuildConfig.VERSION_NAME) + "\n" + stringResource(R.string.launcher_unofficial_notice),
@@ -134,9 +150,10 @@ fun AboutInfoScreen(
                     button = {}
                 )
             }
-            row("author_movtery", 0) { modifier ->
+            row("author_movtery", 0) { modifier, position ->
                 ButtonIconItem(
                     modifier = modifier,
+                    position = position,
                     icon = painterResource(R.drawable.img_avatar_movtery),
                     title = stringResource(R.string.about_launcher_author_movtery_title),
                     text = stringResource(R.string.about_launcher_author_movtery_text),
@@ -150,9 +167,10 @@ fun AboutInfoScreen(
                 )
             }
             //Lite: maintainer fork ini; tombol sponsor dikosongkan dulu
-            row("maintainer_keda", 0) { modifier ->
+            row("maintainer_keda", 0, last = true) { modifier, position ->
                 ButtonIconItem(
                     modifier = modifier,
+                    position = position,
                     icon = painterResource(R.drawable.img_avatar_keda),
                     title = "Keda",
                     text = stringResource(R.string.about_launcher_maintainer_keda_text),
@@ -160,11 +178,14 @@ fun AboutInfoScreen(
                 )
             }
 
+            gap("gap_0")
+
             //Section 1: acknowledgements
             title("ack_title", 1) { stringResource(R.string.about_acknowledgements_title) }
-            row("ack_bangbang93", 1) { modifier ->
+            row("ack_bangbang93", 1) { modifier, position ->
                 ButtonIconItem(
                     modifier = modifier,
+                    position = position,
                     icon = painterResource(R.drawable.img_avatar_bangbang93),
                     title = "bangbang93",
                     text = stringResource(R.string.about_acknowledgements_bangbang93_text, BuildKeys.LAUNCHER_SHORT_NAME),
@@ -177,9 +198,10 @@ fun AboutInfoScreen(
                     }
                 )
             }
-            row("ack_fcl", 1) { modifier ->
+            row("ack_fcl", 1) { modifier, position ->
                 LinkIconItem(
                     modifier = modifier,
+                    position = position,
                     icon = painterResource(R.drawable.img_launcher_fcl),
                     title = "Fold Craft Launcher",
                     text = stringResource(R.string.about_acknowledgements_fcl_text, BuildKeys.LAUNCHER_SHORT_NAME),
@@ -187,9 +209,10 @@ fun AboutInfoScreen(
                     openLink = { openLink("https://github.com/FCL-Team/FoldCraftLauncher") }
                 )
             }
-            row("ack_hmcl", 1) { modifier ->
+            row("ack_hmcl", 1) { modifier, position ->
                 LinkIconItem(
                     modifier = modifier,
+                    position = position,
                     icon = painterResource(R.drawable.img_launcher_hmcl),
                     title = "Hello Minecraft! Launcher",
                     text = stringResource(R.string.about_acknowledgements_hmcl_text, BuildKeys.LAUNCHER_SHORT_NAME),
@@ -197,18 +220,20 @@ fun AboutInfoScreen(
                     openLink = { openLink("https://github.com/HMCL-dev/HMCL") }
                 )
             }
-            row("ack_mcmod", 1) { modifier ->
+            row("ack_mcmod", 1) { modifier, position ->
                 LinkIconItem(
                     modifier = modifier,
+                    position = position,
                     icon = painterResource(R.drawable.img_platform_mcmod),
                     title = stringResource(R.string.about_acknowledgements_mcmod),
                     text = stringResource(R.string.about_acknowledgements_mcmod_text, BuildKeys.LAUNCHER_SHORT_NAME),
                     openLink = { openLink(URL_MCMOD) }
                 )
             }
-            row("ack_mcim", 1) { modifier ->
+            row("ack_mcim", 1) { modifier, position ->
                 ButtonIconItem(
                     modifier = modifier,
+                    position = position,
                     icon = painterResource(R.drawable.img_avatar_mcim),
                     title = "mcmod-info-mirror",
                     text = stringResource(R.string.about_acknowledgements_mcim_text, BuildKeys.LAUNCHER_SHORT_NAME),
@@ -221,18 +246,20 @@ fun AboutInfoScreen(
                     }
                 )
             }
-            row("ack_pcl2", 1) { modifier ->
+            row("ack_pcl2", 1) { modifier, position ->
                 LinkIconItem(
                     modifier = modifier,
+                    position = position,
                     icon = painterResource(R.drawable.img_launcher_pcl2),
                     title = "Plain Craft Launcher 2",
                     text = stringResource(R.string.about_acknowledgements_pcl_text, BuildKeys.LAUNCHER_SHORT_NAME),
                     openLink = { openLink("https://github.com/Meloong-Git/PCL") }
                 )
             }
-            row("ack_pojav", 1) { modifier ->
+            row("ack_pojav", 1) { modifier, position ->
                 LinkIconItem(
                     modifier = modifier,
+                    position = position,
                     icon = painterResource(R.drawable.img_launcher_pojav),
                     title = "PojavLauncher",
                     text = stringResource(R.string.about_acknowledgements_pojav_text, BuildKeys.LAUNCHER_SHORT_NAME),
@@ -240,9 +267,10 @@ fun AboutInfoScreen(
                     openLink = { openLink("https://github.com/PojavLauncherTeam/PojavLauncher") }
                 )
             }
-            row("ack_github", 1) { modifier ->
+            row("ack_github", 1) { modifier, position ->
                 LinkIconItem(
                     modifier = modifier,
+                    position = position,
                     icon = painterResource(R.drawable.ic_github),
                     title = stringResource(R.string.about_acknowledgements_github_community),
                     text = stringResource(R.string.about_acknowledgements_github_community_text),
@@ -250,15 +278,18 @@ fun AboutInfoScreen(
                     useImage = false
                 )
             }
-            row("ack_weblate", 1) { modifier ->
+            row("ack_weblate", 1, last = true) { modifier, position ->
                 LinkIconItem(
                     modifier = modifier,
+                    position = position,
                     icon = painterResource(R.drawable.img_platform_weblate),
                     title = stringResource(R.string.about_acknowledgements_weblate_community),
                     text = stringResource(R.string.about_acknowledgements_weblate_community_text),
                     openLink = { openLink(URL_WEBLATE) }
                 )
             }
+
+            gap("gap_1")
 
             //Section 2: third-party libraries (rows are plain lazy items: nothing animates on entrance)
             title("library_title", 2) { stringResource(R.string.about_library_title) }
@@ -267,16 +298,22 @@ fun AboutInfoScreen(
                 key = { "library_$it" },
                 contentType = { "library" }
             ) { index ->
-                LibraryInfoItem(info = libraryData[index], openLicense = openLicense, openLink = openLink)
+                LibraryInfoItem(
+                    info = libraryData[index],
+                    position = if (index == libraryData.lastIndex) CardPosition.Bottom else CardPosition.Middle,
+                    openLicense = openLicense,
+                    openLink = openLink
+                )
             }
 
             //Section 3: plugins
             val allPlugins = PluginLoader.allPlugins
             if (allPlugins.isNotEmpty()) {
+                gap("gap_2")
                 title("plugin_title", 3) { stringResource(R.string.about_plugin_title) }
                 allPlugins.forEachIndexed { index, apkPlugin ->
-                    row("plugin_${index}_${apkPlugin.packageName}", 3) { modifier ->
-                        PluginInfoItem(modifier = modifier, apkPlugin = apkPlugin)
+                    row("plugin_${index}_${apkPlugin.packageName}", 3, last = index == allPlugins.lastIndex) { modifier, position ->
+                        PluginInfoItem(modifier = modifier, position = position, apkPlugin = apkPlugin)
                     }
                 }
             }
@@ -292,7 +329,7 @@ private fun SectionTitleCard(
 ) {
     SettingsCard(
         modifier = modifier,
-        position = CardPosition.Single
+        position = CardPosition.Top
     ) {
         Text(
             modifier = Modifier
@@ -345,15 +382,17 @@ private fun LinkIconItem(
     text: String,
     openLicense: (() -> Unit)? = null,
     openLink: (() -> Unit)? = null,
+    position: CardPosition = CardPosition.Middle,
     color: Color = itemColor(),
     contentColor: Color = onItemColor(),
     useImage: Boolean = true
 ) {
+    val shape = rememberSettingsCardShape(position)
     AboutItemSurface(
         modifier = modifier,
         color = color,
         contentColor = contentColor,
-        shape = MaterialTheme.shapes.large
+        shape = shape
     ) {
         Row(
             modifier = Modifier
@@ -428,14 +467,16 @@ private fun ButtonIconItem(
     title: String,
     text: String,
     button: @Composable RowScope.() -> Unit,
+    position: CardPosition = CardPosition.Middle,
     color: Color = itemColor(),
     contentColor: Color = onItemColor(),
 ) {
+    val shape = rememberSettingsCardShape(position)
     AboutItemSurface(
         modifier = modifier,
         color = color,
         contentColor = contentColor,
-        shape = MaterialTheme.shapes.large
+        shape = shape
     ) {
         Row(
             modifier = Modifier
@@ -476,14 +517,16 @@ private fun ButtonIconItem(
 private fun PluginInfoItem(
     apkPlugin: ApkPlugin,
     modifier: Modifier = Modifier,
+    position: CardPosition = CardPosition.Middle,
     color: Color = itemColor(),
     contentColor: Color = onItemColor(),
 ) {
+    val shape = rememberSettingsCardShape(position)
     AboutItemSurface(
         modifier = modifier,
         color = color,
         contentColor = contentColor,
-        shape = MaterialTheme.shapes.large
+        shape = shape
     ) {
         val context = LocalContext.current
         Row(
@@ -547,16 +590,18 @@ private fun PluginInfoItem(
 private fun LibraryInfoItem(
     info: LibraryInfo,
     modifier: Modifier = Modifier,
+    position: CardPosition = CardPosition.Middle,
     color: Color = itemColor(),
     contentColor: Color = onItemColor(),
     openLicense: (Int) -> Unit,
     openLink: (url: String) -> Unit
 ) {
+    val shape = rememberSettingsCardShape(position)
     AboutItemSurface(
         modifier = modifier,
         color = color,
         contentColor = contentColor,
-        shape = MaterialTheme.shapes.large
+        shape = shape
     ) {
         Row(
             modifier = Modifier
