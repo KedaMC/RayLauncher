@@ -25,10 +25,11 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import com.movtery.zalithlauncher.ui.components.OutlinedButton
@@ -59,12 +60,12 @@ import com.movtery.zalithlauncher.game.version.installed.VersionsManager
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.ui.androidText
 import com.movtery.zalithlauncher.ui.base.BaseScreen
-import com.movtery.zalithlauncher.ui.components.AnimatedColumn
+import com.movtery.zalithlauncher.ui.components.AnimatedLazyColumn
 import com.movtery.zalithlauncher.ui.components.IconTextButton
 import com.movtery.zalithlauncher.ui.components.SimpleAlertDialog
 import com.movtery.zalithlauncher.ui.components.SimpleEditDialog
 import com.movtery.zalithlauncher.ui.components.SimpleTaskDialog
-import com.movtery.zalithlauncher.ui.components.verticalScrollWithBar
+import com.movtery.zalithlauncher.ui.components.lazyScrollWithBar
 import com.movtery.zalithlauncher.ui.screens.NestedNavKey
 import com.movtery.zalithlauncher.ui.screens.NormalNavKey
 import com.movtery.zalithlauncher.ui.screens.TitledNavKey
@@ -134,16 +135,18 @@ fun VersionOverViewScreen(
             }
         )
 
-        AnimatedColumn(
+        val listState = rememberLazyListState()
+        AnimatedLazyColumn(
             modifier = Modifier
-                .fillMaxWidth()
-                .verticalScrollWithBar(state = rememberScrollState())
-                .padding(all = 12.dp),
-            isVisible = isVisible
+                .fillMaxSize()
+                .lazyScrollWithBar(listState),
+            state = listState,
+            isVisible = isVisible,
+            contentPadding = PaddingValues(all = 12.dp)
         ) { scope ->
-            AnimatedItem(scope) { yOffset ->
+            animatedItemDeferred(scope, key = "info") { yOffset ->
                 VersionInfoLayout(
-                    modifier = Modifier.offset { IntOffset(x = 0, y = yOffset.roundToPx()) },
+                    modifier = Modifier.offset { IntOffset(x = 0, y = yOffset.value.roundToPx()) },
                     version = version,
                     versionSummary = versionSummary,
                     iconFileExists = iconFileExists,
@@ -158,9 +161,9 @@ fun VersionOverViewScreen(
                 )
             }
 
-            AnimatedItem(scope) { yOffset ->
+            animatedItemDeferred(scope, key = "management") { yOffset ->
                 VersionManagementLayout(
-                    modifier = Modifier.offset { IntOffset(x = 0, y = yOffset.roundToPx()) },
+                    modifier = Modifier.offset { IntOffset(x = 0, y = yOffset.value.roundToPx()) },
                     version = version,
                     onShareLog = { logFile ->
                         eventViewModel.sendEvent(
@@ -174,9 +177,9 @@ fun VersionOverViewScreen(
                 )
             }
 
-            AnimatedItem(scope) { yOffset ->
+            animatedItemDeferred(scope, key = "quick_actions") { yOffset ->
                 VersionQuickActions(
-                    modifier = Modifier.offset { IntOffset(x = 0, y = yOffset.roundToPx()) },
+                    modifier = Modifier.offset { IntOffset(x = 0, y = yOffset.value.roundToPx()) },
                     accessFolder = { path ->
                         val folder = if (path.isEmpty()) {
                             version.getGameDir()
