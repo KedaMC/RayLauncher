@@ -168,11 +168,11 @@ fun LauncherSettingsScreen(
             isVisible = isVisible,
             contentPadding = PaddingValues(all = 12.dp)
         ) { scope ->
-            animatedItem(scope) { yOffset ->
+            animatedItemDeferred(scope) { yOffset ->
                 SettingsCardColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .offset { IntOffset(x = 0, y = yOffset.roundToPx()) }
+                        .offset { IntOffset(x = 0, y = yOffset.value.roundToPx()) }
                 ) {
                     var customColorOperation by remember { mutableStateOf<CustomColorOperation>(CustomColorOperation.None) }
                     CustomColorOperation(
@@ -279,13 +279,13 @@ fun LauncherSettingsScreen(
 
             //启动器背景设置板块
             if (backgroundViewModel != null) {
-                animatedItem(scope) { yOffset ->
+                animatedItemDeferred(scope) { yOffset ->
                     //Liquid Glass manages background opacity/blur itself, see effectiveBackgroundOpacity()
                     val liquidGlassOn = launcherGlassOn()
                     SettingsCardColumn(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .offset { IntOffset(x = 0, y = yOffset.roundToPx()) }
+                            .offset { IntOffset(x = 0, y = yOffset.value.roundToPx()) }
                     ) {
                         SettingsCard(
                             modifier = Modifier.fillMaxWidth(),
@@ -372,21 +372,21 @@ fun LauncherSettingsScreen(
             }
 
             //Decoration overlay (image/video from the gallery above the UI)
-            animatedItem(scope) { yOffset ->
+            animatedItemDeferred(scope) { yOffset ->
                 OverlaySettings(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .offset { IntOffset(x = 0, y = yOffset.roundToPx()) },
+                        .offset { IntOffset(x = 0, y = yOffset.value.roundToPx()) },
                     submitError = submitError
                 )
             }
 
             //动画设置板块
-            animatedItem(scope) { yOffset ->
+            animatedItemDeferred(scope) { yOffset ->
                 SettingsCardColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .offset { IntOffset(x = 0, y = yOffset.roundToPx()) }
+                        .offset { IntOffset(x = 0, y = yOffset.value.roundToPx()) }
                 ) {
                     IntSliderSettingsCard(
                         modifier = Modifier.fillMaxWidth(),
@@ -423,11 +423,11 @@ fun LauncherSettingsScreen(
                 }
             }
 
-            animatedItem(scope) { yOffset ->
+            animatedItemDeferred(scope) { yOffset ->
                 SettingsCardColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .offset { IntOffset(x = 0, y = yOffset.roundToPx()) }
+                        .offset { IntOffset(x = 0, y = yOffset.value.roundToPx()) }
                 ) {
                     //这些镜像源都是为了改善中国大陆内陆的网络环境而存在的
                     //境外不需要这些镜像源，反而可能拖慢境外的下载速度

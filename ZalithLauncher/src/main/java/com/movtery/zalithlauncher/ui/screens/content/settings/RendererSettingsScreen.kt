@@ -120,11 +120,11 @@ fun RendererSettingsScreen(
         ) { scope ->
             /** A card of a group. The whole group shares [group]'s entrance delay, like the old per-group stagger. */
             fun card(itemKey: String, group: Int, content: @Composable () -> Unit) {
-                animatedItem(scope, key = itemKey, delay = group * 50) { yOffset ->
+                animatedItemDeferred(scope, key = itemKey, delay = group * 50) { yOffset ->
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .offset { IntOffset(x = 0, y = yOffset.roundToPx()) }
+                            .offset { IntOffset(x = 0, y = yOffset.value.roundToPx()) }
                     ) {
                         content()
                     }

@@ -29,6 +29,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -159,6 +160,19 @@ interface AnimatedLazyListScope {
     )
 
     /**
+     * Like [animatedItem], but hands the offset over as a [State] instead of a plain value, so the
+     * entrance animation is only read in the layout phase (`Modifier.offset { state.value.roundToPx() }`)
+     * and never recomposes the item's content frame by frame.
+     */
+    fun animatedItemDeferred(
+        lazyListScope: LazyListScope,
+        key: Any? = null,
+        delay: Int? = null,
+        targetValue: Int = -40,
+        content: @Composable LazyItemScope.(yOffset: State<Dp>) -> Unit
+    )
+
+    /**
      * 在 [LazyListScope] 中批量添加动画列表项
      * @param delay 基础延迟时间(ms)，每个项在此基础值上根据索引递增
      * @param targetValue 初始偏移距离(Dp)
@@ -193,6 +207,26 @@ private class AnimatedLazyListScopeImpl(
 
         lazyListScope.item(key = key) {
             val yOffset by swapAnimateDpAsState(
+                targetValue = targetValue.dp,
+                swapIn = isVisible,
+                delayMillis = actualDelay
+            )
+            content(yOffset)
+        }
+    }
+
+    override fun animatedItemDeferred(
+        lazyListScope: LazyListScope,
+        key: Any?,
+        delay: Int?,
+        targetValue: Int,
+        content: @Composable LazyItemScope.(yOffset: State<Dp>) -> Unit
+    ) {
+        val currentIndex = itemIndex++
+        val actualDelay = delay ?: (baseDelay + currentIndex * delayIncrement)
+
+        lazyListScope.item(key = key) {
+            val yOffset = swapAnimateDpAsState(
                 targetValue = targetValue.dp,
                 swapIn = isVisible,
                 delayMillis = actualDelay

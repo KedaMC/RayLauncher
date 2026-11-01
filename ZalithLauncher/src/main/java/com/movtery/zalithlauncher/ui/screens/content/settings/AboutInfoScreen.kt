@@ -103,9 +103,9 @@ fun AboutInfoScreen(
         ) { scope ->
             /** Section title card. All items of a section share [section]'s entrance delay. */
             fun title(itemKey: String, section: Int, text: @Composable () -> String) {
-                animatedItem(scope, key = itemKey, delay = section * 50) { yOffset ->
+                animatedItemDeferred(scope, key = itemKey, delay = section * 50) { yOffset ->
                     SectionTitleCard(
-                        modifier = Modifier.offset { IntOffset(x = 0, y = yOffset.roundToPx()) },
+                        modifier = Modifier.offset { IntOffset(x = 0, y = yOffset.value.roundToPx()) },
                         title = text()
                     )
                 }
@@ -113,11 +113,11 @@ fun AboutInfoScreen(
 
             /** One row of a section; [content] receives the modifier that carries the entrance offset. */
             fun row(itemKey: String, section: Int, content: @Composable (Modifier) -> Unit) {
-                animatedItem(scope, key = itemKey, delay = section * 50) { yOffset ->
+                animatedItemDeferred(scope, key = itemKey, delay = section * 50) { yOffset ->
                     content(
                         Modifier
                             .fillMaxWidth()
-                            .offset { IntOffset(x = 0, y = yOffset.roundToPx()) }
+                            .offset { IntOffset(x = 0, y = yOffset.value.roundToPx()) }
                     )
                 }
             }
