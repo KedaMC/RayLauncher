@@ -298,6 +298,9 @@ private fun FavoritesContent(
                     listScrolledFraction.value *
                     barShownFraction.value
 
+            //Entries that already played their entrance animation must not replay it when scrolled back in
+            val animatedKeys = remember { HashSet<String>() }
+
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -332,8 +335,14 @@ private fun FavoritesContent(
                         }
                     }
                 }
-                items(entries, key = { "${it.platform}:${it.project.projectId}" }) { entry ->
+                items(
+                    items = entries,
+                    key = { "${it.platform}:${it.project.projectId}" },
+                    contentType = { "favorite" }
+                ) { entry ->
+                    val animateEntrance = remember { animatedKeys.add("${entry.platform}:${entry.project.projectId}") }
                     FavoriteProjectLayout(
+                        animateEntrance = animateEntrance,
                         modifier = Modifier
                             .fillMaxWidth()
                             .animateItem(),

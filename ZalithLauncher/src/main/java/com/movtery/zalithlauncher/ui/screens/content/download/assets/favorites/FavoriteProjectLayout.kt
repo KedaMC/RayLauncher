@@ -76,6 +76,7 @@ fun FavoriteProjectLayout(
     onClick: () -> Unit,
     onUnfavorite: () -> Unit,
     modifier: Modifier = Modifier,
+    animateEntrance: Boolean = true,
     shape: Shape = MaterialTheme.shapes.large,
     influencedByBackground: Boolean = true,
     color: Color = cardColor(influencedByBackground),
@@ -95,9 +96,9 @@ fun FavoriteProjectLayout(
     val modloaders = remote?.platformModLoaders()
     val categories: List<PlatformFilterCode>? = remote?.platformCategories(project.classes)
 
-    val scale = remember { Animatable(initialValue = 0.95f) }
+    val scale = remember { Animatable(initialValue = if (animateEntrance) 0.95f else 1f) }
     LaunchedEffect(Unit) {
-        scale.animateTo(targetValue = 1f, animationSpec = getAnimateTween())
+        if (animateEntrance) scale.animateTo(targetValue = 1f, animationSpec = getAnimateTween())
     }
 
     BackgroundCard(
