@@ -482,9 +482,6 @@ private fun VersionList(
     openLink: (url: String) -> Unit
 ) {
     val scrollState = rememberLazyListState()
-    //Entries that already played their entrance animation must not replay it (and re-run
-    //their glass scale) every time they scroll back into view.
-    val animatedKeys = remember(versions) { HashSet<String>() }
     LazyColumn(
         modifier = modifier.nonInteractiveScrollbar(
             state = scrollState.scrollIndicatorState!!,
@@ -493,17 +490,11 @@ private fun VersionList(
         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
         state = scrollState,
     ) {
-        items(
-            items = versions,
-            key = { it.version.id },
-            contentType = { "version" }
-        ) { version ->
-            val animateEntrance = remember { animatedKeys.add(version.version.id) }
+        items(versions) { version ->
             VersionItemLayout(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 6.dp),
-                animateEntrance = animateEntrance,
                 version = version,
                 onClick = {
                     onVersionSelect(version.version.id)
@@ -520,7 +511,6 @@ private fun VersionList(
 private fun VersionItemLayout(
     modifier: Modifier = Modifier,
     version: MinecraftVersion,
-    animateEntrance: Boolean = true,
     onClick: () -> Unit = {},
     onAccessWiki: (String) -> Unit = {},
     shape: Shape = MaterialTheme.shapes.large,
@@ -529,9 +519,9 @@ private fun VersionItemLayout(
     contentColor: Color = onCardColor(),
     blur: Int = effectiveBackgroundBlur(),
 ) {
-    val scale = remember { Animatable(initialValue = if (animateEntrance) 0.95f else 1f) }
+    val scale = remember { Animatable(initialValue = 0.95f) }
     LaunchedEffect(Unit) {
-        if (animateEntrance) scale.animateTo(targetValue = 1f, animationSpec = getAnimateTween())
+        scale.animateTo(targetValue = 1f, animationSpec = getAnimateTween())
     }
 
     val (icon, versionType, wikiUrl, summary) = getVersionComponents(version)
