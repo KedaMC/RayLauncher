@@ -273,7 +273,11 @@ fun AssetsVersionItemLayout(
                                 .padding(vertical = 4.dp),
                             contentPadding = PaddingValues(horizontal = 4.dp)
                         ) {
-                            items(infoMap.versions) { version ->
+                            items(
+                items = infoMap.versions,
+                key = { it.platformId() },
+                contentType = { "version" }
+            ) { version ->
                                 AssetsVersionListItem(
                                     modifier = Modifier
                                         .fillMaxWidth()
