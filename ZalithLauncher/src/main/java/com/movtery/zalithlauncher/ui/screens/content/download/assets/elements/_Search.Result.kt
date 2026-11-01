@@ -371,9 +371,6 @@ private fun ResultList(
     installedInfo: ((Platform, projectId: String) -> InstalledMod?)? = null
 ) {
     val context = LocalContext.current
-    //Entries that already played their entrance animation must not replay it (and re-run
-    //their glass scale) every time they scroll back into view.
-    val animatedKeys = remember(data) { HashSet<String>() }
     // With Liquid Glass every entry has its own glass box, so no big backing card here.
     val glassActive = liquidGlassBackdrop() != null
     val container: @Composable (@Composable () -> Unit) -> Unit = { inner ->
@@ -409,12 +406,10 @@ private fun ResultList(
             val isInstalled = installedInfo?.invoke(platform, item.platformId()) != null
             val isFavorite = FavoriteProjectsRepository.isFavorite(platform, item.platformId())
 
-            val animateEntrance = remember { animatedKeys.add("${platform}_${item.platformId()}") }
             ResultProjectLayout(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 6.dp),
-                animateEntrance = animateEntrance,
                 platform = platform,
                 title = mcmod.getMcmodTitle(title, context),
                 description = description,
@@ -452,7 +447,6 @@ fun ResultProjectLayout(
     isInstalled: Boolean = false,
     isFavorite: Boolean = false,
     onFavoriteClick: (() -> Unit)? = null,
-    animateEntrance: Boolean = true,
     shape: Shape = MaterialTheme.shapes.large,
     influencedByBackground: Boolean = true,
     color: Color = cardColor(influencedByBackground),
@@ -462,9 +456,9 @@ fun ResultProjectLayout(
 ) {
     val context = LocalContext.current
 
-    val scale = remember { Animatable(initialValue = if (animateEntrance) 0.95f else 1f) }
+    val scale = remember { Animatable(initialValue = 0.95f) }
     LaunchedEffect(Unit) {
-        if (animateEntrance) scale.animateTo(targetValue = 1f, animationSpec = getAnimateTween())
+        scale.animateTo(targetValue = 1f, animationSpec = getAnimateTween())
     }
 
     val glassItem = liquidGlassBackdrop() != null
