@@ -427,7 +427,7 @@ fun BaseFilterLayout(
     color: Color = cardColor(influencedByBackground),
     contentColor: Color = onCardColor(),
     blur: Int = effectiveBackgroundBlur(),
-    glassBlur: Dp = 10.dp,
+    glassBlur: Dp = 8.dp,
     onClick: (() -> Unit)? = null,
     content: @Composable () -> Unit
 ) {

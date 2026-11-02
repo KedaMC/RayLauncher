@@ -102,7 +102,7 @@ fun TextRailItem(
                 modifier = Modifier.matchParentSize().alpha(animationProgress),
                 containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = Color.White,
-                blurRadius = 10.dp
+                blurRadius = 8.dp
             ) {}
         } else {
             Canvas(modifier = Modifier.matchParentSize().alpha(animationProgress)) {

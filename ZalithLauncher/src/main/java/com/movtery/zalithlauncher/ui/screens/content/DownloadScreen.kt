@@ -249,7 +249,7 @@ private fun TabMenu(
                     shape = MaterialTheme.shapes.large,
                     modifier = Modifier.fillMaxWidth(),
                     containerColor = if (categorySelected) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.22f) else MaterialTheme.colorScheme.surface,
-                    blurRadius = 10.dp,
+                    blurRadius = 8.dp,
                     onClick = selectCategory
                 ) {
                     categoryContent()
