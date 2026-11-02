@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -84,6 +84,8 @@ class EventViewModel : ViewModel() {
         }
         /** 检查更新 */
         data object CheckUpdate : Event
+        /** 查看当月赞助者 */
+        data object ShowSponsors : Event
         /** 在浏览器访问链接 */
         data class OpenLink(val url: String) : Event
         /** 让 MainActivity 防止熄屏 */

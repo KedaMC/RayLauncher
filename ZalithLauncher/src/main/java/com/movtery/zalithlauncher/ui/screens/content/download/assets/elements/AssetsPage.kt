@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 package com.movtery.zalithlauncher.ui.screens.content.download.assets.elements
 
 import com.movtery.zalithlauncher.game.download.assets.platform.PlatformSearchData
-import com.movtery.zalithlauncher.game.download.assets.utils.ModTranslations
+import org.jackhuang.hmcl.addon.AddonProjectInfo
 
 /**
  * 资源搜索结果页面信息
@@ -34,5 +34,5 @@ data class AssetsPage(
     val pageIndex: Int,
     val totalPage: Int,
     val isLastPage: Boolean,
-    val data: List<Pair<PlatformSearchData, ModTranslations.McMod?>>
+    val data: List<Pair<PlatformSearchData, AddonProjectInfo?>>
 )

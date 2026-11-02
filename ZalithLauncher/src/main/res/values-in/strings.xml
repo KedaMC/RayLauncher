@@ -55,9 +55,6 @@
     <string name="theme_color_verdant_field">Hijau Senja</string>
     <string name="theme_color_urban_ash">Urban Ash</string>
     <string name="theme_color_picker_title">Pemilihan Warna</string>
-    <string name="animate_type_bounce">Melambung</string>
-    <string name="animate_type_jelly_bounce">Melambung (Jeli)</string>
-    <string name="animate_type_slice_in">Memotong</string>
     <string name="crash_launcher_title">%sTerjadi kesalahan fatal</string>
     <string name="crash_launcher_message">Aplikasi ini tiba-tiba crash. Rincian kesalahan di bawah ini akan membantu pengembang memperbaiki aplikasi.</string>
     <string name="crash_exit_message">JVM keluar dengan kode %d.</string>
@@ -625,15 +622,11 @@
     <string name="settings_launcher_full_screen_summary">Buat halaman launcher jadi layar penuh, mengabaikan area aman seperti notch dan punch-hole</string>
     <string name="settings_launcher_liquid_glass_title">Liquid Glass</string>
     <string name="settings_launcher_liquid_glass_summary">Aktifkan atau nonaktifkan efek Liquid Glass pada top bar dan kartu beranda. Butuh latar gambar; refraksi penuh butuh Android 13+</string>
-    <string name="settings_launcher_animate_speed_title">Kecepatan Animasi</string>
-    <string name="settings_launcher_swap_animate_type_title">Animasi Transisi</string>
-    <string name="settings_launcher_swap_animate_type_summary">Pilih animasi transisi yang paling cocok sama preferensi kamu</string>
+    <string name="settings_launcher_animate_speed_title">Kecepatan animasi</string>
     <string name="settings_launcher_log_retention_days_title">Durasi Penyimpanan Log</string>
     <string name="settings_launcher_log_retention_days_summary">Atur berapa hari log launcher harus disimpan. Log yang lebih lama dari ini bakal dihapus otomatis</string>
     <string name="settings_launcher_log_share_title">Bagikan Log Launcher</string>
-    <string name="settings_launcher_animate_speed_summary">Atur kecepatan animasi launcher</string>
-    <string name="settings_launcher_animate_extent_title">Intensitas Animasi</string>
-    <string name="settings_launcher_animate_extent_summary">Atur intensitas animasi launcher</string>
+    <string name="settings_launcher_animate_speed_summary">Atur pengganda kecepatan animasi</string>
     <string name="settings_launcher_mirror_official">Gunakan sumber resmi sedapat mungkin</string>
     <string name="settings_launcher_mirror_mirror">Gunakan sumber mirror sedapat mungkin</string>
     <string name="control_keyboard_bind_title">Ikat Tombol</string>
@@ -732,6 +725,7 @@
     <string name="about_sponsor">Dukung Dengan Sponsor</string>
     <string name="about_acknowledgements_title">Ucapan Terima Kasih Kepada</string>
     <string name="about_acknowledgements_pojav_text">%s menggunakan backend peluncur dari PojavLauncher</string>
+    <string name="about_acknowledgements_modrinth_text">%s memport preset animasi model pemain dari Modrinth</string>
     <string name="about_acknowledgements_pcl_text">%s merujuk bagian implementasi dari PCL2</string>
     <string name="about_acknowledgements_fcl_text">%s menggabungkan kode dari FCL dan merujuk bagian implementasinya</string>
     <string name="about_acknowledgements_hmcl_text">%s menggabungkan kode dari HMCL dan merujuk bagian implementasinya</string>
@@ -1068,8 +1062,6 @@
     <string name="versions_export_type_mcbbs_summary">Dapat diimpor oleh %s, HMCL, dan launcher lainnya</string>
     <string name="versions_export_type_modrinth">Modrinth Modpack</string>
     <string name="versions_export_type_summary_common">Dapat diimpor oleh launcher pihak ketiga yang umum digunakan</string>
-    <string name="versions_export_type_multimc">MultiMC Modpack</string>
-    <string name="versions_export_type_multimc_summary">Dapat diimpor oleh %s, MultiMC, dan launcher lainnya</string>
     <string name="versions_export_alias_options">Pengaturan Game</string>
     <string name="versions_export_alias_mods">Folder Mod</string>
     <string name="versions_export_alias_shaderpacks">Folder Shaderpack</string>
@@ -1088,7 +1080,6 @@
     <string name="versions_export_pack_min_memory">Minimal Alokasi Memori</string>
     <string name="versions_export_alias_resource_packs">Folder Resource Pack</string>
     <string name="versions_export_alias_saves">Folder Penyimpanan</string>
-    <string name="versions_export_pack_max_memory">Maksimal Alokasi Memori</string>
     <string name="versions_export_pack_pack_remote">Unduh resource penting dari %s</string>
     <string name="versions_export_pack_also_pack_curseforge">Sertakan resource CurseForge online dalam paket</string>
     <string name="versions_export_pack_select_files">Pilih File</string>
@@ -1158,8 +1149,6 @@
     <string name="settings_game_graphics_api_title">API Grafis</string>
     <string name="settings_game_graphics_api_summary">Atur API grafis yang digunakan oleh Minecraft 26.2+</string>
     <string name="settings_game_graphics_api_default">Ikuti pengaturan game</string>
-    <string name="settings_renderer_surface_title">Gunakan Rendering SurfaceView</string>
-    <string name="settings_renderer_surface_summary">Menggunakan layer terpisah di luar UI untuk rendering</string>
     <string name="plugin_download_title">Unduh Plugin</string>
     <string name="plugin_download_summary">Unduh plugin dan instal sebagai aplikasi. Cukup buka kembali launcher, dan plugin akan dimuat otomatis!</string>
     <string name="settings_game_graphics_api_default_opengl">Hanya atur ke OpenGL saat peluncuran pertama</string>
@@ -1217,7 +1206,6 @@
     <string name="download_assets_id_unsupported">Project tidak didukung!</string>
     <string name="settings_launcher_color_theme_style">Gaya Palet</string>
     <string name="settings_renderer_config_title">Konfigurasi Renderer</string>
-    <string name="settings_renderer_env_title">Variabel Lingkungan: %s</string>
     <string name="control_editor_menu_new_widget_joystick">Tambahkan Joystick</string>
     <string name="control_editor_edit_category_joystick_config">Konfigurasi Joystick</string>
     <string name="control_editor_edit_category_joystick_style">Gaya Joystick</string>
@@ -1409,7 +1397,7 @@
     <string name="settings_gamepad_input_mode_sdl">SDL Direct</string>
     <string name="settings_gamepad_input_mode_sdl_summary">Input gamepad mentah dikirim ke game melalui API gamepad SDL/GLFW; pemetaan tombol dilewati</string>
     <string name="gamepad_mode_prompt_hint">Anda dapat mengubahnya nanti di tab Gamepad pada menu dalam game atau di pengaturan launcher.</string>
-    <string name="control_editor_edit_category_joystick_events">Event Arah</string>
+    <string name="control_editor_edit_category_joystick_events">Peristiwa Arah</string>
     <string name="download_category_favorites">Favorit</string>
     <string name="favorite_add">Favorit</string>
     <string name="favorite_added">Difavoritkan</string>
@@ -1441,6 +1429,25 @@
     <string name="guide_editor_add_widgets_text">Setelah lapisan kontrol dipilih, kamu bisa menambahkan kontrol jenis apa pun ke sana</string>
     <string name="guide_editor_styles_title">Ingin mengubah tampilan kontrolmu?</string>
     <string name="guide_editor_styles_text">Kamu bisa membuat tampilan untuk kontrol agar cepat digunakan kembali dan ditukar</string>
+    <!--  样式收藏柜  -->
+    <string name="control_editor_style_cabinet">Koleksi Gaya</string>
+    <string name="control_editor_style_cabinet_empty">Koleksi gaya masih kosong. Kamu bisa menambahkan gaya dari daftar tampilan kontrol atau daftar gaya joystick.</string>
+    <string name="control_editor_style_cabinet_favorite">Tambahkan ke Koleksi Gaya</string>
+    <string name="control_editor_style_cabinet_favorited">Gaya telah ditambahkan ke koleksi</string>
+    <string name="control_editor_style_cabinet_add_to_layout">Tambahkan ke Layout Kontrol Saat Ini</string>
+    <string name="control_editor_style_cabinet_added_to_layout">Telah ditambahkan ke layout kontrol saat ini</string>
+    <string name="control_editor_style_cabinet_add_conflict_title">Gaya Sudah Ada</string>
+    <string name="control_editor_style_cabinet_add_conflict_message">Gaya dengan ID yang sama sudah ada di layout kontrol saat ini.</string>
+    <string name="control_editor_style_cabinet_add_conflict_independent">Tambahkan sebagai Salinan</string>
+    <string name="control_editor_style_cabinet_conflict_title">Gaya Sudah Ada di Koleksi</string>
+    <string name="control_editor_style_cabinet_conflict_message">Gaya dengan ID yang sama sudah ada di koleksi gaya</string>
+    <string name="control_editor_style_cabinet_conflict_overwrite">Timpa yang Ada</string>
+    <string name="control_editor_style_cabinet_conflict_independent">Simpan sebagai Salinan Terpisah</string>
+    <string name="control_editor_style_cabinet_delete">Yakin ingin menghapus gaya yang dikoleksi %s?</string>
+
+    <string name="guide_editor_style_cabinet_title">Kamu juga bisa menambahkan gaya favorit ke koleksi gaya bersama!</string>
+    <string name="guide_editor_style_cabinet_text">Koleksi gaya bersifat global: layout kontrol apa pun yang sedang kamu edit, gaya di dalamnya selalu bisa dilihat~</string>
+    <string name="guide_editor_style_cabinet_note">Di sini, kamu bisa menambahkan gaya yang dikoleksi ke layout kontrol saat ini untuk digunakan~</string>
     <string name="guide_editor_preview">Gunakan mode pratinjau untuk menguji tata letak kontrolmu</string>
     <string name="guide_editor_save">Setelah selesai mengedit, jangan lupa menyimpan tata letak kontrol!</string>
     <string name="guide_tip_blank">Ketuk area kosong mana pun untuk lanjut ke langkah berikutnya</string>
@@ -1485,4 +1492,31 @@
     <string name="versions_config_theme_exported">Tema berhasil diekspor</string>
     <string name="versions_config_theme_imported">Tema berhasil diimpor</string>
     <string name="versions_config_theme_error">Operasi tema gagal</string>
+    <string name="download_modpack_download_mods_retry">Coba unduh ulang semua mod (%1$d/%2$d, %3$s)</string>
+    <string name="game_menu_option_fps_display_mode">Mode Tampilan FPS</string>
+    <string name="game_menu_option_fps_display_mode_chart">Grafik</string>
+    <string name="account_wardrobe">Lemari Pakaian</string>
+    <string name="versions_modify_version">Ubah Versi</string>
+    <string name="versions_modify_start">Mulai Mengubah</string>
+    <string name="versions_modify_name_tip">Anda dapat mengganti nama versi ini di sini</string>
+    <string name="versions_modify_mc_changed_title">Versi Minecraft telah berubah</string>
+    <string name="versions_modify_mc_changed_tip">Beberapa mod loader mungkin tidak mendukung versi ini; Anda dapat memilih ulang loader untuk versi baru.</string>
+    <string name="versions_modify_unrecognized_title">Komponen terpasang di bawah ini tidak dapat dicocokkan secara otomatis (mungkin tidak kompatibel dengan loader yang dipilih) dan akan dipertahankan sebagaimana adanya kecuali versi baru dipilih</string>
+    <string name="versions_modify_confirm_message">Perubahan berikut akan diterapkan pada versi ini:</string>
+    <string name="versions_modify_diff_remove">Hapus %s</string>
+    <string name="versions_modify_diff_install">Instal %1$s %2$s</string>
+    <string name="versions_modify_success">Versi berhasil diubah!</string>
+    <string name="versions_modify_error_message">Terjadi kesalahan saat mengubah versi:</string>
+    <string name="versions_config_renderer_reset_global">Atur Ulang ke Konfigurasi Global</string>
+    <string name="versions_config_renderer_reset_global_message">Launcher akan menghapus konfigurasi versi ini untuk %s dan kembali menggunakan konfigurasi global. Tindakan ini tidak dapat dibatalkan.</string>
+    <string name="saves_manage_compress_share">Kompres dan Bagikan Data Simpanan</string>
+    <string name="saves_manage_compressing">Mengompres data simpanan: %s</string>
+    <string name="saves_manage_export_failed">Terjadi kesalahan saat mengompres data simpanan</string>
+    <string name="home_server_card_settings">Pengaturan Kartu Server</string>
+    <string name="home_server_card_quick_launch">Tombol peluncuran cepat</string>
+    <string name="home_server_card_version_current">Versi yang saat ini dipilih</string>
+    <string name="home_server_card_version_specific">Versi tertentu</string>
+    <string name="home_server_card_refresh_failed">Gagal memperbarui informasi server</string>
+    <string name="settings_renderer_max_refresh_rate_title">Minta Refresh Rate Maksimum</string>
+    <string name="settings_renderer_max_refresh_rate_summary">Minta layar beralih ke refresh rate tertinggi yang didukung pada resolusi saat ini untuk menghilangkan batas frame rate pada beberapa perangkat</string>
 </resources>

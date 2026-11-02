@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -140,6 +140,11 @@ private class GlassNode(
     private var screenOrigin = Offset.Zero
     private var hasOrigin = false
 
+    //绘制时复用的临时对象，避免每次绘制都重新分配
+    private val currentMatrix = Matrix()
+    private val invertedMatrix = Matrix()
+    private val matrixValues = FloatArray(9)
+
     override fun onGloballyPositioned(coordinates: LayoutCoordinates) {
         val position = coordinates.positionOnScreen()
         if (!position.isSpecified) return
@@ -162,15 +167,13 @@ private class GlassNode(
 
         val nativeCanvas = drawContext.canvas.nativeCanvas
         nativeCanvas.withSave {
-            val current = Matrix()
-            getMatrix(current)
-            val inverted = Matrix()
-            if (current.invert(inverted)) {
-                val values = FloatArray(9).also(current::getValues)
+            getMatrix(currentMatrix)
+            if (currentMatrix.invert(invertedMatrix)) {
+                val values = matrixValues.also(currentMatrix::getValues)
                 val left = bounds.left - screenOrigin.x + values[Matrix.MTRANS_X]
                 val top = bounds.top - screenOrigin.y + values[Matrix.MTRANS_Y]
 
-                concat(inverted)
+                concat(invertedMatrix)
                 if (Build.VERSION.SDK_INT >= 31) {
                     store.glassLayer?.let { layer ->
                         this@drawGlass.translate(left, top) {

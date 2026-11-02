@@ -54,7 +54,8 @@ import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.setting.unit.floatRange
 import com.movtery.zalithlauncher.setting.unit.min
 import com.movtery.zalithlauncher.ui.base.BaseScreen
-import com.movtery.zalithlauncher.ui.components.AnimatedLazyColumn
+import com.movtery.zalithlauncher.ui.components.GlassLazyColumn
+import com.movtery.zalithlauncher.ui.components.animated
 import com.movtery.zalithlauncher.ui.components.lazyScrollWithBar
 import com.movtery.zalithlauncher.ui.screens.NestedNavKey
 import com.movtery.zalithlauncher.ui.screens.NormalNavKey
@@ -92,7 +93,7 @@ fun GameSettingsScreen(
         val runtimes = remember { RuntimesManager.getRuntimes() }
         val nativePlugins = remember { NativePluginManager.getPlugins() }
 
-        AnimatedLazyColumn(
+        GlassLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .lazyScrollWithBar(listState),
@@ -100,14 +101,14 @@ fun GameSettingsScreen(
             isVisible = isVisible,
             verticalArrangement = Arrangement.spacedBy(2.dp),
             contentPadding = PaddingValues(all = 12.dp)
-        ) { scope ->
+        ) {
             /** A card of a group. The whole group shares [group]'s entrance delay, like the old per-group stagger. */
             fun card(itemKey: String, group: Int, content: @Composable () -> Unit) {
-                animatedItemDeferred(scope, key = itemKey, delay = group * 50) { yOffset ->
+                animatedItem(key = itemKey, delay = group * 50) { ctx ->
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .offset { IntOffset(x = 0, y = yOffset.value.roundToPx()) }
+                            .animated(ctx)
                     ) {
                         content()
                     }
@@ -115,7 +116,7 @@ fun GameSettingsScreen(
             }
 
             fun groupGap(itemKey: String) {
-                scope.item(key = itemKey, contentType = "gap") { Spacer(modifier = Modifier.height(GroupGap)) }
+                item(key = itemKey, contentType = "gap") { Spacer(modifier = Modifier.height(GroupGap)) }
             }
 
             //Group 0: version

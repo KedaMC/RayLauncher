@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
+import android.graphics.Bitmap
 import android.graphics.SurfaceTexture
 import android.hardware.display.DisplayManager
 import android.os.Build
@@ -32,11 +33,8 @@ import android.view.Display
 import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.Surface
-import android.view.SurfaceHolder
-import android.view.SurfaceView
 import android.view.TextureView
 import android.view.TextureView.SurfaceTextureListener
-import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Toast
@@ -45,24 +43,46 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.annotation.Keep
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.PopupProperties
+import androidx.core.graphics.createBitmap
 import androidx.core.graphics.drawable.toDrawable
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
@@ -103,6 +123,8 @@ import com.movtery.zalithlauncher.ui.base.BaseAppCompatActivity
 import com.movtery.zalithlauncher.ui.base.ObserveFullScreenSetting
 import com.movtery.zalithlauncher.ui.components.rememberBoxSize
 import com.movtery.zalithlauncher.ui.control.input.HidableInputLayout
+import com.movtery.zalithlauncher.ui.control.input.InputMagnifier
+import com.movtery.zalithlauncher.ui.control.input.InputMagnifierState
 import com.movtery.zalithlauncher.ui.control.input.TextInputMode
 import com.movtery.zalithlauncher.ui.screens.game.elements.OpenFolderLayer
 import com.movtery.zalithlauncher.ui.screens.game.elements.OpenFolderOperation
@@ -134,6 +156,7 @@ import java.io.File
 import java.io.IOException
 import kotlin.time.Duration.Companion.milliseconds
 import android.graphics.Color as NativeColor
+import android.view.WindowInsets as AndroidWindowInsets
 
 
 private const val INTENT_RUN_GAME = "BUNDLE_RUN_GAME"
@@ -276,6 +299,8 @@ class VMViewModel : ViewModel() {
      */
     var textInputMode by mutableStateOf(TextInputMode.DISABLE)
 
+    val inputMagnifierState = InputMagnifierState()
+
     fun disableInputMode() {
         if (textInputMode == TextInputMode.ENABLE) textInputMode = TextInputMode.DISABLE
     }
@@ -319,11 +344,32 @@ class VMViewModel : ViewModel() {
             KeyEvent.KEYCODE_TAB -> sender.sendTab()
 
             else -> {
-                //输入法产生的字符类按键事件不能转发给游戏
                 val isSoftKeyboard = (keyEvent.flags and KeyEvent.FLAG_SOFT_KEYBOARD) != 0
-                if (!isSoftKeyboard) sender.sendOther(keyEvent)
+                val isTextInput = SDLActivity.isTextInputEvent(keyEvent)
+                when {
+                    shouldConsumeSdlTextInput(keyEvent) -> sender.sendChar(keyEvent.unicodeChar.toChar())
+                    !isSoftKeyboard && !isTextInput -> sender.sendOther(keyEvent)
+                }
             }
         }
+    }
+
+    /**
+     * SDL 渲染路径没有输入代理的文本回调，物理字符键需直接发送文本并消费按键事件
+     */
+    fun shouldConsumeSdlTextInput(keyEvent: KeyEvent): Boolean {
+        return SdlBridge.sdlEnabled && SdlBridge.isSdlRenderActive() &&
+                (keyEvent.flags and KeyEvent.FLAG_SOFT_KEYBOARD) == 0 &&
+                SDLActivity.isTextInputEvent(keyEvent)
+    }
+
+    /**
+     * IME 可能清除后续按键的 Meta 状态，Ctrl 本身必须直接同步到 SDL
+     */
+    fun shouldConsumeSdlModifierKey(keyEvent: KeyEvent): Boolean {
+        return SdlBridge.sdlEnabled && SdlBridge.isSdlRenderActive() &&
+                (keyEvent.keyCode == KeyEvent.KEYCODE_CTRL_LEFT ||
+                        keyEvent.keyCode == KeyEvent.KEYCODE_CTRL_RIGHT)
     }
 
     /**
@@ -341,7 +387,7 @@ class VMViewModel : ViewModel() {
     }
 }
 
-class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener, SurfaceHolder.Callback {
+class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener {
     override fun isIgnoreNotch(): Boolean = AllSettings.gameFullScreen.getValue()
 
     private val errorViewModel: ErrorViewModel by viewModels()
@@ -354,9 +400,11 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener, SurfaceHolde
     private val vmViewModel: VMViewModel by viewModels()
 
     /** View used to locate the layout hosting SDL's text input bridge. */
-    private var gameSurfaceView: View? = null
+    private var gameTextureView: TextureView? = null
 
-    private var applySizeToSurface: ((width: Int, height: Int) -> Unit)? = null
+    private var magnifierBitmap: Bitmap? = null
+    private var magnifierFrame by mutableStateOf<ImageBitmap?>(null)
+    private var magnifierFrameVersion by mutableLongStateOf(0L)
 
     private inline fun <T> withHandler(block: AbstractHandler.() -> T): T {
         return vmViewModel.session.handler.block()
@@ -377,6 +425,27 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener, SurfaceHolde
             clazz.getMethod("bind", android.content.res.AssetManager::class.java)
                 .invoke(instance, applicationContext.assets)
         }
+    }
+
+    private fun captureMagnifierFrame() {
+        if (!vmViewModel.inputMagnifierState.isVisible) return
+        val textureView = gameTextureView ?: return
+        val width = textureView.width
+        val height = textureView.height
+        if (!textureView.isAvailable || width <= 0 || height <= 0) return
+
+        val bitmap = magnifierBitmap
+            ?.takeIf { it.width == width && it.height == height }
+            ?: createBitmap(width, height).also {
+                magnifierBitmap = it
+                magnifierFrame = it.asImageBitmap()
+            }
+        val captured = runCatching {
+            textureView.getBitmap(bitmap)
+        }.getOrNull() ?: return
+
+        if (magnifierFrame == null) magnifierFrame = captured.asImageBitmap()
+        magnifierFrameVersion++
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -646,7 +715,7 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener, SurfaceHolde
         }
         lastWindowSize = newSize
 
-        applySizeToSurface?.invoke(newSize.width, newSize.height)
+        gameTextureView?.surfaceTexture?.setDefaultBufferSize(newSize.width, newSize.height)
         ZLBridgeStates.onWindowChange()
         CallbackBridge.sendUpdateWindowSize(newSize.width, newSize.height)
         if (SdlBridge.sdlEnabled) {
@@ -688,12 +757,19 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener, SurfaceHolde
             return true
         }
         if (vmViewModel.textInputMode == TextInputMode.ENABLE) {
+            if (vmViewModel.shouldConsumeSdlModifierKey(event)) {
+                vmViewModel.handleSpecialKey(event)
+                return true
+            }
             if (isPressed && !vmViewModel.keyCanHandle(event)) {
                 return super.dispatchKeyEvent(event)
             }
 
             if (isPressed) {
                 vmViewModel.handleSpecialKey(event)
+            }
+            if (vmViewModel.shouldConsumeSdlTextInput(event)) {
+                return true
             }
 
             if (event.keyCode == KeyEvent.KEYCODE_TAB) {
@@ -822,8 +898,12 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener, SurfaceHolde
     }
 
     private fun clearSurfaceFrameRate() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            gameSurface?.clearFrameRate()
+        gameSurface?.let { surface ->
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                surface.clearFrameRate()
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                surface.setFrameRate(0f, Surface.FRAME_RATE_COMPATIBILITY_DEFAULT)
+            }
         }
     }
 
@@ -831,7 +911,7 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener, SurfaceHolde
         val nativeSurface = Surface(surface)
         gameSurface = nativeSurface
         applyMaxRefreshRatePolicy()
-        SdlBridge.prepareSurface(this, nativeSurface, gameSurfaceView?.parent as? ViewGroup, surface)
+        SdlBridge.prepareSurface(this, nativeSurface, gameTextureView?.parent as? ViewGroup, surface)
         if (vmViewModel.isRunning) {
             ZLBridge.setupBridgeWindow(nativeSurface)
             // surface 重建后新 SurfaceTexture 的渲染 buffer 回落视图尺寸，须重新恢复渲染状态；
@@ -875,57 +955,7 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener, SurfaceHolde
     }
 
     override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {
-    }
-
-    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
-        if (withHandler { mIsSurfaceDestroyed }) return
-        val viewWidth = gameSurfaceView?.width ?: 0
-        val viewHeight = gameSurfaceView?.height ?: 0
-        if (viewWidth <= 0 || viewHeight <= 0) return
-        requestRefreshWindowSize(screenSize = referenceScreenSize(fallback = IntSize(viewWidth, viewHeight)))
-    }
-
-    override fun surfaceCreated(holder: SurfaceHolder) {
-        val surface = holder.surface
-        gameSurface = surface
-        applyMaxRefreshRatePolicy()
-        SdlBridge.prepareSurface(this, surface, gameSurfaceView?.parent as? ViewGroup, holder)
-        if (vmViewModel.isRunning) {
-            ZLBridge.setupBridgeWindow(surface)
-            withHandler { mIsSurfaceDestroyed = false }
-            val viewWidth = gameSurfaceView?.width ?: 0
-            val viewHeight = gameSurfaceView?.height ?: 0
-            if (viewWidth > 0 && viewHeight > 0) {
-                requestRefreshWindowSize(screenSize = referenceScreenSize(fallback = IntSize(viewWidth, viewHeight)))
-            }
-            return
-        }
-        vmViewModel.isRunning = true
-
-        withHandler { mIsSurfaceDestroyed = false }
-        lifecycleScope.launch(Dispatchers.Default) {
-            val screenSize = vmViewModel.screenSizeBridge.awaitData()
-            val currentSize = refreshWindowSize(screenSize = screenSize)
-            withHandler {
-                execute(
-                    surface = surface,
-                    screenSize = currentSize,
-                    scope = lifecycleScope
-                )
-            }
-        }
-    }
-
-    override fun surfaceDestroyed(holder: SurfaceHolder) {
-        gameSurface = null
-        val nativeSurface = holder.surface
-        if (SdlBridge.beginSurfaceDestroy(holder, nativeSurface)) {
-            if (SdlBridge.sdlEnabled) {
-                SDLActivity.getSDLSurface()?.surfaceDestroyed(holder)
-            }
-            SdlBridge.unregisterSurface(nativeSurface)
-        }
-        withHandler { mIsSurfaceDestroyed = true }
+        captureMagnifierFrame()
     }
 
     @Composable
@@ -978,45 +1008,122 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener, SurfaceHolde
                         IntOffset(0, -bottomPadding)
                     },
                 factory = { context ->
-                    val view = if (AllSettings.useSurfaceView.getValue()) {
-                        //使用 SurfaceView 渲染
-                        SurfaceView(context).apply {
-                            holder.addCallback(this@VMActivity)
-                            // SDL 模式需要父 ViewGroup（输入法 EditText 附加用）
-                            gameSurfaceView = this
-                        }.also { surface ->
-                            GameSurfaceRegistry.register(surface)
-                            applySizeToSurface = { width, height ->
-                                surface.holder.setFixedSize(width, height)
+                    TextureView(context).apply {
+                        isOpaque = true
+                        alpha = 1.0f
+                        surfaceTextureListener = this@VMActivity
+                        setOnApplyWindowInsetsListener { v, insets ->
+                            if (SdlBridge.sdlEnabled && Build.VERSION.SDK_INT >= 30) {
+                                SDLActivity.notifyImeVisibilityChanged(
+                                    insets.isVisible(AndroidWindowInsets.Type.ime())
+                                )
                             }
+                            v.onApplyWindowInsets(insets)
                         }
-                    } else {
-                        TextureView(context).apply {
-                            isOpaque = true
-                            alpha = 1.0f
-
-                            surfaceTextureListener = this@VMActivity
-                        }.also { texture ->
-                            GameSurfaceRegistry.register(texture)
-                            gameSurfaceView = texture
-                            applySizeToSurface = { width, height ->
-                                texture.surfaceTexture?.setDefaultBufferSize(width, height)
-                            }
-                        }
+                    }.also { texture ->
+                        GameSurfaceRegistry.register(texture)
+                        gameTextureView = texture
                     }
-                    view.setOnApplyWindowInsetsListener { v, insets ->
-                        if (SdlBridge.sdlEnabled && android.os.Build.VERSION.SDK_INT >= 30) {
-                            SDLActivity.notifyImeVisibilityChanged(
-                                insets.isVisible(android.view.WindowInsets.Type.ime())
-                            )
-                        }
-                        v.onApplyWindowInsets(insets)
-                    }
-                    view
                 }
             )
 
             content()
+
+            InputMagnifier(
+                inputEnabled = vmViewModel.textInputMode == TextInputMode.ENABLE,
+                state = vmViewModel.inputMagnifierState,
+                frame = { magnifierFrame },
+                frameVersion = { magnifierFrameVersion },
+                floatingContent = {
+                    InputMagnifierContent(
+                        modifier = Modifier
+                            .padding(all = 8.dp)
+                            .align(Alignment.TopEnd),
+                        onClose = { vmViewModel.inputMagnifierState.close() }
+                    )
+                }
+            )
+            LaunchedEffect(vmViewModel.inputMagnifierState.isVisible) {
+                if (vmViewModel.inputMagnifierState.isVisible) captureMagnifierFrame()
+            }
+        }
+    }
+}
+
+@Composable
+private fun InputMagnifierContent(
+    onClose: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var menuExpanded by remember { mutableStateOf(false) }
+
+    Surface(
+        modifier = modifier,
+        shape = MaterialTheme.shapes.medium,
+        color = Color.Black.copy(alpha = 0.65f),
+        contentColor = Color.White
+    ) {
+        Row {
+            Box {
+                IconButton(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .focusProperties { canFocus = false },
+                    onClick = { menuExpanded = true }
+                ) {
+                    Icon(
+                        modifier = Modifier.size(18.dp),
+                        painter = painterResource(R.drawable.ic_more_vert),
+                        contentDescription = stringResource(R.string.generic_more)
+                    )
+                }
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false },
+                    shape = MaterialTheme.shapes.large,
+                    properties = PopupProperties(focusable = false)
+                ) {
+                    DropdownMenuItem(
+                        modifier = Modifier.focusProperties { canFocus = false },
+                        text = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.game_menu_option_ime_magnifier_auto_show)
+                                )
+                                Checkbox(
+                                    modifier = Modifier.focusProperties { canFocus = false },
+                                    checked = AllSettings.imeMagnifierAutoShow.state,
+                                    onCheckedChange = {
+                                        AllSettings.imeMagnifierAutoShow.save(
+                                            !AllSettings.imeMagnifierAutoShow.state
+                                        )
+                                    }
+                                )
+                            }
+                        },
+                        onClick = {
+                            AllSettings.imeMagnifierAutoShow.save(
+                                !AllSettings.imeMagnifierAutoShow.state
+                            )
+                        }
+                    )
+                }
+            }
+            IconButton(
+                modifier = Modifier
+                    .size(40.dp)
+                    .focusProperties { canFocus = false },
+                onClick = onClose,
+            ) {
+                Icon(
+                    modifier = Modifier.size(18.dp),
+                    painter = painterResource(R.drawable.ic_close),
+                    contentDescription = stringResource(R.string.generic_close)
+                )
+            }
         }
     }
 }

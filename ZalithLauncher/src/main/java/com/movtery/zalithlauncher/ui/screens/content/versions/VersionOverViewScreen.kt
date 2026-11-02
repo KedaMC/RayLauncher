@@ -60,7 +60,8 @@ import com.movtery.zalithlauncher.game.version.installed.VersionsManager
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.ui.androidText
 import com.movtery.zalithlauncher.ui.base.BaseScreen
-import com.movtery.zalithlauncher.ui.components.AnimatedLazyColumn
+import com.movtery.zalithlauncher.ui.components.GlassLazyColumn
+import com.movtery.zalithlauncher.ui.components.animated
 import com.movtery.zalithlauncher.ui.components.IconTextButton
 import com.movtery.zalithlauncher.ui.components.SimpleAlertDialog
 import com.movtery.zalithlauncher.ui.components.SimpleEditDialog
@@ -136,17 +137,17 @@ fun VersionOverViewScreen(
         )
 
         val listState = rememberLazyListState()
-        AnimatedLazyColumn(
+        GlassLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .lazyScrollWithBar(listState),
             state = listState,
             isVisible = isVisible,
             contentPadding = PaddingValues(all = 12.dp)
-        ) { scope ->
-            animatedItemDeferred(scope, key = "info") { yOffset ->
+        ) {
+            animatedItem(key = "info") { ctx ->
                 VersionInfoLayout(
-                    modifier = Modifier.offset { IntOffset(x = 0, y = yOffset.value.roundToPx()) },
+                    modifier = Modifier.animated(ctx),
                     version = version,
                     versionSummary = versionSummary,
                     iconFileExists = iconFileExists,
@@ -161,9 +162,9 @@ fun VersionOverViewScreen(
                 )
             }
 
-            animatedItemDeferred(scope, key = "management") { yOffset ->
+            animatedItem(key = "management") { ctx ->
                 VersionManagementLayout(
-                    modifier = Modifier.offset { IntOffset(x = 0, y = yOffset.value.roundToPx()) },
+                    modifier = Modifier.animated(ctx),
                     version = version,
                     onShareLog = { logFile ->
                         eventViewModel.sendEvent(
@@ -177,9 +178,9 @@ fun VersionOverViewScreen(
                 )
             }
 
-            animatedItemDeferred(scope, key = "quick_actions") { yOffset ->
+            animatedItem(key = "quick_actions") { ctx ->
                 VersionQuickActions(
-                    modifier = Modifier.offset { IntOffset(x = 0, y = yOffset.value.roundToPx()) },
+                    modifier = Modifier.animated(ctx),
                     accessFolder = { path ->
                         val folder = if (path.isEmpty()) {
                             version.getGameDir()

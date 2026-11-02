@@ -27,7 +27,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -57,7 +56,8 @@ import androidx.compose.ui.unit.dp
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.game.plugin.driver.Driver
 import com.movtery.zalithlauncher.game.plugin.driver.DriverPluginManager
-import com.movtery.zalithlauncher.game.plugin.renderer_v2.RendererV2Data
+import com.movtery.zalithlauncher.game.plugin.Plugin
+import com.movtery.zalithlauncher.game.renderer.ConfigurableRenderer
 import com.movtery.zalithlauncher.game.renderer.RendererInterface
 import com.movtery.zalithlauncher.game.renderer.Renderers
 import com.movtery.zalithlauncher.game.version.installed.GraphicsApi
@@ -69,7 +69,8 @@ import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.setting.enums.ResolutionRule
 import com.movtery.zalithlauncher.setting.unit.floatRange
 import com.movtery.zalithlauncher.ui.base.BaseScreen
-import com.movtery.zalithlauncher.ui.components.AnimatedLazyColumn
+import com.movtery.zalithlauncher.ui.components.GlassLazyColumn
+import com.movtery.zalithlauncher.ui.components.animated
 import com.movtery.zalithlauncher.ui.components.IntInputField
 import com.movtery.zalithlauncher.ui.components.SimpleAlertDialog
 import com.movtery.zalithlauncher.ui.components.TitleAndSummary
@@ -109,7 +110,7 @@ fun RendererSettingsScreen(
         //viewport are composed and blurred while scrolling.
         val listState = rememberLazyListState()
 
-        AnimatedLazyColumn(
+        GlassLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .lazyScrollWithBar(listState),
@@ -117,14 +118,14 @@ fun RendererSettingsScreen(
             isVisible = isVisible,
             verticalArrangement = Arrangement.spacedBy(2.dp),
             contentPadding = PaddingValues(all = 12.dp)
-        ) { scope ->
+        ) {
             /** A card of a group. The whole group shares [group]'s entrance delay, like the old per-group stagger. */
             fun card(itemKey: String, group: Int, content: @Composable () -> Unit) {
-                animatedItemDeferred(scope, key = itemKey, delay = group * 50) { yOffset ->
+                animatedItem(key = itemKey, delay = group * 50) { ctx ->
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .offset { IntOffset(x = 0, y = yOffset.value.roundToPx()) }
+                            .animated(ctx)
                     ) {
                         content()
                     }
@@ -132,19 +133,21 @@ fun RendererSettingsScreen(
             }
 
             fun groupGap(itemKey: String) {
-                scope.item(key = itemKey, contentType = "gap") { Spacer(modifier = Modifier.height(GroupGap)) }
+                item(key = itemKey, contentType = "gap") { Spacer(modifier = Modifier.height(GroupGap)) }
             }
 
             //Group 0: renderer, Vulkan driver, graphics API
             card("renderer", 0) {
                 val currentRendererId = AllSettings.renderer.state
-                val v2PluginEnvUnits = remember(currentRendererId) {
+                val currentRenderer = remember(currentRendererId) {
                     Renderers.getRenderers()
-                        .filterIsInstance<RendererV2Data>()
                         .find { it.getUniqueIdentifier() == currentRendererId }
-                        ?.env?.getConfigurableUnits()?.takeIf { it.isNotEmpty() }
                 }
-                var showV2ConfigDialog by remember { mutableStateOf(false) }
+                val configurableRenderer = remember(currentRenderer) {
+                    (currentRenderer as? ConfigurableRenderer)
+                        ?.takeIf { it.configSpec.entries.isNotEmpty() }
+                }
+                var showConfigDialog by remember { mutableStateOf(false) }
 
                 ListSettingsCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -159,10 +162,9 @@ fun RendererSettingsScreen(
                         RendererSummaryLayout(it)
                     },
                     trailingIcon = {
-                        //选中新一代渲染器插件且存在可配置项时，提供配置入口
-                        if (v2PluginEnvUnits != null) {
+                        if (configurableRenderer != null) {
                             IconButton(
-                                onClick = { showV2ConfigDialog = true }
+                                onClick = { showConfigDialog = true }
                             ) {
                                 Icon(
                                     painter = painterResource(R.drawable.ic_settings_filled),
@@ -191,13 +193,40 @@ fun RendererSettingsScreen(
                     }
                 )
 
-                //新一代渲染器插件的环境变量配置对话框
-                if (showV2ConfigDialog && v2PluginEnvUnits != null) {
-                    RendererV2ConfigDialog(
-                        units = v2PluginEnvUnits,
-                        onDismissRequest = { showV2ConfigDialog = false }
+                if (showConfigDialog && configurableRenderer != null) {
+                    RendererConfigDialog(
+                        renderer = configurableRenderer,
+                        onDismissRequest = { showConfigDialog = false }
                     )
                 }
+            }
+
+            card("sfpew_plugin_layer", 0) {
+                val currentRenderer = Renderers.getRenderers()
+                    .find { it.getUniqueIdentifier() == AllSettings.renderer.state }
+                SwitchSettingsCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    position = CardPosition.Middle,
+                    unit = AllSettings.sfpewPluginLayer,
+                    enabled = currentRenderer is Plugin,
+                    title = stringResource(R.string.settings_renderer_sfpew_plugin_layer_title),
+                    summary = stringResource(R.string.settings_renderer_sfpew_plugin_layer_summary)
+                )
+            }
+            card("sfpew_relaxed_context", 0) {
+                val currentRenderer = Renderers.getRenderers()
+                    .find { it.getUniqueIdentifier() == AllSettings.renderer.state }
+                SwitchSettingsCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    position = CardPosition.Middle,
+                    unit = AllSettings.sfpewRelaxedContext,
+                    enabled = currentRenderer?.let { renderer ->
+                        renderer.supportsSfpewByDefault() ||
+                        (renderer is Plugin && AllSettings.sfpewPluginLayer.state)
+                    } == true,
+                    title = stringResource(R.string.renderer_config_sfpew_relaxed_context_title),
+                    summary = stringResource(R.string.renderer_config_sfpew_relaxed_context_desc)
+                )
             }
 
             card("vulkan_driver", 0) {
@@ -349,15 +378,6 @@ fun RendererSettingsScreen(
                     summary = stringResource(R.string.settings_renderer_vsync_in_zink_summary)
                 )
             }
-            card("surface_view", 2) {
-                SwitchSettingsCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    position = CardPosition.Middle,
-                    unit = AllSettings.useSurfaceView,
-                    title = stringResource(R.string.settings_renderer_surface_title),
-                    summary = stringResource(R.string.settings_renderer_surface_summary)
-                )
-            }
             card("dump_shaders", 2) {
                 SwitchSettingsCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -372,7 +392,6 @@ fun RendererSettingsScreen(
 }
 
 @Composable
-@OptIn(ExperimentalLayoutApi::class)
 fun RendererSummaryLayout(renderer: RendererInterface) {
     FlowRow(
         modifier = Modifier.alpha(0.7f),
@@ -386,11 +405,11 @@ fun RendererSummaryLayout(renderer: RendererInterface) {
             val minVer = getDisplayMinMCVersion()
             val maxVer = getDisplayMaxMCVersion()
 
-            if (minVer != null || maxVer != null) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                if (minVer != null || maxVer != null) {
                     Text(text = stringResource(R.string.renderer_version_support), style = MaterialTheme.typography.labelSmall)
 
                     minVer?.let {

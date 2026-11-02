@@ -73,25 +73,31 @@ import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.game.control.ControlManager
 import com.movtery.zalithlauncher.game.multirt.RuntimesManager
 import com.movtery.zalithlauncher.game.plugin.driver.DriverPluginManager
-import com.movtery.zalithlauncher.game.plugin.renderer_v2.RendererV2Data
-import com.movtery.zalithlauncher.game.plugin.renderer_v2.data.EnvSettingUnit
-import com.movtery.zalithlauncher.game.plugin.renderer_v2.data.VersionEnvStorage
+import com.movtery.zalithlauncher.game.plugin.Plugin
+import com.movtery.zalithlauncher.game.renderer.ConfigurableRenderer
+import com.movtery.zalithlauncher.game.version.installed.SettingState
 import com.movtery.zalithlauncher.game.renderer.Renderers
 import com.movtery.zalithlauncher.game.support.touch_controller.VibrationHandler
 import com.movtery.zalithlauncher.game.version.installed.GraphicsApi
 import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.game.version.installed.VersionConfig
-import com.movtery.zalithlauncher.ui.screens.content.settings.RendererV2ConfigDialog
+import com.movtery.zalithlauncher.ui.screens.content.settings.RendererConfigDialog
+import com.movtery.zalithlauncher.ui.screens.content.versions.elements.StatefulVersionConfig
+import com.movtery.zalithlauncher.utils.string.isNotEmptyOrBlank
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.DisposableEffect
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.setting.unit.floatRange
 import com.movtery.zalithlauncher.setting.unit.getOrMin
 import com.movtery.zalithlauncher.ui.AndroidStringText
 import com.movtery.zalithlauncher.ui.androidText
 import com.movtery.zalithlauncher.ui.base.BaseScreen
-import com.movtery.zalithlauncher.ui.components.AnimatedLazyColumn
-import com.movtery.zalithlauncher.ui.components.AnimatedLazyListScope
+import com.movtery.zalithlauncher.ui.components.GlassLazyColumn
+import com.movtery.zalithlauncher.ui.components.animated
 import com.movtery.zalithlauncher.ui.components.IDItem
-import com.movtery.zalithlauncher.ui.components.SimpleAlertDialog
 import com.movtery.zalithlauncher.ui.components.lazyScrollWithBar
 import com.movtery.zalithlauncher.ui.screens.NestedNavKey
 import com.movtery.zalithlauncher.ui.screens.NormalNavKey
@@ -117,6 +123,9 @@ import com.movtery.zalithlauncher.viewmodel.ErrorViewModel
 
 private const val TAG = "VersionConfigScreen"
 
+/** Scope that outlives the page, so the config is still saved after leaving it */
+private val configSaveScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
 /** Gap between two card groups, on top of the 2dp the list already puts between any two cards. */
 private val GroupGap = 8.dp
 
@@ -125,15 +134,14 @@ private val GroupGap = 8.dp
  * composed (and blurred) while scrolling. Every card of a group shares the group's entrance delay.
  */
 private class ConfigItems(
-    private val scope: AnimatedLazyListScope,
-    private val lazy: LazyListScope
+    private val scope: GlassLazyScope
 ) {
     fun card(itemKey: String, group: Int, content: @Composable () -> Unit) {
-        scope.animatedItemDeferred(lazy, key = itemKey, delay = group * 50) { yOffset ->
+        scope.animatedItem(key = itemKey, delay = group * 50) { ctx ->
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .offset { IntOffset(x = 0, y = yOffset.value.roundToPx()) }
+                    .animated(ctx)
             ) {
                 content()
             }
@@ -152,7 +160,7 @@ private class ConfigItems(
     }
 
     fun gap(itemKey: String) {
-        lazy.item(key = itemKey, contentType = "gap") { Spacer(modifier = Modifier.height(GroupGap)) }
+        scope.item(key = itemKey, contentType = "gap") { Spacer(modifier = Modifier.height(GroupGap)) }
     }
 }
 
@@ -179,19 +187,29 @@ fun VersionConfigScreen(
     ) { isVisible ->
         val config = version.getVersionConfig()
         val listState = rememberLazyListState()
+        val stateful = remember(version) { StatefulVersionConfig(config) }
+
+        DisposableEffect(version) {
+            onDispose {
+                if (stateful.isModified()) {
+                    //Save everything once when the page is left
+                    stateful.packInto(config)
+                    saveConfigAsync(config, submitError)
+                }
+            }
+        }
 
         //State, dialogs and launchers of every group live out here; the lazy items below only draw cards
-        val versionItems = rememberVersionConfigItems(config, submitError)
+        val versionItems = rememberVersionConfigItems(stateful)
         val themeItems = rememberProfileThemeItems(version, config, showToast, submitError)
-        val gameItems = rememberGameConfigItems(config, submitError)
+        val gameItems = rememberGameConfigItems(stateful)
         val supportItems = rememberSupportConfigItems(
-            config = config,
+            stateful = stateful,
             onCheckVulkan = { onCheckVulkan(version) },
-            showToast = showToast,
-            submitError = submitError
+            showToast = showToast
         )
 
-        AnimatedLazyColumn(
+        GlassLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .lazyScrollWithBar(listState),
@@ -199,8 +217,8 @@ fun VersionConfigScreen(
             isVisible = isVisible,
             verticalArrangement = Arrangement.spacedBy(2.dp),
             contentPadding = PaddingValues(all = 12.dp)
-        ) { scope ->
-            val items = ConfigItems(this, scope)
+        ) {
+            val items = ConfigItems(this)
             items.versionItems()
             items.gap("gap_0")
             items.themeItems()
@@ -214,49 +232,35 @@ fun VersionConfigScreen(
 
 @Composable
 private fun rememberVersionConfigItems(
-    config: VersionConfig,
-    submitError: (ErrorViewModel.ThrowableMessage) -> Unit
+    stateful: StatefulVersionConfig
 ): ConfigItems.() -> Unit {
         val renderers = Renderers.getRenderers()
         val renderersIdList = getIDList(renderers) { IDItem(it.getUniqueIdentifier(), it.getRendererName()) }
-        var currentRendererId by remember { mutableStateOf(config.renderer) }
-        val v2Plugin = remember(currentRendererId) {
-            if (currentRendererId.isNotEmpty()) {
-                renderers.filterIsInstance<RendererV2Data>()
-                    .find { it.getUniqueIdentifier() == currentRendererId }
-                    ?.takeIf { it.env.getConfigurableUnits().isNotEmpty() }
+        val effectiveRendererId = stateful.renderer.ifEmpty { AllSettings.renderer.state }
+        val effectiveRenderer = remember(effectiveRendererId) {
+            renderers.find { it.getUniqueIdentifier() == effectiveRendererId }
+        }
+        val configurableRenderer = remember(stateful.renderer) {
+            if (stateful.renderer.isNotEmpty()) {
+                renderers.filterIsInstance<ConfigurableRenderer>()
+                    .find { it.getUniqueIdentifier() == stateful.renderer }
+                    ?.takeIf { it.configSpec.entries.isNotEmpty() }
             } else null
         }
-        var showV2ConfigDialog by remember { mutableStateOf(false) }
-        var showResetGlobalDialog by remember { mutableStateOf(false) }
-        var v2PluginEnvUnits by remember { mutableStateOf<List<EnvSettingUnit>?>(null) }
+        var showConfigDialog by remember { mutableStateOf(false) }
 
-        // 新一代渲染器插件在当前版本中的独立环境变量配置对话框
-        if (showV2ConfigDialog && v2PluginEnvUnits != null) {
-            RendererV2ConfigDialog(
-                units = v2PluginEnvUnits!!,
-                onDismissRequest = {
-                    showV2ConfigDialog = false
-                    v2PluginEnvUnits = null
-                },
-                onResetToGlobal = { showResetGlobalDialog = true }
+        if (showConfigDialog && configurableRenderer != null) {
+            RendererConfigDialog(
+                renderer = configurableRenderer,
+                versionFolder = stateful.versionPath,
+                onDismissRequest = { showConfigDialog = false }
             )
         }
 
-        if (showResetGlobalDialog) {
-            val rendererName = v2Plugin?.getRendererName().orEmpty()
-            SimpleAlertDialog(
-                title = stringResource(R.string.versions_config_renderer_reset_global),
-                text = stringResource(R.string.versions_config_renderer_reset_global_message, rendererName),
-                onConfirm = {
-                    showResetGlobalDialog = false
-                    // 删除整个独立配置文件，放弃本版本的全部独立环境变量配置
-                    VersionEnvStorage(config.getVersionPath()).delete()
-                    showV2ConfigDialog = false
-                    v2PluginEnvUnits = null
-                },
-                onDismiss = { showResetGlobalDialog = false }
-            )
+        val sfpewPluginLayerEnabled = when (stateful.sfpewPluginLayer) {
+            SettingState.FOLLOW_GLOBAL -> AllSettings.sfpewPluginLayer.state
+            SettingState.ENABLE -> true
+            SettingState.DISABLE -> false
         }
 
         val drivers = DriverPluginManager.getDriverList()
@@ -272,9 +276,14 @@ private fun rememberVersionConfigItems(
             }
             IDItem(it.name, title)
         }
+        val unspecifiedName = stringResource(R.string.generic_unspecified)
         val controls by ControlManager.dataList.collectAsStateWithLifecycle()
         val controlsIdList = getIDList(controls.filter { it.isSupport }) {
-            IDItem(it.file.name, it.controlLayout.info.name.translate())
+            IDItem(
+                it.file.name,
+                it.controlLayout.info.name.translate()
+                    .takeIf { name -> name.isNotEmptyOrBlank() } ?: unspecifiedName
+            )
         }
 
     return {
@@ -283,13 +292,8 @@ private fun rememberVersionConfigItems(
             StatefulDropdownMenuFollowGlobal(
                 modifier = Modifier.fillMaxWidth(),
                 position = CardPosition.Top,
-                currentValue = config.isolationType,
-                onValueChange = { type ->
-                    if (config.isolationType != type) {
-                        config.isolationType = type
-                        config.saveOrShowError(submitError)
-                    }
-                },
+                currentValue = stateful.isolationType,
+                onValueChange = { stateful.isolationType = it },
                 title = stringResource(R.string.versions_config_isolation_title),
                 summary = stringResource(R.string.versions_config_isolation_summary)
             )
@@ -299,13 +303,8 @@ private fun rememberVersionConfigItems(
             StatefulDropdownMenuFollowGlobal(
                 modifier = Modifier.fillMaxWidth(),
                 position = CardPosition.Middle,
-                currentValue = config.skipGameIntegrityCheck,
-                onValueChange = { type ->
-                    if (config.skipGameIntegrityCheck != type) {
-                        config.skipGameIntegrityCheck = type
-                        config.saveOrShowError(submitError)
-                    }
-                },
+                currentValue = stateful.skipGameIntegrityCheck,
+                onValueChange = { stateful.skipGameIntegrityCheck = it },
                 title = stringResource(R.string.settings_game_skip_game_integrity_check_title),
                 summary = stringResource(R.string.settings_game_skip_game_integrity_check_summary)
             )
@@ -316,7 +315,7 @@ private fun rememberVersionConfigItems(
                 modifier = Modifier.fillMaxWidth(),
                 position = CardPosition.Middle,
                 items = renderersIdList,
-                currentId = currentRendererId,
+                currentId = stateful.renderer,
                 defaultId = "",
                 title = stringResource(R.string.versions_config_renderer),
                 getItemText = { it.title },
@@ -327,15 +326,9 @@ private fun rememberVersionConfigItems(
                     }
                 },
                 trailingIcon = {
-                    // 仅当独立指定了具有可配置项的新一代渲染器时提供配置入口；设置跟随全局时不能独立修改
-                    if (v2Plugin != null) {
-                        IconButton(
-                            onClick = {
-                                val storage = VersionEnvStorage(config.getVersionPath())
-                                v2PluginEnvUnits = v2Plugin.env.createConfigurableUnits(storage)
-                                showV2ConfigDialog = true
-                            }
-                        ) {
+                    //Follow-global can't be configured per version
+                    if (configurableRenderer != null) {
+                        IconButton(onClick = { showConfigDialog = true }) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_settings_filled),
                                 contentDescription = stringResource(R.string.settings_renderer_config_title)
@@ -343,13 +336,34 @@ private fun rememberVersionConfigItems(
                         }
                     }
                 },
-                onValueChange = { item ->
-                    if (config.renderer != item.id) {
-                        config.renderer = item.id
-                        currentRendererId = item.id
-                        config.saveOrShowError(submitError)
-                    }
-                }
+                onValueChange = { stateful.renderer = it.id }
+            )
+        }
+
+        card("sfpew_plugin_layer", 0) {
+            StatefulDropdownMenuFollowGlobal(
+                modifier = Modifier.fillMaxWidth(),
+                position = CardPosition.Middle,
+                currentValue = stateful.sfpewPluginLayer,
+                enabled = effectiveRenderer is Plugin,
+                onValueChange = { stateful.sfpewPluginLayer = it },
+                title = stringResource(R.string.settings_renderer_sfpew_plugin_layer_title),
+                summary = stringResource(R.string.settings_renderer_sfpew_plugin_layer_summary)
+            )
+        }
+
+        card("sfpew_relaxed_context", 0) {
+            StatefulDropdownMenuFollowGlobal(
+                modifier = Modifier.fillMaxWidth(),
+                position = CardPosition.Middle,
+                currentValue = stateful.sfpewRelaxedContext,
+                enabled = effectiveRenderer?.let { renderer ->
+                    renderer.supportsSfpewByDefault() ||
+                    (renderer is Plugin && sfpewPluginLayerEnabled)
+                } == true,
+                onValueChange = { stateful.sfpewRelaxedContext = it },
+                title = stringResource(R.string.renderer_config_sfpew_relaxed_context_title),
+                summary = stringResource(R.string.renderer_config_sfpew_relaxed_context_desc)
             )
         }
 
@@ -358,7 +372,7 @@ private fun rememberVersionConfigItems(
                 modifier = Modifier.fillMaxWidth(),
                 position = CardPosition.Middle,
                 items = driversIdList,
-                currentId = config.driver,
+                currentId = stateful.driver,
                 defaultId = "",
                 title = stringResource(R.string.versions_config_vulkan_driver),
                 getItemText = { it.title },
@@ -368,12 +382,7 @@ private fun rememberVersionConfigItems(
                         DriverSummaryLayout(driver)
                     }
                 },
-                onValueChange = { item ->
-                    if (config.driver != item.id) {
-                        config.driver = item.id
-                        config.saveOrShowError(submitError)
-                    }
-                }
+                onValueChange = { stateful.driver = it.id }
             )
         }
 
@@ -382,17 +391,14 @@ private fun rememberVersionConfigItems(
                 modifier = Modifier.fillMaxWidth(),
                 position = CardPosition.Middle,
                 items = graphicsApisList,
-                currentId = config.graphicsApi?.name ?: "",
+                currentId = stateful.graphicsApi?.name ?: "",
                 defaultId = "",
                 title = stringResource(R.string.settings_game_graphics_api_title),
                 summary = stringResource(R.string.settings_game_graphics_api_summary),
                 getItemText = { it.title },
                 getItemId = { it.id },
                 onValueChange = { item ->
-                    if (config.graphicsApi?.name != item.id) {
-                        config.graphicsApi = GraphicsApi.entries.find { it.name == item.id }
-                        config.saveOrShowError(submitError)
-                    }
+                    stateful.graphicsApi = GraphicsApi.entries.find { it.name == item.id }
                 }
             )
         }
@@ -402,17 +408,12 @@ private fun rememberVersionConfigItems(
                 modifier = Modifier.fillMaxWidth(),
                 position = CardPosition.Bottom,
                 items = controlsIdList,
-                currentId = config.control,
+                currentId = stateful.control,
                 defaultId = "",
                 title = stringResource(R.string.versions_config_control),
                 getItemText = { it.title },
                 getItemId = { it.id },
-                onValueChange = {
-                    if (config.control != it.id) {
-                        config.control = it.id
-                        config.saveOrShowError(submitError)
-                    }
-                }
+                onValueChange = { stateful.control = it.id }
             )
         }
     }
@@ -420,19 +421,9 @@ private fun rememberVersionConfigItems(
 
 @Composable
 private fun rememberGameConfigItems(
-    config: VersionConfig,
-    submitError: (ErrorViewModel.ThrowableMessage) -> Unit
+    stateful: StatefulVersionConfig
 ): ConfigItems.() -> Unit {
     val javaRuntimes = getIDList(RuntimesManager.getRuntimes().filter { it.isCompatible() }) { IDItem(it.name, it.name) }
-        /**
-         * 临时已分配内存，用于UI状态更新
-         */
-        var ramAllocation by remember { mutableIntStateOf(config.ramAllocation) }
-        var customInfo by remember { mutableStateOf(config.customInfo) }
-        var gameArgs by remember { mutableStateOf(config.gameArgs) }
-        var jvmArgs by remember { mutableStateOf(config.jvmArgs) }
-        var serverIp by remember { mutableStateOf(config.serverIp) }
-
     return {
         groupTitle("game_title", 2, R.string.versions_config_game_settings)
         card("java_runtime", 2) {
@@ -440,16 +431,11 @@ private fun rememberGameConfigItems(
                 modifier = Modifier.fillMaxWidth(),
                 position = CardPosition.Top,
                 items = javaRuntimes,
-                currentId = config.javaRuntime,
+                currentId = stateful.javaRuntime,
                 defaultId = "",
                 title = stringResource(R.string.settings_game_java_runtime_title),
                 summary = stringResource(R.string.versions_config_java_runtime_summary),
-                onValueChange = { item ->
-                    if (config.javaRuntime != item.id) {
-                        config.javaRuntime = item.id
-                        config.saveOrShowError(submitError)
-                    }
-                }
+                onValueChange = { stateful.javaRuntime = it.id }
             )
         }
 
@@ -457,27 +443,23 @@ private fun rememberGameConfigItems(
             ToggleableIntSliderSettingsCard(
                 modifier = Modifier.fillMaxWidth(),
                 position = CardPosition.Middle,
-                currentValue = config.ramAllocation,
+                currentValue = stateful.ramAllocation,
                 valueRange = AllSettings.ramAllocation.floatRange.start..getMaxMemoryForSettings(LocalContext.current).toFloat(),
                 defaultValue = AllSettings.ramAllocation.getOrMin(),
                 title = stringResource(R.string.settings_game_java_memory_title),
                 summary = stringResource(R.string.settings_game_java_memory_summary),
                 suffix = "MB",
-                onValueChange = {
-                    config.ramAllocation = it
-                    ramAllocation = it
-                },
-                onValueChangeFinished = { config.saveOrShowError(submitError) },
+                onValueChange = { stateful.ramAllocation = it },
                 previewContent = {
                     AnimatedVisibility(
                         modifier = Modifier.fillMaxWidth(),
-                        visible = ramAllocation >= 256
+                        visible = stateful.ramAllocation >= 256
                     ) {
                         MemoryPreview(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(start = 2.dp, end = 8.dp),
-                            preview = ramAllocation.takeIf { it >= 256 }?.toDouble(),
+                            preview = stateful.ramAllocation.takeIf { it >= 256 }?.toDouble(),
                             usedText = { usedMemory, totalMemory ->
                                 stringResource(R.string.settings_game_java_memory_used_text, usedMemory.toInt(), totalMemory.toInt())
                             },
@@ -494,14 +476,8 @@ private fun rememberGameConfigItems(
             TextInputSettingsCard(
                 modifier = Modifier.fillMaxWidth(),
                 position = CardPosition.Middle,
-                value = customInfo,
-                onValueChange = { value ->
-                    customInfo = value
-                    if (config.customInfo != value) {
-                        config.customInfo = value
-                        config.saveOrShowError(submitError)
-                    }
-                },
+                value = stateful.customInfo,
+                onValueChange = { stateful.customInfo = it },
                 title = stringResource(R.string.settings_game_version_custom_info_title),
                 summary = stringResource(R.string.settings_game_version_custom_info_summary),
                 label = {
@@ -514,16 +490,10 @@ private fun rememberGameConfigItems(
             TextInputSettingsCard(
                 modifier = Modifier.fillMaxWidth(),
                 position = CardPosition.Middle,
-                value = gameArgs,
+                value = stateful.gameArgs,
                 title = stringResource(R.string.versions_config_game_args_title),
                 summary = stringResource(R.string.versions_config_game_args_summary),
-                onValueChange = { value ->
-                    gameArgs = value
-                    if (config.gameArgs != value) {
-                        config.gameArgs = value
-                        config.saveOrShowError(submitError)
-                    }
-                },
+                onValueChange = { stateful.gameArgs = it },
                 label = {
                     Text(text = stringResource(R.string.versions_config_disable_if_blank))
                 }
@@ -534,16 +504,10 @@ private fun rememberGameConfigItems(
             TextInputSettingsCard(
                 modifier = Modifier.fillMaxWidth(),
                 position = CardPosition.Middle,
-                value = jvmArgs,
+                value = stateful.jvmArgs,
                 title = stringResource(R.string.settings_game_jvm_args_title),
                 summary = stringResource(R.string.settings_game_jvm_args_summary),
-                onValueChange = { value ->
-                    jvmArgs = value
-                    if (config.jvmArgs != value) {
-                        config.jvmArgs = value
-                        config.saveOrShowError(submitError)
-                    }
-                },
+                onValueChange = { stateful.jvmArgs = it },
                 label = {
                     Text(text = stringResource(R.string.versions_config_follow_global_if_blank))
                 }
@@ -554,16 +518,10 @@ private fun rememberGameConfigItems(
             TextInputSettingsCard(
                 modifier = Modifier.fillMaxWidth(),
                 position = CardPosition.Bottom,
-                value = serverIp,
+                value = stateful.serverIp,
                 title = stringResource(R.string.versions_config_auto_join_server_ip_title),
                 summary = stringResource(R.string.versions_config_auto_join_server_ip_summary),
-                onValueChange = { value ->
-                    serverIp = value
-                    if (config.serverIp != value) {
-                        config.serverIp = value
-                        config.saveOrShowError(submitError)
-                    }
-                },
+                onValueChange = { stateful.serverIp = it },
                 label = {
                     Text(text = stringResource(R.string.versions_config_disable_if_blank))
                 }
@@ -574,17 +532,14 @@ private fun rememberGameConfigItems(
 
 @Composable
 private fun rememberSupportConfigItems(
-    config: VersionConfig,
+    stateful: StatefulVersionConfig,
     onCheckVulkan: () -> Unit,
-    showToast: (AndroidStringText) -> Unit,
-    submitError: (ErrorViewModel.ThrowableMessage) -> Unit
+    showToast: (AndroidStringText) -> Unit
 ): ConfigItems.() -> Unit {
     val context = LocalContext.current
 
         val vibrator = remember(context) { context.getSystemService<Vibrator>() }
-        var touchVibrateKind by remember { mutableStateOf(config.touchVibrateKind) }
-        val effectiveVibrateKind = touchVibrateKind ?: VibrationHandler.VibrateKind.default
-        var touchVibrateDuration by remember { mutableIntStateOf(config.touchVibrateDuration) }
+        val effectiveVibrateKind = stateful.touchVibrateKind ?: VibrationHandler.VibrateKind.default
         var microphoneState by remember { mutableStateOf<MicrophoneCheckState>(MicrophoneCheckState.None) }
         MicrophoneCheckOperation(
             state = microphoneState,
@@ -603,11 +558,7 @@ private fun rememberSupportConfigItems(
                 summary = stringResource(R.string.versions_config_vibrate_kind_summary),
                 entries = VibrationHandler.VibrateKind.entries,
                 getRadioEnable = { enum ->
-                    if (enum == VibrationHandler.VibrateKind.ONE_SHOT) {
-                        true
-                    } else {
-                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
-                    }
+                    enum == VibrationHandler.VibrateKind.ONE_SHOT || Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
                 },
                 getRadioText = { enum ->
                     when (enum) {
@@ -620,17 +571,13 @@ private fun rememberSupportConfigItems(
                 },
                 maxItemsInEachRow = 4,
                 onRadioClick = { enum ->
-                    touchVibrateKind = enum
+                    stateful.touchVibrateKind = enum
                     vibrator?.let { vibrator ->
                         VibrationHandler.vibrate(
                             vibrator = vibrator,
-                            vibrateDuration = touchVibrateDuration,
-                            vibrateKind = touchVibrateKind,
+                            vibrateDuration = stateful.touchVibrateDuration,
+                            vibrateKind = stateful.touchVibrateKind,
                         )
-                    }
-                    if (config.touchVibrateKind != enum) {
-                        config.touchVibrateKind = enum
-                        config.saveOrShowError(submitError)
                     }
                 }
             )
@@ -641,23 +588,19 @@ private fun rememberSupportConfigItems(
                 IntSliderSettingsCard(
                     modifier = Modifier.fillMaxWidth(),
                     position = CardPosition.Middle,
-                    value = touchVibrateDuration,
+                    value = stateful.touchVibrateDuration,
                     title = stringResource(R.string.versions_config_vibrate_duration_title),
                     summary = stringResource(R.string.versions_config_vibrate_duration_summary),
                     valueRange = 80f..500f,
-                    onValueChange = {
-                        touchVibrateDuration = it
-                        config.touchVibrateDuration = touchVibrateDuration
-                    },
+                    onValueChange = { stateful.touchVibrateDuration = it },
                     onValueChangeFinished = {
                         vibrator?.let { vibrator ->
                             VibrationHandler.vibrate(
                                 vibrator = vibrator,
-                                vibrateDuration = touchVibrateDuration,
-                                vibrateKind = touchVibrateKind,
+                                vibrateDuration = stateful.touchVibrateDuration,
+                                vibrateKind = stateful.touchVibrateKind,
                             )
                         }
-                        config.saveOrShowError(submitError)
                     },
                     suffix = "ms",
                     fineTuningControl = true
@@ -906,5 +849,24 @@ private fun VersionConfig.saveOrShowError(
                 message = androidText(e.getMessageOrToString())
             )
         )
+    }
+}
+
+private fun saveConfigAsync(
+    config: VersionConfig,
+    submitError: (ErrorViewModel.ThrowableMessage) -> Unit
+) {
+    configSaveScope.launch {
+        runCatching {
+            config.saveWithThrowable()
+        }.onFailure { e ->
+            Logger.error(TAG, "Failed to save version config!", e)
+            submitError(
+                ErrorViewModel.ThrowableMessage(
+                    title = androidText(R.string.versions_config_failed_to_save),
+                    message = androidText(e.getMessageOrToString())
+                )
+            )
+        }
     }
 }

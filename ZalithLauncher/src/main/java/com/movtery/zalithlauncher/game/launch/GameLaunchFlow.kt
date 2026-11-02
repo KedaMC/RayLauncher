@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ import com.movtery.zalithlauncher.game.account.isReloginRequired
 import com.movtery.zalithlauncher.game.account.microsoft.validateAccessToken
 import com.movtery.zalithlauncher.game.account.refreshMicrosoft
 import com.movtery.zalithlauncher.game.download.game.GameLibDownloader
+import com.movtery.zalithlauncher.game.renderer.detectFpeEmulatorMods
 import com.movtery.zalithlauncher.game.support.lwjgl3ify.patchLwjgl3ifyIfNeeded
 import com.movtery.zalithlauncher.game.version.download.BaseMinecraftDownloader
 import com.movtery.zalithlauncher.game.version.download.DownloadMode
@@ -48,14 +49,13 @@ import com.movtery.zalithlauncher.ui.activities.runGame
 import com.movtery.zalithlauncher.ui.androidText
 import com.movtery.zalithlauncher.utils.GSON
 import com.movtery.zalithlauncher.utils.network.isNetworkAvailable
+import com.movtery.zalithlauncher.utils.string.getMessageOrToString
 import com.movtery.zalithlauncher.viewmodel.ErrorViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.StateFlow
-
-private const val TAG = "GameLaunchFlow"
 
 /** 账号凭据已被服务端拒绝 */
 private class LaunchReloginRequired(
@@ -86,11 +86,11 @@ class GameLaunchFlow(scope: CoroutineScope) {
         version: Version,
         skipAccountRefresh: Boolean = false,
         exitActivity: () -> Unit,
-        submitError: (ErrorViewModel.ThrowableMessage) -> Unit,
         onReloginRequired: (Account) -> Unit = {},
         onRefreshFailed: (Account, Throwable) -> Unit = { _, _ -> },
         isRunning: () -> Unit = {},
         onComplete: () -> Unit,
+        onError: (ErrorViewModel.ThrowableMessage) -> Unit,
     ) {
         if (taskExecutor.isRunning()) {
             //正在启动中，阻止这次启动请求
@@ -99,6 +99,13 @@ class GameLaunchFlow(scope: CoroutineScope) {
         }
 
         val account = AccountsManager.currentAccountFlow.value ?: return
+        var errorReported = false
+        val handleError: (ErrorViewModel.ThrowableMessage) -> Unit = { message ->
+            if (!errorReported) {
+                errorReported = true
+                onError(message)
+            }
+        }
 
         taskExecutor.executePhasesAsync(
             onStart = {
@@ -110,7 +117,7 @@ class GameLaunchFlow(scope: CoroutineScope) {
                             account = account,
                             skipAccountRefresh = skipAccountRefresh,
                             exitActivity = exitActivity,
-                            submitError = submitError
+                            onError = handleError
                         )
                     )
                 )
@@ -120,7 +127,12 @@ class GameLaunchFlow(scope: CoroutineScope) {
                 when (th) {
                     is LaunchReloginRequired -> onReloginRequired(th.account)
                     is LaunchCheckFailed -> onRefreshFailed(th.account, th.cause ?: th)
-                    else -> {}
+                    else -> handleError(
+                        ErrorViewModel.ThrowableMessage(
+                            title = androidText(R.string.generic_error),
+                            message = androidText(th.getMessageOrToString())
+                        )
+                    )
                 }
             },
         )
@@ -139,7 +151,7 @@ class GameLaunchFlow(scope: CoroutineScope) {
         account: Account,
         skipAccountRefresh: Boolean,
         exitActivity: () -> Unit,
-        submitError: (ErrorViewModel.ThrowableMessage) -> Unit
+        onError: (ErrorViewModel.ThrowableMessage) -> Unit
     ): TaskFlowExecutor.TaskPhase {
         //检查是否联网，根据这个条件决定是否校验账号
         //以及，没有联网时，让微软账号、外置账号作为离线账号登录
@@ -149,6 +161,8 @@ class GameLaunchFlow(scope: CoroutineScope) {
         }
 
         return buildPhase {
+            var launchManifest: GameManifest? = null
+
             if (hasNetwork && !skipAccountRefresh && AccountsManager.isLaunchCheckNeeded(account)) {
                 //账号管理页正在刷新该账号时，直接使用现有凭据启动
                 addTask(
@@ -180,9 +194,12 @@ class GameLaunchFlow(scope: CoroutineScope) {
                 dispatcher = Dispatchers.IO
             ) { task ->
                 val patchedManifest = checkMods(version)
-                val manifest = patchedManifest ?: VersionInfoParser(version).setInheriting().build()
+                val manifest = patchedManifest ?: VersionInfoParser(version)
+                    .setInheriting(skipIfNotExists = true)
+                    .build()
                 val manifestString = GSON.toJson(manifest)
 
+                launchManifest = manifest
                 version.launchManifest = manifestString
 
                 // 如果打了补丁，此处需要重新检索一下依赖库并下载
@@ -204,7 +221,7 @@ class GameLaunchFlow(scope: CoroutineScope) {
                     task = createGameDownloadTask(
                         context = context,
                         version = version,
-                        submitError = submitError
+                        onError = onError
                     )
                 )
             }
@@ -214,6 +231,14 @@ class GameLaunchFlow(scope: CoroutineScope) {
                 icon = R.drawable.ic_rocket_launch_filled,
                 title = androidText(R.string.main_launch_game)
             ) { _ ->
+                launchManifest?.let { manifest ->
+                    version.launchManifest = GSON.toJson(
+                        VersionInfoParser(version)
+                            .setManifest(manifest)
+                            .setInheriting()
+                            .build()
+                    )
+                }
                 runGame(context, version, account)
                 exitActivity()
             }
@@ -249,7 +274,7 @@ class GameLaunchFlow(scope: CoroutineScope) {
     private fun createGameDownloadTask(
         context: Context,
         version: Version,
-        submitError: (ErrorViewModel.ThrowableMessage) -> Unit
+        onError: (ErrorViewModel.ThrowableMessage) -> Unit
     ): Task {
         return MinecraftDownloader(
             context = context,
@@ -258,7 +283,7 @@ class GameLaunchFlow(scope: CoroutineScope) {
             gameHome = version.getGameHome(),
             mode = DownloadMode.VERIFY_AND_REPAIR,
             onError = { message ->
-                submitError(
+                onError(
                     ErrorViewModel.ThrowableMessage(
                         title = androidText(R.string.minecraft_download_failed),
                         message = androidText(message)
@@ -275,6 +300,7 @@ class GameLaunchFlow(scope: CoroutineScope) {
     private suspend fun checkMods(version: Version): GameManifest? {
         val modsDir = VersionFolders.MOD.getDir(version.getGameDir())
         val mods = AllModReader(modsDir).readAllLocals()
+        version.fpeEmulatorModDetected = detectFpeEmulatorMods(mods)
 
         if (mods.any { it.id == "touchcontroller" && it.file.isEnabled() }) {
             version.enableTouchProxy = true

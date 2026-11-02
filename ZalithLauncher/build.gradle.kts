@@ -103,6 +103,10 @@ android {
         }
     }
 
+    lint {
+        checkReleaseBuilds = false
+    }
+
     splits {
         val arch = projectArch.takeIf { it != "all" } ?: return@splits
         abi {
@@ -199,6 +203,17 @@ androidComponents {
                                 }
                             }
                         }
+                        File(assetsDir, "runtimes/jna").listFiles()?.forEach { versionDir ->
+                            val nativesDir = File(versionDir, "natives")
+                            if (nativesDir.isDirectory) {
+                                nativesDir.listFiles()?.forEach { dir ->
+                                    if (dir.isDirectory && dir.name != abi) {
+                                        logger.lifecycle("Removing non-target-arch JNA natives: $dir")
+                                        dir.deleteRecursively()
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -282,6 +297,7 @@ dependencies {
     //Utils
     implementation(libs.bytehook)
     implementation(libs.gson)
+    implementation(libs.jetbrains.annotations)
     implementation(libs.commons.io)
     implementation(libs.commons.codec)
     implementation(libs.commons.compress)

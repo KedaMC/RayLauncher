@@ -62,11 +62,13 @@ import com.movtery.zalithlauncher.coroutine.TaskSystem
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.setting.enums.GestureActionType
 import com.movtery.zalithlauncher.setting.enums.MouseControlMode
+import com.movtery.zalithlauncher.setting.enums.MouseTouchBlockMode
 import com.movtery.zalithlauncher.setting.unit.ParcelableSettingUnit
 import com.movtery.zalithlauncher.setting.unit.floatRange
 import com.movtery.zalithlauncher.ui.androidText
 import com.movtery.zalithlauncher.ui.base.BaseScreen
-import com.movtery.zalithlauncher.ui.components.AnimatedLazyColumn
+import com.movtery.zalithlauncher.ui.components.GlassLazyColumn
+import com.movtery.zalithlauncher.ui.components.animated
 import com.movtery.zalithlauncher.ui.components.IconTextButton
 import com.movtery.zalithlauncher.ui.components.LittleTextLabel
 import com.movtery.zalithlauncher.ui.components.MarqueeText
@@ -145,7 +147,7 @@ fun ControlSettingsScreen(
         //so only the cards near the viewport are composed and blurred while scrolling.
         val listState = rememberLazyListState()
 
-        AnimatedLazyColumn(
+        GlassLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .lazyScrollWithBar(listState),
@@ -153,14 +155,14 @@ fun ControlSettingsScreen(
             isVisible = isVisible,
             verticalArrangement = Arrangement.spacedBy(2.dp),
             contentPadding = PaddingValues(all = 12.dp)
-        ) { scope ->
+        ) {
             /** A card of a group. The whole group shares [group]'s entrance delay, like the old per-group stagger. */
             fun card(itemKey: String, group: Int, content: @Composable () -> Unit) {
-                animatedItemDeferred(scope, key = itemKey, delay = group * 50) { yOffset ->
+                animatedItem(key = itemKey, delay = group * 50) { ctx ->
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .offset { IntOffset(x = 0, y = yOffset.value.roundToPx()) }
+                            .animated(ctx)
                     ) {
                         content()
                     }
@@ -168,7 +170,7 @@ fun ControlSettingsScreen(
             }
 
             fun groupGap(itemKey: String) {
-                scope.item(key = itemKey, contentType = "gap") { Spacer(modifier = Modifier.height(GroupGap)) }
+                item(key = itemKey, contentType = "gap") { Spacer(modifier = Modifier.height(GroupGap)) }
             }
 
             //Group 0: physical mouse / key
@@ -277,6 +279,17 @@ fun ControlSettingsScreen(
                     items = MouseControlMode.entries,
                     title = stringResource(R.string.settings_control_mouse_control_mode_title),
                     summary = stringResource(R.string.settings_control_mouse_control_mode_summary),
+                    getItemText = { stringResource(it.nameRes) }
+                )
+            }
+            card("mouse_touch_block_mode", 2) {
+                ListSettingsCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    position = CardPosition.Middle,
+                    unit = AllSettings.mouseTouchBlockMode,
+                    items = MouseTouchBlockMode.entries,
+                    title = stringResource(R.string.settings_control_mouse_block_touch_title),
+                    summary = stringResource(R.string.settings_control_mouse_block_touch_summary),
                     getItemText = { stringResource(it.nameRes) }
                 )
             }

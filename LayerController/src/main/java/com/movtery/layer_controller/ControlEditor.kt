@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -512,8 +512,7 @@ private fun ControlWidgetRenderer(
     @Composable
     fun RenderWidget(
         data: ObservableWidget,
-        layer: ObservableControlLayer,
-        isPressed: Boolean
+        layer: ObservableControlLayer
     ) {
         TextButton(
             isEditMode = true,
@@ -534,7 +533,6 @@ private fun ControlWidgetRenderer(
             snapThresholdValue = snapThresholdValue,
             drawLine = drawLine,
             onLineCancel = onLineCancel,
-            isPressed = isPressed,
             onTapInEditMode = {
                 onButtonTap(data, layer)
             }
@@ -553,11 +551,11 @@ private fun ControlWidgetRenderer(
                 allWidgetsMap[layer] = widgetsInLayer
 
                 textBoxes.forEach { data ->
-                    RenderWidget(data, layer, isPressed = false)
+                    RenderWidget(data, layer)
                 }
 
                 normalButtons.forEach { data ->
-                    RenderWidget(data, layer, data.isPressed)
+                    RenderWidget(data, layer)
                 }
 
                 joystickButtons.forEach { data ->

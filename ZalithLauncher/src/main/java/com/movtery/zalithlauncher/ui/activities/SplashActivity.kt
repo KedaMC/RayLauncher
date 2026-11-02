@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.SplashException
 import com.movtery.zalithlauncher.components.Components
@@ -38,18 +39,29 @@ import com.movtery.zalithlauncher.components.UnpackComponentsTask
 import com.movtery.zalithlauncher.components.jre.Jre
 import com.movtery.zalithlauncher.components.jre.UnpackJnaTask
 import com.movtery.zalithlauncher.components.jre.UnpackJreTask
+import com.movtery.zalithlauncher.context.readAssetFile
+import com.movtery.zalithlauncher.legal.AvailableAgreement
+import com.movtery.zalithlauncher.path.GLOBAL_JSON
 import com.movtery.zalithlauncher.setting.AllSettings
+import com.movtery.zalithlauncher.setting.launcherMMKV
 import com.movtery.zalithlauncher.ui.base.BaseAppCompatActivity
+import com.movtery.zalithlauncher.ui.screens.navigateOnce
+import com.movtery.zalithlauncher.ui.screens.splash.SplashOperation
 import com.movtery.zalithlauncher.ui.screens.splash.SplashScreen
 import com.movtery.zalithlauncher.ui.theme.ZalithLauncherTheme
 import com.movtery.zalithlauncher.ui.theme.backgroundColor
 import com.movtery.zalithlauncher.ui.theme.onBackgroundColor
+import com.movtery.zalithlauncher.ui.theme.showThemed
 import com.movtery.zalithlauncher.utils.logging.Logger
 import com.movtery.zalithlauncher.viewmodel.SplashBackStackViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicInteger
 
 private const val TAG = "SplashActivity"
@@ -62,6 +74,11 @@ const val IMPORT_TYPE_MODPACK = "modpack"
 const val IMPORT_TYPE_CONTROLS = "controls"
 const val IMPORT_TYPE_UNKNOWN = "unknown"
 
+private const val WELCOME_VERSION_KEY = "welcomeVersionKey"
+private const val WELCOME_VERSION_VALUE = 1
+private const val AGREEMENT_DATA_PATH = "legal/data.json"
+private const val ACCEPTED_AGREEMENT_VERSION_KEY = "acceptedAgreementVersion"
+
 @SuppressLint("CustomSplashScreen")
 @AndroidEntryPoint
 class SplashActivity : BaseAppCompatActivity() {
@@ -71,17 +88,48 @@ class SplashActivity : BaseAppCompatActivity() {
     private var pendingImportIntent: Intent? = null
 
     private val backStackViewModel: SplashBackStackViewModel by viewModels()
+    private val _availableAgreement = MutableStateFlow<AvailableAgreement?>(null)
+    private val availableAgreement = _availableAgreement.asStateFlow()
+
+    private fun switchScreen(screen: SplashOperation) {
+        backStackViewModel.splashScreen.backStack.navigateOnce(screen)
+    }
+
+    private suspend fun loadAvailableAgreement(): AvailableAgreement? = runCatching {
+        withContext(Dispatchers.IO) {
+            GLOBAL_JSON.decodeFromString(
+                AvailableAgreement.serializer(),
+                this@SplashActivity.readAssetFile(AGREEMENT_DATA_PATH)
+            )
+        }
+    }.onFailure {
+        Logger.warning(TAG, "Failed to load agreement data", it)
+    }.getOrNull()
+
+    private fun requiresAgreementConsent(): Boolean {
+        val version = availableAgreement.value?.version ?: return false
+        return launcherMMKV().getString(ACCEPTED_AGREEMENT_VERSION_KEY, null) != version
+    }
+
+    private fun acceptCurrentAgreement() {
+        availableAgreement.value?.version?.let {
+            launcherMMKV().putString(ACCEPTED_AGREEMENT_VERSION_KEY, it).apply()
+        }
+    }
+
+    private fun showAgreementUpdateDialog() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.agreement_update_title)
+            .setMessage(R.string.agreement_update_message)
+            .setPositiveButton(R.string.generic_confirm) { dialog, _ -> dialog.dismiss() }
+            .showThemed()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
 
         initUnpackItems()
-        checkAllTask()
-
-        if (checkTasksToMain()) {
-            return
-        }
 
         setContent {
             ZalithLauncherTheme {
@@ -92,10 +140,43 @@ class SplashActivity : BaseAppCompatActivity() {
                 ) {
                     SplashScreen(
                         startAllTask = { startAllTask() },
+                        onWelcomeFinished = {
+                            launcherMMKV().putInt(WELCOME_VERSION_KEY, WELCOME_VERSION_VALUE).apply()
+                            acceptCurrentAgreement()
+                            switchScreen(SplashOperation.Loading)
+                            checkTasksToMain()
+                        },
+                        availableAgreement = availableAgreement,
                         unpackItems = unpackItems,
                         screenViewModel = backStackViewModel
                     )
                 }
+            }
+        }
+
+        lifecycleScope.launch(Dispatchers.Main) {
+            switchScreen(SplashOperation.Loading)
+
+            withContext(Dispatchers.IO) {
+                checkAllTask()
+                val agreement = loadAvailableAgreement()
+                _availableAgreement.update { agreement }
+            }
+
+            // 检查协议同意情况
+            val acceptedAgreementVersion = launcherMMKV().getString(ACCEPTED_AGREEMENT_VERSION_KEY, null)
+            val agreementConsentRequired = requiresAgreementConsent()
+            if (
+                agreementConsentRequired ||
+                launcherMMKV().getInt(WELCOME_VERSION_KEY, 0) < WELCOME_VERSION_VALUE
+            ) {
+                switchScreen(SplashOperation.Welcome)
+                // 曾同意过旧版的协议，发布对话框提醒
+                if (acceptedAgreementVersion != null && agreementConsentRequired) {
+                    showAgreementUpdateDialog()
+                }
+            } else {
+                checkTasksToMain()
             }
         }
     }
@@ -197,6 +278,8 @@ class SplashActivity : BaseAppCompatActivity() {
     }
 
     private fun startAllTask() {
+        switchScreen(SplashOperation.Unpacking)
+
         lifecycleScope.launch {
             val jobs = unpackItems
                 .filter {
@@ -238,21 +321,30 @@ class SplashActivity : BaseAppCompatActivity() {
         }
     }
 
-    private fun checkTasksToMain(): Boolean {
-        if (!areAllTasksFinished()) return false
+    private fun checkTasksToMain() {
+        fun run(): Boolean {
+            if (!areAllTasksFinished()) return false
 
-        Logger.info(TAG, "All content that needs to be extracted is already the latest version!")
+            Logger.info(TAG, "All content that needs to be extracted is already the latest version!")
 
-        if (isImportIntent(intent) && !isLauncherIntent(intent)) {
-            val success = handleImportIntent(intent)
-            if (success) {
-                finish()
-                return true
+            if (isImportIntent(intent) && !isLauncherIntent(intent)) {
+                val success = handleImportIntent(intent)
+                if (success) {
+                    finish()
+                    return true
+                }
             }
+
+            swapToMain()
+            return true
         }
 
-        swapToMain()
-        return true
+        val screen = if (run()) {
+            SplashOperation.Loading
+        } else {
+            SplashOperation.Unpacking
+        }
+        switchScreen(screen)
     }
 
     private fun swapToMain() {
@@ -312,8 +404,7 @@ class SplashActivity : BaseAppCompatActivity() {
     }
 
     private fun isLauncherIntent(intent: Intent?): Boolean {
-        if (intent == null) return false
-        return intent.action == Intent.ACTION_MAIN &&
+        return intent != null && intent.action == Intent.ACTION_MAIN &&
                 intent.categories?.contains(Intent.CATEGORY_LAUNCHER) == true
     }
 

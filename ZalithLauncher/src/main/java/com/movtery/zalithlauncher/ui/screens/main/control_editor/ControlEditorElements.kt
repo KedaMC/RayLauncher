@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,13 +60,7 @@ import androidx.compose.ui.unit.dp
 import com.movtery.layer_controller.data.HideLayerWhen
 import com.movtery.layer_controller.data.JoystickTriggerMode
 import com.movtery.layer_controller.data.VisibilityType
-import com.movtery.layer_controller.event.ClickEvent
-import com.movtery.layer_controller.observable.ObservableButtonStyle
-import com.movtery.layer_controller.observable.ObservableClickEventsProvider
 import com.movtery.layer_controller.observable.ObservableControlLayer
-import com.movtery.layer_controller.observable.ObservableJoystickStyle
-import com.movtery.layer_controller.observable.ObservableTranslatableString
-import com.movtery.layer_controller.observable.ObservableWidget
 import com.movtery.layer_controller.utils.snap.SnapMode
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.bridge.CURSOR_DISABLED
@@ -83,72 +77,9 @@ import com.movtery.zalithlauncher.ui.components.ScalingActionButton
 import com.movtery.zalithlauncher.ui.components.lazyScrollWithBar
 import com.movtery.zalithlauncher.ui.theme.cardColor
 import com.movtery.zalithlauncher.ui.theme.onCardColor
+import com.movtery.zalithlauncher.utils.string.isNotEmptyOrBlank
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
-
-/**
- * 控制布局编辑器操作状态
- */
-sealed interface EditorOperation {
-    data object None : EditorOperation
-    /** 选择了一个控件进行编辑 */
-    data object SelectButton : EditorOperation
-    /** 编辑控件层属性 */
-    data class EditLayer(val layer: ObservableControlLayer) : EditorOperation
-    /** 删除控件层 */
-    data class DeleteLayer(val layer: ObservableControlLayer) : EditorOperation
-    /** 打开控件外观列表 */
-    data object OpenStyleList : EditorOperation
-    /** 创建控件外观 */
-    data object CreateStyle : EditorOperation
-    /** 编辑控件外观 */
-    data object EditButtonStyle : EditorOperation
-    /** 删除控件外观 */
-    data class DeleteButtonStyle(val style: ObservableButtonStyle) : EditorOperation
-    /** 编辑摇杆样式 */
-    data object EditJoystickStyle : EditorOperation
-    /** 删除摇杆样式 */
-    data class DeleteJoystickStyle(val style: ObservableJoystickStyle) : EditorOperation
-    /** 打开摇杆样式列表 */
-    data object OpenJoystickStyleList : EditorOperation
-    /** 创建摇杆样式 */
-    data object CreateJoystickStyle : EditorOperation
-    /** 控制布局正在保存中 */
-    data object Saving : EditorOperation
-    /** 控制布局保存失败 */
-    data class SaveFailed(val error: Throwable) : EditorOperation
-}
-
-/**
- * 控制布局编辑器对控件的操作状态
- */
-sealed interface EditorWidgetOperation {
-    data object None : EditorWidgetOperation
-    /** 选择了一个控件, 并询问用户将其复制到哪些控制层 */
-    data class CloneButton(val data: ObservableWidget, val layer: ObservableControlLayer) : EditorWidgetOperation
-    /** 删除一个控件 */
-    data class DeleteButton(val data: ObservableWidget, val layer: ObservableControlLayer) : EditorWidgetOperation
-    /** 编辑控件的显示文本 */
-    data class EditWidgetText(val string: ObservableTranslatableString) : EditorWidgetOperation
-    /** 编辑切换控件层可见性事件 */
-    data class SwitchLayersVisibility(
-        val data: ObservableClickEventsProvider,
-        val type: ClickEvent.Type
-    ) : EditorWidgetOperation
-    /** 编辑发送的文本 */
-    data class SendText(val data: ObservableClickEventsProvider) : EditorWidgetOperation
-}
-
-/**
- * 控制布局编辑器的一些警告的操作状态
- */
-sealed interface EditorWarningOperation {
-    data object None : EditorWarningOperation
-    /** 没有控件层，提醒用户添加 */
-    data object WarningNoLayers : EditorWarningOperation
-    /** 没有选择控件层，提醒用户选择 */
-    data object WarningNoSelectLayer : EditorWarningOperation
-}
 
 /**
  * 预览控制布局的场景
@@ -179,6 +110,14 @@ fun JoystickTriggerMode.getTriggerModeText(): String {
         JoystickTriggerMode.TOUCH -> R.string.control_editor_edit_joystick_trigger_mode_touch
     }
     return stringResource(textRes)
+}
+
+/**
+ * 文本为空或全空白时，回退显示为“未指定”
+ */
+@Composable
+fun String.orUnspecified(): String {
+    return takeIf { it.isNotEmptyOrBlank() } ?: stringResource(R.string.generic_unspecified)
 }
 
 @Composable
@@ -234,6 +173,7 @@ fun EditorMenu(
     addNewJoystick: () -> Unit,
     openStyleList: () -> Unit,
     openJoystickStyleList: () -> Unit,
+    openStyleCabinet: () -> Unit,
     isLayerFocus: Boolean,
     onLayerFocusChanged: (Boolean) -> Unit,
     isPreviewMode: Boolean,
@@ -265,6 +205,7 @@ fun EditorMenu(
                 addNewJoystick = addNewJoystick,
                 openStyleList = openStyleList,
                 openJoystickStyleList = openJoystickStyleList,
+                openStyleCabinet = openStyleCabinet,
                 isPreviewMode = isPreviewMode,
                 onPreviewChanged = onPreviewChanged,
                 previewScenario = previewScenario,
@@ -329,6 +270,7 @@ private fun EditorMenuContent(
     addNewJoystick: () -> Unit,
     openStyleList: () -> Unit,
     openJoystickStyleList: () -> Unit,
+    openStyleCabinet: () -> Unit,
     isPreviewMode: Boolean,
     onPreviewChanged: (Boolean) -> Unit,
     previewScenario: PreviewScenario,
@@ -389,6 +331,10 @@ private fun EditorMenuContent(
             )
         }
 
+        item {
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+
         //控件外观列表
         item(key = "control_appearance_list") {
             MenuTextButton(
@@ -414,6 +360,22 @@ private fun EditorMenuContent(
                 enabled = isPreviewMode.not(),
                 onClick = {
                     openJoystickStyleList()
+                    closeScreen()
+                },
+                color = color,
+                contentColor = contentColor,
+            )
+        }
+
+        // 样式收藏柜
+        item(key = "style_cabinet") {
+            MenuTextButton(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                text = stringResource(R.string.control_editor_style_cabinet),
+                enabled = isPreviewMode.not(),
+                onClick = {
+                    openStyleCabinet()
                     closeScreen()
                 },
                 color = color,
@@ -743,7 +705,7 @@ private fun ControlLayerItem(
             }
             MarqueeText(
                 modifier = Modifier.weight(1f),
-                text = layer.name,
+                text = layer.name.orUnspecified(),
                 style = MaterialTheme.typography.bodyMedium
             )
             IconButton(

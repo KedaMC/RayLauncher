@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -53,7 +52,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -64,6 +62,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -77,17 +76,16 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.zIndex
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.filemanager.config.FmConfig
 import com.movtery.zalithlauncher.filemanager.logic.ops.ConflictResolution
 import com.movtery.zalithlauncher.filemanager.logic.trash.TrashItem
 import com.movtery.zalithlauncher.filemanager.ui.components.AppBarSubTexts
-import com.movtery.zalithlauncher.filemanager.ui.components.FmAlertDialog
 import com.movtery.zalithlauncher.filemanager.ui.components.FmCardPosition
 import com.movtery.zalithlauncher.filemanager.ui.components.FmIcons
 import com.movtery.zalithlauncher.filemanager.ui.components.fmSwipeTrigger
@@ -110,6 +108,7 @@ import com.movtery.zalithlauncher.filemanager.viewmodel.TrashItemView
 import com.movtery.zalithlauncher.filemanager.viewmodel.TrashListView
 import com.movtery.zalithlauncher.filemanager.viewmodel.TrashSortConfig
 import com.movtery.zalithlauncher.filemanager.viewmodel.TrashViewState
+import com.movtery.zalithlauncher.ui.components.SimpleAlertDialog
 import com.movtery.zalithlauncher.utils.file.formatFileSize
 import com.movtery.zalithlauncher.utils.formatDate
 import kotlin.math.floor
@@ -133,7 +132,6 @@ private sealed interface FmTrashOperation {
  * @param onExit 退出文件管理器回调
  * @param onToggleOrientation 横竖屏切换回调
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FmTrashScreen(
     vm: FileManagerViewModel,
@@ -277,10 +275,13 @@ private fun TrashContent(
 
     val contentState = if (list.loading) null else list.items
 
-    Box(
+    PullToRefreshBox(
         modifier = Modifier
             .fillMaxSize()
-            .graphicsLayer { alpha = contentAlpha.value }
+            .graphicsLayer { alpha = contentAlpha.value },
+        isRefreshing = false,
+        enabled = !list.loading,
+        onRefresh = vm::refreshTrashList,
     ) {
         AnimatedContent(
             targetState = contentState,
@@ -382,7 +383,6 @@ private fun TrashStatusBox(text: String) {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun FmTrashItem(
     item: TrashItemView,
@@ -496,7 +496,9 @@ private fun TrashSingleMenu(
     Box {
         DropdownMenu(
             expanded = expanded,
-            onDismissRequest = onDismiss
+            onDismissRequest = onDismiss,
+            shape = MaterialTheme.shapes.large,
+            shadowElevation = 3.dp
         ) {
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.fm_property)) },
@@ -533,7 +535,9 @@ private fun TrashMultiMenu(
     Box {
         DropdownMenu(
             expanded = expanded,
-            onDismissRequest = onDismiss
+            onDismissRequest = onDismiss,
+            shape = MaterialTheme.shapes.large,
+            shadowElevation = 3.dp
         ) {
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.fm_trash_restore)) },
@@ -575,7 +579,9 @@ private fun FmTrashMoreMenu(
         onDismissRequest = {
             menuExpanded = false
             sortExpanded = false
-        }
+        },
+        shape = MaterialTheme.shapes.large,
+        shadowElevation = 3.dp
     ) {
         DropdownMenuItem(
             text = { Text(stringResource(R.string.generic_refresh)) },
@@ -608,7 +614,9 @@ private fun FmTrashMoreMenu(
 
         DropdownMenu(
             expanded = sortExpanded,
-            onDismissRequest = { sortExpanded = false }
+            onDismissRequest = { sortExpanded = false },
+            shape = MaterialTheme.shapes.large,
+            shadowElevation = 3.dp
         ) {
             FmTrashSortMenuItem(
                 labelRes = R.string.fm_sort_name,
@@ -849,7 +857,7 @@ private fun TrashDialogs(
             )
         }
 
-        is FmTrashOperation.RestoreConfirm -> FmAlertDialog(
+        is FmTrashOperation.RestoreConfirm -> SimpleAlertDialog(
             title = stringResource(R.string.fm_trash_restore_confirm_title),
             text = stringResource(R.string.fm_trash_restore_confirm_text, trashOperation.item.meta.name),
             onConfirm = {
@@ -859,7 +867,7 @@ private fun TrashDialogs(
             onDismiss = { updateTrashOperation(FmTrashOperation.None) }
         )
 
-        is FmTrashOperation.PurgeConfirm -> FmAlertDialog(
+        is FmTrashOperation.PurgeConfirm -> SimpleAlertDialog(
             title = stringResource(R.string.fm_trash_purge_confirm_title),
             text = stringResource(R.string.fm_trash_purge_confirm_text, trashOperation.item.meta.name),
             confirmText = stringResource(R.string.generic_delete),
@@ -873,7 +881,7 @@ private fun TrashDialogs(
         FmTrashOperation.RestoreAllConfirm -> {
             val total = (uiState.trashView as? TrashViewState.Opened)?.trashListView?.total ?: 0
             val selected = vm.selectedTrashItems()
-            FmAlertDialog(
+            SimpleAlertDialog(
                 title = stringResource(R.string.fm_trash_restore_all_title),
                 text = if (selected.isNotEmpty()) {
                     stringResource(R.string.fm_trash_restore_selected_text, selected.size)
@@ -894,7 +902,7 @@ private fun TrashDialogs(
 
         FmTrashOperation.PurgeAllConfirm -> {
             val selected = vm.selectedTrashItems()
-            FmAlertDialog(
+            SimpleAlertDialog(
                 title = stringResource(R.string.fm_trash_purge_confirm_title),
                 text = stringResource(R.string.fm_trash_purge_selected_text, selected.size),
                 confirmText = stringResource(R.string.generic_delete),
@@ -906,7 +914,7 @@ private fun TrashDialogs(
             )
         }
 
-        FmTrashOperation.ClearConfirm -> FmAlertDialog(
+        FmTrashOperation.ClearConfirm -> SimpleAlertDialog(
             title = stringResource(R.string.fm_trash_clear),
             text = stringResource(
                 R.string.fm_trash_confirm_purge,
@@ -920,7 +928,7 @@ private fun TrashDialogs(
             onDismiss = { updateTrashOperation(FmTrashOperation.None) }
         )
 
-        FmTrashOperation.RangeSelectHelp -> FmAlertDialog(
+        FmTrashOperation.RangeSelectHelp -> SimpleAlertDialog(
             title = stringResource(R.string.fm_range_select_help),
             text = stringResource(R.string.fm_range_select_help_text),
             onDismiss = { updateTrashOperation(FmTrashOperation.None) }

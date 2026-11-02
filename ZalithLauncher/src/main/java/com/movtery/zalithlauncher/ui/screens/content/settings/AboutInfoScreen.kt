@@ -63,6 +63,7 @@ import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.game.plugin.ApkPlugin
 import com.movtery.zalithlauncher.game.plugin.PluginLoader
 import com.movtery.zalithlauncher.game.plugin.appCacheIcon
+import com.movtery.zalithlauncher.launcherName
 import com.movtery.zalithlauncher.library.LibraryInfo
 import com.movtery.zalithlauncher.library.libraryData
 import com.movtery.zalithlauncher.path.URL_COMMUNITY
@@ -70,7 +71,8 @@ import com.movtery.zalithlauncher.path.URL_MCMOD
 import com.movtery.zalithlauncher.path.URL_SUPPORT
 import com.movtery.zalithlauncher.path.URL_WEBLATE
 import com.movtery.zalithlauncher.ui.base.BaseScreen
-import com.movtery.zalithlauncher.ui.components.AnimatedLazyColumn
+import com.movtery.zalithlauncher.ui.components.GlassLazyColumn
+import com.movtery.zalithlauncher.ui.components.animated
 import com.movtery.zalithlauncher.ui.components.LiquidGlassSurface
 import com.movtery.zalithlauncher.ui.components.ScalingActionButton
 import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
@@ -93,6 +95,7 @@ fun AboutInfoScreen(
     settingsScreenKey: TitledNavKey?,
     mainScreenKey: TitledNavKey?,
     checkUpdate: () -> Unit,
+    onViewSponsors: () -> Unit,
     openLicense: (raw: Int) -> Unit,
     openLink: (url: String) -> Unit
 ) {
@@ -102,17 +105,17 @@ fun AboutInfoScreen(
     ) { isVisible ->
         //Every row is a glass surface, so every row is its own lazy item: only the ones near the viewport
         //are composed and blurred while scrolling. A section is a small glass title card plus its rows.
-        AnimatedLazyColumn(
+        GlassLazyColumn(
             modifier = Modifier.fillMaxSize(),
             isVisible = isVisible,
             verticalArrangement = Arrangement.spacedBy(2.dp),
             contentPadding = PaddingValues(all = 12.dp)
-        ) { scope ->
+        ) {
             /** Section title card. All items of a section share [section]'s entrance delay. */
             fun title(itemKey: String, section: Int, text: @Composable () -> String) {
-                animatedItemDeferred(scope, key = itemKey, delay = section * 50) { yOffset ->
+                animatedItem(key = itemKey, delay = section * 50) { ctx ->
                     SectionTitleCard(
-                        modifier = Modifier.offset { IntOffset(x = 0, y = yOffset.value.roundToPx()) },
+                        modifier = Modifier.animated(ctx),
                         title = text()
                     )
                 }
@@ -123,18 +126,18 @@ fun AboutInfoScreen(
              * Rows are [CardPosition.Middle] unless they close their section ([last]).
              */
             fun row(itemKey: String, section: Int, last: Boolean = false, content: @Composable (Modifier, CardPosition) -> Unit) {
-                animatedItemDeferred(scope, key = itemKey, delay = section * 50) { yOffset ->
+                animatedItem(key = itemKey, delay = section * 50) { ctx ->
                     content(
                         Modifier
                             .fillMaxWidth()
-                            .offset { IntOffset(x = 0, y = yOffset.value.roundToPx()) },
+                            .animated(ctx),
                         if (last) CardPosition.Bottom else CardPosition.Middle
                     )
                 }
             }
 
             fun gap(itemKey: String) {
-                scope.item(key = itemKey, contentType = "gap") { Spacer(modifier = Modifier.height(SectionGap)) }
+                item(key = itemKey, contentType = "gap") { Spacer(modifier = Modifier.height(SectionGap)) }
             }
 
             //Section 0: launcher and its authors
@@ -182,6 +185,21 @@ fun AboutInfoScreen(
 
             //Section 1: acknowledgements
             title("ack_title", 1) { stringResource(R.string.about_acknowledgements_title) }
+            row("ack_sponsors", 1) { modifier, position ->
+                val launcherName = remember { launcherName() }
+                ButtonIconItem(
+                    modifier = modifier,
+                    position = position,
+                    icon = painterResource(R.drawable.img_sponsor),
+                    title = stringResource(R.string.about_sponsors_title),
+                    text = stringResource(R.string.about_sponsors_summary, launcherName),
+                    button = {
+                        Button(onClick = onViewSponsors) {
+                            Text(text = stringResource(R.string.generic_view))
+                        }
+                    }
+                )
+            }
             row("ack_bangbang93", 1) { modifier, position ->
                 ButtonIconItem(
                     modifier = modifier,
@@ -293,7 +311,7 @@ fun AboutInfoScreen(
 
             //Section 2: third-party libraries (rows are plain lazy items: nothing animates on entrance)
             title("library_title", 2) { stringResource(R.string.about_library_title) }
-            scope.items(
+            items(
                 count = libraryData.size,
                 key = { "library_$it" },
                 contentType = { "library" }

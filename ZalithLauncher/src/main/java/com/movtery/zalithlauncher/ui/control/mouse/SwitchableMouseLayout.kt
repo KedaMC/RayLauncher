@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,6 +38,7 @@ import com.movtery.zalithlauncher.bridge.CURSOR_ENABLED
 import com.movtery.zalithlauncher.bridge.ZLBridgeStates
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.setting.enums.MouseControlMode
+import com.movtery.zalithlauncher.setting.enums.MouseTouchBlockMode
 import com.movtery.zalithlauncher.ui.control.gamepad.GamepadStickCameraListener
 import com.movtery.zalithlauncher.utils.device.PhysicalMouseChecker
 import com.movtery.zalithlauncher.utils.file.ifExists
@@ -52,6 +53,7 @@ typealias CursorMode = Int
  * 可根据指针抓取模式，自切换的虚拟指针模拟层
  * @param cursorMode                当前指针抓取模式
  * @param controlMode               控制模式：SLIDE（滑动控制）、CLICK（点击控制）
+ * @param touchBlockMode            半屏触摸阻止模式
  * @param enableMouseClick          是否开启虚拟鼠标点击操作（仅适用于滑动控制）
  * @param longPressTimeoutMillis    长按触发检测时长
  * @param requestPointerCapture     是否使用鼠标抓取方案
@@ -83,6 +85,7 @@ fun SwitchableMouseLayout(
     screenSize: IntSize,
     cursorMode: CursorMode,
     controlMode: MouseControlMode = AllSettings.mouseControlMode.state,
+    touchBlockMode: MouseTouchBlockMode = AllSettings.mouseTouchBlockMode.state,
     enableMouseClick: Boolean = AllSettings.enableMouseClick.state,
     longPressTimeoutMillis: Long = AllSettings.mouseLongPressDelay.state.toLong(),
     requestPointerCapture: Boolean = !AllSettings.physicalMouseMode.state,
@@ -242,6 +245,8 @@ fun SwitchableMouseLayout(
                 //捕获模式下，只有滑动控制模式才能获取到滑动偏移量
                 MouseControlMode.SLIDE
             },
+            touchBlockMode = touchBlockMode,
+            cursorMode = cursorMode,
             enableMouseClick = enableMouseClick,
             longPressTimeoutMillis = longPressTimeoutMillis,
             requestPointerCapture = capturePointer,

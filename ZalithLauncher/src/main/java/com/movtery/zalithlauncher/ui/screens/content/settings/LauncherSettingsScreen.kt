@@ -51,7 +51,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import com.movtery.zalithlauncher.ui.components.Button
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import com.movtery.zalithlauncher.ui.components.FilledTonalButton
 import androidx.compose.material3.Icon
 import com.movtery.zalithlauncher.ui.components.IconButton
@@ -95,7 +94,8 @@ import com.movtery.zalithlauncher.setting.enums.applyLanguage
 import com.movtery.zalithlauncher.setting.unit.floatRange
 import com.movtery.zalithlauncher.ui.androidText
 import com.movtery.zalithlauncher.ui.base.BaseScreen
-import com.movtery.zalithlauncher.ui.components.AnimatedLazyColumn
+import com.movtery.zalithlauncher.ui.components.GlassLazyColumn
+import com.movtery.zalithlauncher.ui.components.animated
 import com.movtery.zalithlauncher.ui.components.lazyScrollWithBar
 import com.movtery.zalithlauncher.ui.components.IconTextButton
 import com.movtery.zalithlauncher.ui.components.MarqueeText
@@ -109,6 +109,7 @@ import com.movtery.zalithlauncher.ui.components.toColorOrNull
 import com.movtery.zalithlauncher.ui.components.toHex
 import com.movtery.zalithlauncher.ui.components.verticalScrollWithBar
 import com.movtery.zalithlauncher.ui.screens.NestedNavKey
+import com.movtery.zalithlauncher.ui.systemLocaleStringResource
 import com.movtery.zalithlauncher.ui.screens.NormalNavKey
 import com.movtery.zalithlauncher.ui.screens.TitledNavKey
 import com.movtery.zalithlauncher.ui.screens.content.elements.DisabledAlpha
@@ -122,7 +123,6 @@ import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.SwitchSett
 import com.movtery.zalithlauncher.ui.theme.ColorThemeType
 import com.movtery.zalithlauncher.ui.theme.cardColor
 import com.movtery.zalithlauncher.ui.theme.onCardColor
-import com.movtery.zalithlauncher.utils.animation.TransitionAnimationType
 import com.movtery.zalithlauncher.utils.file.shareFile
 import com.movtery.zalithlauncher.utils.isChinaMainland
 import com.movtery.zalithlauncher.utils.logging.Logger
@@ -141,7 +141,6 @@ private sealed interface CustomColorOperation {
     data object Dialog: CustomColorOperation
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun LauncherSettingsScreen(
     key: NestedNavKey.Settings,
@@ -160,19 +159,19 @@ fun LauncherSettingsScreen(
         val listState = rememberLazyListState()
         val backgroundViewModel = LocalBackgroundViewModel.current
 
-        AnimatedLazyColumn(
+        GlassLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .lazyScrollWithBar(listState),
             state = listState,
             isVisible = isVisible,
             contentPadding = PaddingValues(all = 12.dp)
-        ) { scope ->
-            animatedItemDeferred(scope) { yOffset ->
+        ) {
+            animatedItem { ctx ->
                 SettingsCardColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .offset { IntOffset(x = 0, y = yOffset.value.roundToPx()) }
+                        .animated(ctx)
                 ) {
                     var customColorOperation by remember { mutableStateOf<CustomColorOperation>(CustomColorOperation.None) }
                     CustomColorOperation(
@@ -188,7 +187,7 @@ fun LauncherSettingsScreen(
                         summary = stringResource(R.string.settings_launcher_color_theme_summary),
                         entries = ColorThemeType.entries,
                         getRadioEnable = { enum ->
-                            if (enum == ColorThemeType.DYNAMIC) Build.VERSION.SDK_INT >= Build.VERSION_CODES.S else true
+                            enum != ColorThemeType.DYNAMIC || Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
                         },
                         getRadioText = { enum ->
                             when (enum) {
@@ -223,8 +222,11 @@ fun LauncherSettingsScreen(
                         position = CardPosition.Middle,
                         unit = AllSettings.launcherLanguage,
                         items = AppLanguage.entries,
-                        title = stringResource(R.string.settings_launcher_language),
-                        getItemText = { stringResource(it.textRes) },
+                        title = systemLocaleStringResource(R.string.settings_launcher_language),
+                        getItemText = {
+                            if (it == AppLanguage.FOLLOW_SYSTEM) systemLocaleStringResource(it.textRes)
+                            else stringResource(it.textRes)
+                        },
                         onValueChange = {
                             applyLanguage(it)
                         }
@@ -279,13 +281,13 @@ fun LauncherSettingsScreen(
 
             //启动器背景设置板块
             if (backgroundViewModel != null) {
-                animatedItemDeferred(scope) { yOffset ->
+                animatedItem { ctx ->
                     //Liquid Glass manages background opacity/blur itself, see effectiveBackgroundOpacity()
                     val liquidGlassOn = launcherGlassOn()
                     SettingsCardColumn(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .offset { IntOffset(x = 0, y = yOffset.value.roundToPx()) }
+                            .animated(ctx)
                     ) {
                         SettingsCard(
                             modifier = Modifier.fillMaxWidth(),
@@ -372,62 +374,48 @@ fun LauncherSettingsScreen(
             }
 
             //Decoration overlay (image/video from the gallery above the UI)
-            animatedItemDeferred(scope) { yOffset ->
+            animatedItem { ctx ->
                 OverlaySettings(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .offset { IntOffset(x = 0, y = yOffset.value.roundToPx()) },
+                        .animated(ctx),
                     submitError = submitError
                 )
             }
 
             //动画设置板块
-            animatedItemDeferred(scope) { yOffset ->
+            animatedItem { ctx ->
                 SettingsCardColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .offset { IntOffset(x = 0, y = yOffset.value.roundToPx()) }
+                        .animated(ctx)
                 ) {
-                    IntSliderSettingsCard(
+                    SwitchSettingsCard(
                         modifier = Modifier.fillMaxWidth(),
                         position = CardPosition.Top,
-                        unit = AllSettings.launcherAnimateSpeed,
-                        title = stringResource(R.string.settings_launcher_animate_speed_title),
-                        summary = stringResource(R.string.settings_launcher_animate_speed_summary),
-                        valueRange = AllSettings.launcherAnimateSpeed.floatRange,
-                        suffix = "x"
+                        unit = AllSettings.launcherSwapAnimEnabled,
+                        title = stringResource(R.string.settings_launcher_swap_anim_enabled_title),
+                        summary = stringResource(R.string.settings_launcher_swap_anim_enabled_summary)
                     )
 
                     IntSliderSettingsCard(
                         modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Middle,
-                        unit = AllSettings.launcherAnimateExtent,
-                        title = stringResource(R.string.settings_launcher_animate_extent_title),
-                        summary = stringResource(R.string.settings_launcher_animate_extent_summary),
-                        valueRange = AllSettings.launcherAnimateExtent.floatRange,
-                        suffix = "x"
-                    )
-
-                    EnumSettingsCard(
-                        modifier = Modifier.fillMaxWidth(),
                         position = CardPosition.Bottom,
-                        unit = AllSettings.launcherSwapAnimateType,
-                        title = stringResource(R.string.settings_launcher_swap_animate_type_title),
-                        summary = stringResource(R.string.settings_launcher_swap_animate_type_summary),
-                        entries = TransitionAnimationType.entries,
-                        getRadioEnable = { true },
-                        getRadioText = { enum ->
-                            stringResource(enum.textRes)
-                        }
+                        unit = AllSettings.launcherAnimateSpeedLevel,
+                        title = stringResource(R.string.settings_launcher_animate_speed_title),
+                        summary = stringResource(R.string.settings_launcher_animate_speed_summary),
+                        valueRange = AllSettings.launcherAnimateSpeedLevel.floatRange,
+                        valueText = { value -> "×" + (value / 10f) },
+                        enabled = AllSettings.launcherSwapAnimEnabled.state,
                     )
                 }
             }
 
-            animatedItemDeferred(scope) { yOffset ->
+            animatedItem { ctx ->
                 SettingsCardColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .offset { IntOffset(x = 0, y = yOffset.value.roundToPx()) }
+                        .animated(ctx)
                 ) {
                     //这些镜像源都是为了改善中国大陆内陆的网络环境而存在的
                     //境外不需要这些镜像源，反而可能拖慢境外的下载速度

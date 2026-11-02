@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ class CurseForgeSearchResult(
     override fun getAssetsPage(classes: PlatformClasses): AssetsPage {
         val mcmodData = data.mapNotNull { data0 ->
             if (!data0.isApproved()) return@mapNotNull null
-            data0 to classes.getTranslations().getModBySlugId(data0.slug)
+            data0 to classes.getTranslations()?.getInfoByCurseForgeId(data0.slug)
         }
         val pageSize = pagination.pageSize
         val isLastPage = pagination.resultCount < pageSize ||

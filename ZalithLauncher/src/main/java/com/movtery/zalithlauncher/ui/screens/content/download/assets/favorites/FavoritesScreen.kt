@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,12 +35,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -82,10 +82,14 @@ import com.movtery.zalithlauncher.game.download.assets.platform.curseforge.model
 import com.movtery.zalithlauncher.game.download.assets.platform.modrinth.models.modrinthModLoaderFilters
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.ui.base.BaseScreen
+import com.movtery.zalithlauncher.ui.components.AnimatedDirection
 import com.movtery.zalithlauncher.ui.components.EdgeDirection
 import com.movtery.zalithlauncher.ui.components.OwnOutlinedTextField
 import com.movtery.zalithlauncher.ui.components.TextRailItem
+import com.movtery.zalithlauncher.ui.components.animated
 import com.movtery.zalithlauncher.ui.components.fadeEdge
+import com.movtery.zalithlauncher.ui.components.rememberAnimatedContext
+import com.movtery.zalithlauncher.ui.components.topBarWheelFallback
 import com.movtery.zalithlauncher.ui.screens.NestedNavKey
 import com.movtery.zalithlauncher.ui.screens.TitledNavKey
 import com.movtery.zalithlauncher.ui.screens.content.download.assets.elements.BaseFilterLayout
@@ -94,7 +98,6 @@ import com.movtery.zalithlauncher.ui.screens.content.download.assets.elements.Fi
 import com.movtery.zalithlauncher.ui.screens.content.elements.backgroundGlass
 import com.movtery.zalithlauncher.ui.theme.cardColor
 import com.movtery.zalithlauncher.ui.theme.onCardColor
-import com.movtery.zalithlauncher.utils.animation.swapAnimateDpAsState
 import com.movtery.zalithlauncher.viewmodel.backgroundVisible
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -161,7 +164,7 @@ private class FavoritesScreenViewModel : ViewModel() {
         }
     }
 
-    fun onScreenEntered() {
+    fun reload() {
         viewModelScope.launch {
             //先完成数据同步，再基于最新数据池刷新远端数据
             FavoriteProjectsRepository.reload()
@@ -202,37 +205,32 @@ fun FavoritesScreen(
     ) { isVisible ->
         //每进入一次屏幕，重载收藏数据并刷新远端数据
         LaunchedEffect(Unit) {
-            viewModel.onScreenEntered()
+            viewModel.reload()
         }
 
         Row(modifier = Modifier.fillMaxSize()) {
-            val yOffset by swapAnimateDpAsState(targetValue = (-40).dp, swapIn = isVisible)
+            val ctx = rememberAnimatedContext(isVisible = isVisible)
             FavoritesContent(
                 modifier = Modifier
                     .fillMaxHeight()
                     .weight(7f)
-                    .offset { IntOffset(x = 0, y = yOffset.roundToPx()) },
+                    .animated(ctx),
                 viewModel = viewModel,
                 swapToDownload = swapToDownload
             )
 
-            val xOffset by swapAnimateDpAsState(
-                targetValue = 40.dp,
-                swapIn = isVisible,
-                isHorizontal = true
-            )
+            val ctxX = rememberAnimatedContext(isVisible = isVisible)
             FavoritesFilter(
                 modifier = Modifier
                     .fillMaxHeight()
                     .weight(3f)
-                    .offset { IntOffset(x = xOffset.roundToPx(), y = 0) },
+                    .animated(ctxX, from = AnimatedDirection.Right),
                 viewModel = viewModel
             )
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FavoritesContent(
     modifier: Modifier = Modifier,
@@ -242,7 +240,11 @@ private fun FavoritesContent(
     val repositoryLoaded = FavoriteProjectsRepository.initialized
     val repositoryEmpty = FavoriteProjectsRepository.projects.isEmpty()
 
-    Box(modifier = modifier) {
+    PullToRefreshBox(
+        modifier = modifier,
+        isRefreshing = false,
+        onRefresh = viewModel::reload,
+    ) {
         if (!repositoryLoaded) {
             //收藏数据装载中
         } else if (repositoryEmpty) {
@@ -287,23 +289,29 @@ private fun FavoritesContent(
             val barShownFraction = remember(topAppBarState) {
                 derivedStateOf { 1f - topAppBarState.collapsedFraction }
             }
-            val actionBarShadowElevation = if (backgroundVisible()) {
-                0.dp //背景可见时不使用阴影，因为卡片会半透明化
-            } else {
-                5.dp * barShownFraction.value * listScrolledFraction.value
-            }
+            //背景可见时不使用阴影，因为卡片会半透明化
+            val withShadow = !backgroundVisible()
 
-            //列表顶部淡化，凸显悬浮分类操作栏的视觉层级
-            val listTopFadePx = (headerHeightPx + headerTopPaddingPx + 80f) *
-                    listScrolledFraction.value *
-                    barShownFraction.value
+            //悬浮分类操作栏的阴影在图层块内读取滚动比例，滚动时只更新图层不重组
+            val barShape = MaterialTheme.shapes.large
+            val barShadowModifier = Modifier.graphicsLayer {
+                if (withShadow) {
+                    shadowElevation = 5.dp.toPx() * listScrolledFraction.value * barShownFraction.value
+                }
+                shape = barShape
+            }
 
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .nestedScroll(scrollBehavior.nestedScrollConnection)
+                    .topBarWheelFallback(topAppBarState)
                     .clipToBounds()
-                    .topFade(listTopFadePx),
+                    .topFade {
+                        (headerHeightPx + headerTopPaddingPx + 80f) *
+                                listScrolledFraction.value *
+                                barShownFraction.value
+                    },
                 state = listState,
                 contentPadding = PaddingValues(
                     start = 12.dp,
@@ -549,20 +557,24 @@ private fun FavoritesFilter(
 /**
  * 在组件顶部绘制指定像素高度的线性渐隐
  */
-private fun Modifier.topFade(heightPx: Float): Modifier = this
+private fun Modifier.topFade(heightPx: () -> Float): Modifier = this
     .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
     .drawWithContent {
         drawContent()
-        if (heightPx <= 0f) return@drawWithContent
+        val height = heightPx()
+        if (height <= 0f) return@drawWithContent
         inset(
             left = 0f,
             top = 0f,
             right = 0f,
-            bottom = (size.height - heightPx).coerceAtLeast(0f)
+            bottom = (size.height - height).coerceAtLeast(0f)
         ) {
             drawRect(
-                brush = Brush.verticalGradient(0f to Color.Black, 1f to Color.Transparent),
+                brush = TopFadeBrush,
                 blendMode = BlendMode.DstOut
             )
         }
     }
+
+/** 顶部渐隐使用的固定渐变 */
+private val TopFadeBrush = Brush.verticalGradient(0f to Color.Black, 1f to Color.Transparent)

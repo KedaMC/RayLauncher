@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,6 @@
 
 package com.movtery.zalithlauncher.game.download.game
 
-import com.movtery.zalithlauncher.game.addons.modloader.cleanroom.CleanroomVersion
 import com.movtery.zalithlauncher.game.addons.modloader.fabriclike.fabric.FabricVersion
 import com.movtery.zalithlauncher.game.addons.modloader.fabriclike.legacyfabric.LegacyFabricVersion
 import com.movtery.zalithlauncher.game.addons.modloader.fabriclike.quilt.QuiltVersion
@@ -41,5 +40,4 @@ data class GameDownloadInfo(
     val legacyFabricAPI: ModVersion? = null,
     val quilt: QuiltVersion? = null,
     val quiltAPI: ModVersion? = null,
-    val cleanroom: CleanroomVersion? = null,
 )

@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -43,6 +42,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -53,7 +53,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -69,6 +68,7 @@ import com.movtery.zalithlauncher.game.account.yggdrasil.PlayerProfile
 import com.movtery.zalithlauncher.ui.AndroidStringText
 import com.movtery.zalithlauncher.ui.androidText
 import com.movtery.zalithlauncher.ui.base.BaseScreen
+import com.movtery.zalithlauncher.ui.components.AnimatedDirection
 import com.movtery.zalithlauncher.ui.components.BackgroundCard
 import com.movtery.zalithlauncher.ui.components.MarqueeText
 import com.movtery.zalithlauncher.ui.components.ScalingActionButton
@@ -77,7 +77,8 @@ import com.movtery.zalithlauncher.ui.components.SimpleAlertDialog
 import com.movtery.zalithlauncher.ui.components.SimpleEditDialog
 import com.movtery.zalithlauncher.ui.components.SimpleListDialog
 import com.movtery.zalithlauncher.ui.components.SimpleListItem
-import com.movtery.zalithlauncher.ui.components.SkinPreview3D
+import com.movtery.zalithlauncher.ui.components.animated
+import com.movtery.zalithlauncher.ui.components.rememberAnimatedContext
 import com.movtery.zalithlauncher.ui.screens.NormalNavKey
 import com.movtery.zalithlauncher.ui.screens.content.elements.AccountItem
 import com.movtery.zalithlauncher.ui.screens.content.elements.AccountOperation
@@ -87,6 +88,7 @@ import com.movtery.zalithlauncher.ui.screens.content.elements.LocalLoginDialog
 import com.movtery.zalithlauncher.ui.screens.content.elements.LocalLoginOperation
 import com.movtery.zalithlauncher.ui.screens.content.elements.LoginMenuDialog
 import com.movtery.zalithlauncher.ui.screens.content.elements.LoginMenuOperation
+import com.movtery.zalithlauncher.ui.screens.content.elements.MicrosoftLoginMethodDialog
 import com.movtery.zalithlauncher.ui.screens.content.elements.MicrosoftLoginOperation
 import com.movtery.zalithlauncher.ui.screens.content.elements.MicrosoftLoginTipDialog
 import com.movtery.zalithlauncher.ui.screens.content.elements.MicrosoftReloginDialog
@@ -94,7 +96,6 @@ import com.movtery.zalithlauncher.ui.screens.content.elements.OtherAccountRelogi
 import com.movtery.zalithlauncher.ui.screens.content.elements.OtherLoginOperation
 import com.movtery.zalithlauncher.ui.screens.content.elements.OtherServerLoginDialog
 import com.movtery.zalithlauncher.ui.screens.content.elements.ServerOperation
-import com.movtery.zalithlauncher.utils.animation.swapAnimateDpAsState
 import com.movtery.zalithlauncher.utils.copyText
 import com.movtery.zalithlauncher.utils.string.getMessageOrToString
 import com.movtery.zalithlauncher.viewmodel.AccountManageEffect
@@ -104,7 +105,10 @@ import com.movtery.zalithlauncher.viewmodel.ErrorViewModel
 import com.movtery.zalithlauncher.viewmodel.EventViewModel
 import com.movtery.zalithlauncher.viewmodel.LocalBackgroundViewModel
 import com.movtery.zalithlauncher.viewmodel.ScreenBackStackViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
+import com.movtery.zalithlauncher.ui.components.SkinPreview3D
 /**
  * 封装账号界面 UI 交互的回调函数
  * 
@@ -272,15 +276,11 @@ private fun ActionsLayout(
     currentAccount: Account?,
     actions: AccountActions
 ) {
-    val xOffset by swapAnimateDpAsState(
-        targetValue = (-40).dp,
-        swapIn = isVisible,
-        isHorizontal = true
-    )
+    val ctx = rememberAnimatedContext(isVisible = isVisible)
 
     Column(
         modifier = modifier
-            .offset { IntOffset(x = xOffset.roundToPx(), y = 0) }
+            .animated(ctx, from = AnimatedDirection.Left)
             .fillMaxHeight()
     ) {
         //玩家模型预览
@@ -386,18 +386,44 @@ private fun MicrosoftLoginOperation(
                 onConfirm = {
                     actions.onIntent(
                         AccountManageIntent.UpdateMicrosoftLoginOp(
+                            MicrosoftLoginOperation.SelectBrowser
+                        )
+                    )
+                },
+                openLink = actions.openLink
+            )
+        }
+        is MicrosoftLoginOperation.SelectBrowser -> {
+            MicrosoftLoginMethodDialog(
+                onDismissRequest = {
+                    actions.onIntent(
+                        AccountManageIntent.UpdateMicrosoftLoginOp(
                             MicrosoftLoginOperation.None
                         )
                     )
+                },
+                onSystemBrowser = {
                     actions.onIntent(
                         AccountManageIntent.PerformMicrosoftLogin(
+                            useSystemBrowser = true,
                             toWeb = actions.navigateToWeb,
+                            toSystemBrowser = actions.openLink,
                             backToMain = actions.backToMainScreen,
                             checkIfInWebScreen = actions.checkIfInWebScreen
                         )
                     )
                 },
-                openLink = actions.openLink
+                onInternalBrowser = {
+                    actions.onIntent(
+                        AccountManageIntent.PerformMicrosoftLogin(
+                            useSystemBrowser = false,
+                            toWeb = actions.navigateToWeb,
+                            toSystemBrowser = actions.openLink,
+                            backToMain = actions.backToMainScreen,
+                            checkIfInWebScreen = actions.checkIfInWebScreen
+                        )
+                    )
+                }
             )
         }
     }
@@ -632,7 +658,7 @@ private fun AccountsLayout(
     accountCapes: Map<String, List<PlayerProfile.Cape>>,
     actions: AccountActions
 ) {
-    val yOffset by swapAnimateDpAsState(targetValue = (-40).dp, swapIn = isVisible)
+    val ctx = rememberAnimatedContext(isVisible = isVisible)
     val context = LocalContext.current
 
     AccountOperation(accountOperation, actions)
@@ -645,7 +671,7 @@ private fun AccountsLayout(
     )
 
     BackgroundCard(
-        modifier = modifier.offset { IntOffset(x = 0, y = yOffset.roundToPx()) },
+        modifier = modifier.animated(ctx),
         shape = MaterialTheme.shapes.extraLarge
     ) {
         if (accounts.isNotEmpty()) {
@@ -808,10 +834,8 @@ private fun AccountOperation(
                     onConfirm = {
                         actions.onIntent(AccountManageIntent.UpdateAccountOp(AccountOperation.None))
                         actions.onIntent(
-                            AccountManageIntent.PerformMicrosoftLogin(
-                                toWeb = actions.navigateToWeb,
-                                backToMain = actions.backToMainScreen,
-                                checkIfInWebScreen = actions.checkIfInWebScreen
+                            AccountManageIntent.UpdateMicrosoftLoginOp(
+                                MicrosoftLoginOperation.SelectBrowser
                             )
                         )
                     }

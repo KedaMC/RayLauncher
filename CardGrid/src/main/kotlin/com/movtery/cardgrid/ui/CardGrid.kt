@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -92,7 +91,6 @@ private const val SlotStrokeAlpha = 0.5f
  * 卡片网格容器
  * @param cardBackground 卡片内容的背景装饰，在卡片表面内部应用
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun CardGrid(
     state: CardGridState,
@@ -114,7 +112,6 @@ fun CardGrid(
     }
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun CardGridCanvas(
     state: CardGridState,
@@ -250,7 +247,6 @@ private fun CardGridCanvas(
     }
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun CardSlot(
     state: CardGridState,

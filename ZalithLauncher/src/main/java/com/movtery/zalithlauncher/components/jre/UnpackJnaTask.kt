@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,12 +20,11 @@ package com.movtery.zalithlauncher.components.jre
 
 import android.content.Context
 import com.movtery.zalithlauncher.components.UnpackSingleTask
+import com.movtery.zalithlauncher.context.copyAssetFile
 import com.movtery.zalithlauncher.path.PathManager
-import com.movtery.zalithlauncher.utils.file.extractFromZip
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.movtery.zalithlauncher.utils.device.Architecture
+import org.apache.commons.io.FileUtils
 import java.io.File
-import java.util.zip.ZipFile
 
 class UnpackJnaTask(context: Context) : UnpackSingleTask(
     context = context,
@@ -33,15 +32,28 @@ class UnpackJnaTask(context: Context) : UnpackSingleTask(
     assetsDirName = "runtimes/jna",
     fileDirName = "jna"
 ) {
-    override suspend fun moreProgress(file: File) {
-        if (file.extension == "zip") {
-            withContext(Dispatchers.IO) {
-                ZipFile(file).use { zip ->
-                    //解压 jna 压缩包
-                    zip.extractFromZip("", this@UnpackJnaTask.rootDir)
+    override suspend fun run() {
+        val dir = File(rootDir, fileDirName)
+        FileUtils.deleteDirectory(dir)
+
+        val abi = Architecture.archAsStringAndroid(Architecture.getDeviceArchitecture())
+        context.assets.list(assetsDirName)
+            ?.filter { it != "version" }
+            ?.forEach { version ->
+                val nativesDir = "$assetsDirName/$version/natives/$abi"
+                if (context.assets.list(nativesDir)?.contains("libjnidispatch.so") == true) {
+                    context.copyAssetFile(
+                        fileName = "$nativesDir/libjnidispatch.so",
+                        output = File(dir, "$version/libjnidispatch.so"),
+                        overwrite = true
+                    )
                 }
-                file.delete()
             }
-        }
+
+        context.copyAssetFile(
+            fileName = "$assetsDirName/version",
+            output = File(dir, "version"),
+            overwrite = true
+        )
     }
 }
