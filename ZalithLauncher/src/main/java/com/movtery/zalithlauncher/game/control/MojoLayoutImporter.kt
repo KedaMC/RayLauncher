@@ -24,13 +24,16 @@ import kotlin.math.roundToInt
 internal object MojoLayoutImporter {
     private const val MAX_JSON_BYTES = 16 * 1024 * 1024
     private const val MAX_MJ_VERSION = 9
+    private const val PREFERRED_SCALE = 100f
 
     data class Payload(val json: String)
     private data class Point(val x: Float, val y: Float)
     private class State(
         val screenW: Float,
         val screenH: Float,
-        val density: Float
+        val density: Float,
+        /** MJ `scaledAt`: button scale the layout was saved with. */
+        val layoutScale: Float
     ) {
         val styles = mutableListOf<ButtonStyle>()
         val joystickStyles = mutableListOf<JoystickStyle>()
@@ -39,7 +42,12 @@ internal object MojoLayoutImporter {
         var drawers = 0
         var skippedActions = 0
         var bitmapControls = 0
-        val margin get() = 8f * density
+        /** MJ margin is dpToPx(2). */
+        val margin get() = 2f * density
+
+        /** MJ rescales saved sizes: size / scaledAt * buttonscale (default buttonscale is 100). */
+        fun scaled(value: Float) = value / layoutScale * PREFERRED_SCALE
+        fun strokeScaled(value: Float) = value * (layoutScale / 100f)
     }
 
     fun readPayload(input: InputStream): Payload {
@@ -59,7 +67,8 @@ internal object MojoLayoutImporter {
         val state = State(
             max(metrics.widthPixels, metrics.heightPixels).toFloat().coerceAtLeast(1f),
             min(metrics.widthPixels, metrics.heightPixels).toFloat().coerceAtLeast(1f),
-            metrics.density.coerceAtLeast(0.1f)
+            metrics.density.coerceAtLeast(0.1f),
+            root.optDouble("scaledAt", 100.0).toFloat().takeIf { it.isFinite() && it > 0f } ?: 100f
         )
         val mainButtons = mutableListOf<NormalData>()
         val mainJoysticks = mutableListOf<JoystickData>()
@@ -71,29 +80,31 @@ internal object MojoLayoutImporter {
             val properties = drawer.optJSONObject("properties") ?: return@eachIndexed
             val children = drawer.optJSONArray("buttonProperties") ?: JSONArray()
             val layerId = id()
-            val w = properties.optDouble("width", 50.0).toFloat().coerceAtLeast(5f)
-            val h = properties.optDouble("height", 50.0).toFloat().coerceAtLeast(5f)
+            val w = state.scaled(properties.optDouble("width", 50.0).toFloat()).coerceAtLeast(5f)
+            val h = state.scaled(properties.optDouble("height", 50.0).toFloat()).coerceAtLeast(5f)
             val wp = w * state.density
             val hp = h * state.density
             val anchor = state.position(properties, wp, hp)
-            // MJ drawer children can carry their own absolute dynamic coordinates.
-            // Prefer those coordinates; orientation is only a fallback for older layouts
-            // whose child buttons do not define a complete position.
-            val orientation = drawer.optString("orientation", "FREE").uppercase()
+            // MJ recomputes child positions and sizes for every non-FREE drawer at runtime:
+            // child = drawer position + (drawer size + margin) * (i + 1), child size = drawer size.
+            // Stored child coordinates are stale there, so they are only used for FREE drawers.
+            val orientation = drawer.orientation()
             val childButtons = mutableListOf<NormalData>()
             for (i in 0 until children.length()) {
                 val child = children.optJSONObject(i) ?: continue
-                val hasOwnPosition = child.optString("dynamicX").isNotBlank() &&
-                    child.optString("dynamicY").isNotBlank()
-                val fallbackPosition = if (hasOwnPosition) null else when (orientation) {
-                    "RIGHT" -> Point(anchor.x + (wp + state.margin) * (i + 1), anchor.y)
-                    "LEFT" -> Point(anchor.x - (wp + state.margin) * (i + 1), anchor.y)
-                    "UP" -> Point(anchor.x, anchor.y - (hp + state.margin) * (i + 1))
-                    "DOWN" -> Point(anchor.x, anchor.y + (hp + state.margin) * (i + 1))
+                val step = i + 1
+                val aligned = when (orientation) {
+                    "RIGHT" -> Point(anchor.x + (wp + state.margin) * step, anchor.y)
+                    "LEFT" -> Point(anchor.x - (wp + state.margin) * step, anchor.y)
+                    "UP" -> Point(anchor.x, anchor.y - (hp + state.margin) * step)
+                    "DOWN" -> Point(anchor.x, anchor.y + (hp + state.margin) * step)
                     else -> null
                 }
-                // Child dimensions are independent of the drawer trigger dimensions.
-                childButtons += state.button(child, fallbackPosition)
+                childButtons += if (aligned != null) {
+                    state.button(child, aligned, sizeDp = w to h)
+                } else {
+                    state.button(child)
+                }
             }
             layers += ControlLayer(
                 name = "MJ ${properties.optString("name", "Drawer")} ${index + 1}",
@@ -147,16 +158,18 @@ internal object MojoLayoutImporter {
     private fun State.button(
         src: JSONObject,
         overridePosition: Point? = null,
-        extra: List<ClickEvent> = emptyList()
+        extra: List<ClickEvent> = emptyList(),
+        sizeDp: Pair<Float, Float>? = null
     ): NormalData {
         val name = src.optString("name", "Button").ifBlank { "Button" }
-        val w = src.optDouble("width", 50.0).toFloat().coerceAtLeast(5f)
-        val h = src.optDouble("height", 50.0).toFloat().coerceAtLeast(5f)
+        val w = sizeDp?.first ?: scaled(src.optDouble("width", 50.0).toFloat()).coerceAtLeast(5f)
+        val h = sizeDp?.second ?: scaled(src.optDouble("height", 50.0).toFloat()).coerceAtLeast(5f)
         val wp = w * density
         val hp = h * density
         val p = toPosition(overridePosition ?: position(src, wp, hp), wp, hp)
         val events = mutableListOf<ClickEvent>()
         src.optJSONArray("keycodes").eachInt { code ->
+            if (code == 0) return@eachInt // unused MJ key slot
             val key = key(code)
             if (key == null) skippedActions++ else events += ClickEvent(ClickEvent.Type.Key, key)
         }
@@ -166,7 +179,7 @@ internal object MojoLayoutImporter {
             src.optDouble("opacity", 1.0).toFloat(),
             src.optInt("bgColor", 0x4D000000),
             src.optInt("strokeColor", -1),
-            src.optDouble("strokeWidth", 0.0).toFloat(),
+            strokeScaled(src.optDouble("strokeWidth", 0.0).toFloat()),
             src.optDouble("cornerRadius", 0.0).toFloat()
         )
         styles += style
@@ -195,13 +208,13 @@ internal object MojoLayoutImporter {
     }
 
     private fun State.joystick(src: JSONObject): JoystickData {
-        val w = src.optDouble("width", 100.0).toFloat().coerceAtLeast(20f)
-        val h = src.optDouble("height", w.toDouble()).toFloat().coerceAtLeast(20f)
+        val w = scaled(src.optDouble("width", 100.0).toFloat()).coerceAtLeast(20f)
+        val h = scaled(src.optDouble("height", src.optDouble("width", 100.0)).toFloat()).coerceAtLeast(20f)
         val size = max(w, h)
         val sizePx = size * density
         val styleId = id()
         val alpha = src.optDouble("opacity", 1.0).toFloat().coerceIn(0f, 1f)
-        val stroke = (src.optDouble("strokeWidth", 0.0).toFloat() / size * 100f)
+        val stroke = (strokeScaled(src.optDouble("strokeWidth", 0.0).toFloat()) / size * 100f)
             .roundToInt().coerceIn(0, 50)
         val config = JoystickStyle.StyleConfig(
             alpha = alpha,
@@ -251,6 +264,13 @@ internal object MojoLayoutImporter {
         return ButtonStyle("MJ: $name", id(), false, true, config, config)
     }
 
+    /** MJ serializes the drawer orientation as an enum name; older exports may use its int index. */
+    private fun JSONObject.orientation(): String = when (val raw = opt("orientation")) {
+        is Number -> listOf("DOWN", "LEFT", "UP", "RIGHT", "FREE").getOrElse(raw.toInt()) { "FREE" }
+        is String -> raw.uppercase()
+        else -> "FREE"
+    }
+
     private fun visibility(src: JSONObject): VisibilityType {
         val game = src.optBoolean("displayInGame", true)
         val menu = src.optBoolean("displayInMenu", true)
@@ -266,7 +286,7 @@ internal object MojoLayoutImporter {
         val vars = mapOf(
             "top" to 0f, "left" to 0f, "right" to screenW - w, "bottom" to screenH - h,
             "width" to w, "height" to h, "screen_width" to screenW, "screen_height" to screenH,
-            "margin" to margin, "preferred_scale" to 100f
+            "margin" to margin, "preferred_scale" to PREFERRED_SCALE
         )
         val x = eval(src.optString("dynamicX", ""), vars)
             ?: src.optDouble("x", ((screenW - w) / 2f).toDouble()).toFloat()
