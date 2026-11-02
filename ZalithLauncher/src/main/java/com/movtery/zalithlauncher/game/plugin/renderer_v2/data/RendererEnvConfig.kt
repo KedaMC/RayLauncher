@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * 版本独立渲染器环境变量配置，序列化保存于版本文件夹下的 renderer.config
+ * 旧版渲染器环境变量配置，仅用于迁移版本文件夹下的 renderer.config
  */
 @Serializable
 data class RendererEnvConfig(

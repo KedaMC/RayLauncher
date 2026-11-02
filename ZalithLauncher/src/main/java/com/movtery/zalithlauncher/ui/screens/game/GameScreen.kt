@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -105,7 +105,6 @@ import com.movtery.zalithlauncher.ui.screens.game.elements.ReplacementControlSta
 import com.movtery.zalithlauncher.ui.screens.game.elements.SendKeycodeOperation
 import com.movtery.zalithlauncher.ui.screens.game.elements.SendKeycodeState
 import com.movtery.zalithlauncher.ui.screens.main.control_editor.ControlEditor
-import com.movtery.zalithlauncher.utils.RegionRestriction
 import com.movtery.zalithlauncher.utils.currentGameDisplayLayout
 import com.movtery.zalithlauncher.utils.logging.Logger
 import com.movtery.zalithlauncher.viewmodel.EditorViewModel
@@ -617,7 +616,7 @@ fun GameScreen(
                 observedLayout = viewModel.observableLayout,
                 eventHandler = viewModel.eventHandler,
                 checkOccupiedPointers = { viewModel.occupiedPointers.contains(it) },
-                opacity = (AllSettings.controlsOpacity.state.toFloat() / 100f).coerceIn(0f, 1f),
+                opacity = { (AllSettings.controlsOpacity.state.toFloat() / 100f).coerceIn(0f, 1f) },
                 markPointerAsMoveOnly = { viewModel.moveOnlyPointers.add(it) },
                 onOccupiedPointer = { viewModel.occupiedPointers.add(it) },
                 onReleasePointer = { viewModel.occupiedPointers.remove(it) },
@@ -731,12 +730,6 @@ fun GameScreen(
                     }
                 }
 
-                val gameFps: Int? = if (showFps) {
-                    viewModel.gameFps
-                } else {
-                    null
-                }
-
                 DraggableGameBall(
                     position = AllSettings.menuBallPos.state,
                     onPositionChanged = {
@@ -745,11 +738,11 @@ fun GameScreen(
                     onSavePos = {
                         AllSettings.menuBallPos.save()
                     },
-                    gameFps = gameFps,
+                    gameFps = { if (showFps) viewModel.gameFps else null },
                     fpsDisplayMode = AllSettings.fpsDisplayMode.state,
-                    fpsHistory = viewModel.fpsHistory,
-                    fpsMax = viewModel.fpsMax,
-                    fpsMin = viewModel.fpsMin,
+                    fpsHistory = { viewModel.fpsHistory },
+                    fpsMax = { viewModel.fpsMax },
+                    fpsMin = { viewModel.fpsMin },
                     showMemory = AllSettings.showMemory.state,
                     opened = viewModel.gameMenuState == MenuState.SHOW,
                     alpha = AllSettings.menuBallOpacity.state / 100f,

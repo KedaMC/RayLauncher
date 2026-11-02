@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -72,6 +72,9 @@ class ControlEditorActivity : BaseAppCompatActivity() {
 
         //初始化控制布局
         editorViewModel.initLayout(layout)
+
+        //加载样式收藏柜
+        editorViewModel.styleCabinet.load()
 
         //绑定返回键按下事件，防止直接退出导致控制布局丢失所有变更
         //提醒用户保存并退出

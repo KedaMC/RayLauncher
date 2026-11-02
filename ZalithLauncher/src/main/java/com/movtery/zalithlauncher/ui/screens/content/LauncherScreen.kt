@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,6 +48,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -83,12 +84,15 @@ import com.movtery.zalithlauncher.game.version.installed.VersionsManager
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.setting.enums.ActionMenuSide
 import com.movtery.zalithlauncher.ui.base.BaseScreen
+import com.movtery.zalithlauncher.ui.components.AnimatedDirection
 import com.movtery.zalithlauncher.ui.components.BackgroundCard
 import com.movtery.zalithlauncher.ui.components.LiquidGlassSurface
 import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
 import com.movtery.zalithlauncher.ui.components.MarqueeText
 import com.movtery.zalithlauncher.ui.components.ScalingActionButton
 import com.movtery.zalithlauncher.ui.components.SkinPreview3D
+import com.movtery.zalithlauncher.ui.components.animated
+import com.movtery.zalithlauncher.ui.components.rememberAnimatedContext
 import com.movtery.zalithlauncher.ui.screens.NestedNavKey
 import com.movtery.zalithlauncher.ui.screens.NormalNavKey
 import com.movtery.zalithlauncher.ui.screens.content.elements.CommonVersionInfoLayout
@@ -102,8 +106,9 @@ import com.movtery.zalithlauncher.ui.screens.content.home.rememberActionMenuDrag
 import com.movtery.zalithlauncher.ui.screens.content.home.server.LocalServerCardQuickPlay
 import com.movtery.zalithlauncher.ui.screens.content.home.version.LocalHomeCardLauncher
 import com.movtery.zalithlauncher.ui.screens.content.home.version.LocalHomeCardVersionSettings
-import com.movtery.zalithlauncher.utils.animation.swapAnimateDpAsState
 import com.movtery.zalithlauncher.viewmodel.ScreenBackStackViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
 private const val ContentWeight = 7f
@@ -229,7 +234,7 @@ fun LauncherScreen(
                         isTaller = isActionMenuTaller,
                         dockedSide = dockedSide,
                         onLaunchGame = onLaunchGame,
-                        swapTargetValue = if (dockedSide == ActionMenuSide.END) 40.dp else (-40).dp,
+                        swapDirection = if (dockedSide == ActionMenuSide.END) AnimatedDirection.Right else AnimatedDirection.Left,
                         pickUpScale = { dragState.scale },
                         toAccountManageScreen = toAccountManageScreen,
                         toVersionManageScreen = toVersionManageScreen,
@@ -249,10 +254,7 @@ private fun ContentMenu(
     onOpenVersionSettings: (Version) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val yOffset by swapAnimateDpAsState(
-        targetValue = (-40).dp,
-        swapIn = isVisible
-    )
+    val ctx = rememberAnimatedContext(isVisible = isVisible)
     val gridState = rememberCardGridState()
 
     CompositionLocalProvider(
@@ -265,7 +267,7 @@ private fun ContentMenu(
             isVisible = isVisible,
             modifier = modifier
                 .fillMaxSize()
-                .offset { IntOffset(x = 0, y = yOffset.roundToPx()) }
+                .animated(ctx)
         )
     }
 }
@@ -621,18 +623,14 @@ private fun ActionMenu(
     isTaller: Boolean,
     dockedSide: ActionMenuSide,
     onLaunchGame: (Version?) -> Unit,
-    swapTargetValue: Dp,
+    swapDirection: AnimatedDirection,
     pickUpScale: () -> Float,
     modifier: Modifier = Modifier,
     toAccountManageScreen: () -> Unit = {},
     toVersionManageScreen: () -> Unit = {},
     toVersionSettingsScreen: () -> Unit = {}
 ) {
-    val xOffset by swapAnimateDpAsState(
-        targetValue = swapTargetValue,
-        swapIn = isVisible,
-        isHorizontal = true
-    )
+    val ctx = rememberAnimatedContext(isVisible = isVisible)
 
     val account by AccountsManager.currentAccountFlow.collectAsStateWithLifecycle()
 
@@ -640,7 +638,7 @@ private fun ActionMenu(
         val scale = pickUpScale()
         scaleX = scale
         scaleY = scale
-    }.offset { IntOffset(x = xOffset.roundToPx(), y = 0) }
+    }.animated(ctx, from = swapDirection)
 
     if (isTaller) {
         ActionMenuTallerContent(

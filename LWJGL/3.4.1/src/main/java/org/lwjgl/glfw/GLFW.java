@@ -1002,6 +1002,7 @@ public class GLFW
     }
 
     public static void glfwSetWindowMonitor(@NativeType("GLFWwindow *") long window, @NativeType("GLFWmonitor *") long monitor, int xpos, int ypos, int width, int height, int refreshRate) {
+        if (width <= 0 || height <= 0) return;
         // weird calculation to fake pointer
         mGLFWWindowMonitor = window * monitor;
     }

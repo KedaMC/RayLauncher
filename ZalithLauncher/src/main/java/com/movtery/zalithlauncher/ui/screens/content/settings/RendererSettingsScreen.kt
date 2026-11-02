@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,11 +25,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Icon
@@ -47,12 +45,12 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.movtery.zalithlauncher.R
+import com.movtery.zalithlauncher.game.plugin.Plugin
 import com.movtery.zalithlauncher.game.plugin.driver.Driver
 import com.movtery.zalithlauncher.game.plugin.driver.DriverPluginManager
-import com.movtery.zalithlauncher.game.plugin.renderer_v2.RendererV2Data
+import com.movtery.zalithlauncher.game.renderer.ConfigurableRenderer
 import com.movtery.zalithlauncher.game.renderer.RendererInterface
 import com.movtery.zalithlauncher.game.renderer.Renderers
 import com.movtery.zalithlauncher.game.version.installed.GraphicsApi
@@ -68,6 +66,7 @@ import com.movtery.zalithlauncher.ui.components.AnimatedColumn
 import com.movtery.zalithlauncher.ui.components.IntInputField
 import com.movtery.zalithlauncher.ui.components.SimpleAlertDialog
 import com.movtery.zalithlauncher.ui.components.TitleAndSummary
+import com.movtery.zalithlauncher.ui.components.animated
 import com.movtery.zalithlauncher.ui.components.verticalScrollWithBar
 import com.movtery.zalithlauncher.ui.screens.NestedNavKey
 import com.movtery.zalithlauncher.ui.screens.NormalNavKey
@@ -104,21 +103,23 @@ fun RendererSettingsScreen(
                 .verticalScrollWithBar(state = rememberScrollState())
                 .padding(all = 12.dp),
             isVisible = isVisible
-        ) { scope ->
-            AnimatedItem(scope) { yOffset ->
+        ) {
+            AnimatedItem { ctx ->
                 SettingsCardColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .offset { IntOffset(x = 0, y = yOffset.roundToPx()) }
+                        .animated(ctx)
                 ) {
                     val currentRendererId = AllSettings.renderer.state
-                    val v2PluginEnvUnits = remember(currentRendererId) {
+                    val currentRenderer = remember(currentRendererId) {
                         Renderers.getRenderers()
-                            .filterIsInstance<RendererV2Data>()
                             .find { it.getUniqueIdentifier() == currentRendererId }
-                            ?.env?.getConfigurableUnits()?.takeIf { it.isNotEmpty() }
                     }
-                    var showV2ConfigDialog by remember { mutableStateOf(false) }
+                    val configurableRenderer = remember(currentRenderer) {
+                        (currentRenderer as? ConfigurableRenderer)
+                            ?.takeIf { it.configSpec.entries.isNotEmpty() }
+                    }
+                    var showConfigDialog by remember { mutableStateOf(false) }
 
                     ListSettingsCard(
                         modifier = Modifier.fillMaxWidth(),
@@ -133,10 +134,9 @@ fun RendererSettingsScreen(
                             RendererSummaryLayout(it)
                         },
                         trailingIcon = {
-                            //选中新一代渲染器插件且存在可配置项时，提供配置入口
-                            if (v2PluginEnvUnits != null) {
+                            if (configurableRenderer != null) {
                                 IconButton(
-                                    onClick = { showV2ConfigDialog = true }
+                                    onClick = { showConfigDialog = true }
                                 ) {
                                     Icon(
                                         painter = painterResource(R.drawable.ic_settings_filled),
@@ -165,13 +165,34 @@ fun RendererSettingsScreen(
                         }
                     )
 
-                    //新一代渲染器插件的环境变量配置对话框
-                    if (showV2ConfigDialog && v2PluginEnvUnits != null) {
-                        RendererV2ConfigDialog(
-                            units = v2PluginEnvUnits,
-                            onDismissRequest = { showV2ConfigDialog = false }
+                    if (showConfigDialog && configurableRenderer != null) {
+                        RendererConfigDialog(
+                            renderer = configurableRenderer,
+                            onDismissRequest = { showConfigDialog = false }
                         )
                     }
+
+                    SwitchSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Middle,
+                        unit = AllSettings.sfpewPluginLayer,
+                        enabled = currentRenderer is Plugin,
+                        title = stringResource(R.string.settings_renderer_sfpew_plugin_layer_title),
+                        summary = stringResource(R.string.settings_renderer_sfpew_plugin_layer_summary)
+                    )
+
+                    SwitchSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Middle,
+                        unit = AllSettings.sfpewRelaxedContext,
+                        enabled = currentRenderer?.let { renderer ->
+                            renderer.supportsSfpewByDefault() ||
+                            // 如果是插件，需要看是否给插件启用了这个玩意
+                            (renderer is Plugin && AllSettings.sfpewPluginLayer.state)
+                        } == true,
+                        title = stringResource(R.string.renderer_config_sfpew_relaxed_context_title),
+                        summary = stringResource(R.string.renderer_config_sfpew_relaxed_context_desc)
+                    )
 
                     ListSettingsCard(
                         modifier = Modifier.fillMaxWidth(),
@@ -224,11 +245,11 @@ fun RendererSettingsScreen(
                 }
             }
 
-            AnimatedItem(scope) { yOffset ->
+            AnimatedItem { ctx ->
                 SettingsCardColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .offset { IntOffset(x = 0, y = yOffset.roundToPx()) }
+                        .animated(ctx)
                 ) {
                     val context = LocalContext.current
 
@@ -302,11 +323,11 @@ fun RendererSettingsScreen(
                 }
             }
 
-            AnimatedItem(scope) { yOffset ->
+            AnimatedItem { ctx ->
                 SettingsCardColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .offset { IntOffset(x = 0, y = yOffset.roundToPx()) }
+                        .animated(ctx)
                 ) {
                     SwitchSettingsCard(
                         modifier = Modifier.fillMaxWidth(),
@@ -326,14 +347,6 @@ fun RendererSettingsScreen(
 
                     SwitchSettingsCard(
                         modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Middle,
-                        unit = AllSettings.useSurfaceView,
-                        title = stringResource(R.string.settings_renderer_surface_title),
-                        summary = stringResource(R.string.settings_renderer_surface_summary)
-                    )
-
-                    SwitchSettingsCard(
-                        modifier = Modifier.fillMaxWidth(),
                         position = CardPosition.Bottom,
                         unit = AllSettings.dumpShaders,
                         title = stringResource(R.string.settings_renderer_shader_dump_title),
@@ -346,7 +359,6 @@ fun RendererSettingsScreen(
 }
 
 @Composable
-@OptIn(ExperimentalLayoutApi::class)
 fun RendererSummaryLayout(renderer: RendererInterface) {
     FlowRow(
         modifier = Modifier.alpha(0.7f),
@@ -360,11 +372,11 @@ fun RendererSummaryLayout(renderer: RendererInterface) {
             val minVer = getDisplayMinMCVersion()
             val maxVer = getDisplayMaxMCVersion()
 
-            if (minVer != null || maxVer != null) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                if (minVer != null || maxVer != null) {
                     Text(text = stringResource(R.string.renderer_version_support), style = MaterialTheme.typography.labelSmall)
 
                     minVer?.let {

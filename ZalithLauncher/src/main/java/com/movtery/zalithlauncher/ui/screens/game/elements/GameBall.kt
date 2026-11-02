@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,11 +60,11 @@ fun DraggableGameBall(
     position: Offset,
     onPositionChanged: (Offset) -> Unit,
     onSavePos: () -> Unit,
-    gameFps: Int?,
+    gameFps: () -> Int?,
     fpsDisplayMode: FpsDisplayMode,
-    fpsHistory: List<Int>,
-    fpsMax: Int,
-    fpsMin: Int,
+    fpsHistory: () -> List<Int>,
+    fpsMax: () -> Int,
+    fpsMin: () -> Int,
     showMemory: Boolean,
     opened: Boolean,
     alpha: Float = 1f,
@@ -95,16 +95,21 @@ fun DraggableGameBall(
 
 @Composable
 private fun GameBallContent(
-    gameFps: Int?,
+    gameFps: () -> Int?,
     fpsDisplayMode: FpsDisplayMode,
-    fpsHistory: List<Int>,
-    fpsMax: Int,
-    fpsMin: Int,
+    fpsHistory: () -> List<Int>,
+    fpsMax: () -> Int,
+    fpsMin: () -> Int,
     showMemory: Boolean,
     opened: Boolean,
 ) {
-    val showFps = remember(gameFps) {
-        gameFps != null
+    val fps = gameFps()
+    val history = fpsHistory()
+    val fpsMaxValue = fpsMax()
+    val fpsMinValue = fpsMin()
+
+    val showFps = remember(fps) {
+        fps != null
     }
 
     Row(
@@ -162,14 +167,14 @@ private fun GameBallContent(
                     //帧率图表
                     FpsChart(
                         modifier = Modifier.padding(end = 4.dp),
-                        history = fpsHistory,
-                        fpsMax = fpsMax,
-                        fpsMin = fpsMin
+                        history = history,
+                        fpsMax = fpsMaxValue,
+                        fpsMin = fpsMinValue
                     )
                 } else {
                     Text(
                         modifier = Modifier.padding(end = 4.dp),
-                        text = "FPS: ${gameFps ?: 0}",
+                        text = "FPS: ${fps ?: 0}",
                         style = MaterialTheme.typography.labelMedium
                     )
                 }

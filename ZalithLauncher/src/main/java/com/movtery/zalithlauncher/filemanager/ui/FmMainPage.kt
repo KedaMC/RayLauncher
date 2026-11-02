@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,11 +49,11 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -76,7 +76,6 @@ import com.movtery.zalithlauncher.filemanager.logic.editor.isKnownTextFile
 import com.movtery.zalithlauncher.filemanager.logic.entry.FmEntry
 import com.movtery.zalithlauncher.filemanager.logic.ops.ConflictResolution
 import com.movtery.zalithlauncher.filemanager.os.FmLog
-import com.movtery.zalithlauncher.filemanager.ui.components.FmAlertDialog
 import com.movtery.zalithlauncher.filemanager.ui.components.FmAppBar
 import com.movtery.zalithlauncher.filemanager.ui.components.FmBottomBar
 import com.movtery.zalithlauncher.filemanager.ui.components.FmCardPosition
@@ -105,6 +104,7 @@ import com.movtery.zalithlauncher.filemanager.viewmodel.FileManagerUiState
 import com.movtery.zalithlauncher.filemanager.viewmodel.FileManagerViewModel
 import com.movtery.zalithlauncher.filemanager.viewmodel.SearchUiState
 import com.movtery.zalithlauncher.filemanager.viewmodel.applyVisibility
+import com.movtery.zalithlauncher.ui.components.SimpleAlertDialog
 import com.movtery.zalithlauncher.utils.file.formatFileSize
 import com.movtery.zalithlauncher.utils.formatDate
 import kotlinx.coroutines.delay
@@ -134,7 +134,6 @@ private sealed interface FmOperation {
  * @param onExit 退出文件管理器回调
  * @param onToggleOrientation 横竖屏切换回调
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FmMainPage(
     vm: FileManagerViewModel,
@@ -290,10 +289,13 @@ private fun MainContent(
         rawList
     }
 
-    Box(
+    PullToRefreshBox(
         modifier = Modifier
             .fillMaxSize()
-            .graphicsLayer { alpha = contentAlpha.value }
+            .graphicsLayer { alpha = contentAlpha.value },
+        isRefreshing = false,
+        enabled = !uiState.refreshing,
+        onRefresh = vm::refresh,
     ) {
         AnimatedContent(
             targetState = contentState,
@@ -766,13 +768,13 @@ private fun FmMainDialogs(
             }
         )
 
-        FmOperation.RangeSelectHelp -> FmAlertDialog(
+        FmOperation.RangeSelectHelp -> SimpleAlertDialog(
             title = stringResource(R.string.fm_range_select_help),
             text = stringResource(R.string.fm_range_select_help_text),
             onDismiss = { updateOperation(FmOperation.None) }
         )
 
-        is FmOperation.EditConfirm -> FmAlertDialog(
+        is FmOperation.EditConfirm -> SimpleAlertDialog(
             title = stringResource(R.string.fm_edit_unknown_title),
             text = stringResource(R.string.fm_edit_unknown_message),
             onConfirm = {

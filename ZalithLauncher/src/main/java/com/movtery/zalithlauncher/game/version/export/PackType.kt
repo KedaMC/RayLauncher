@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,18 +54,6 @@ enum class PackType(val options: PackEditOptions) {
             .requireMinMemory()
             .build()
     ),
-
-    /**
-     * MultiMC 导出格式
-     */
-    MultiMC(
-        PackEditOptions.Builder()
-            .requireAuthor()
-            .requireSummary()
-            .requireMinMemory()
-            .requireMaxMemory()
-            .build()
-    ),
 }
 
 class PackEditOptions private constructor(
@@ -75,7 +63,6 @@ class PackEditOptions private constructor(
     val requireJavaArgs: Boolean = false,
     val requireWebsiteUrl: Boolean = false,
     val requireMinMemory: Boolean = false,
-    val requireMaxMemory: Boolean = false,
     val requirePackModrinth: Boolean = false,
     val requirePackCurseForge: Boolean = false
 ) {
@@ -86,7 +73,6 @@ class PackEditOptions private constructor(
         private var requireJavaArgs: Boolean = false
         private var requireWebsiteUrl: Boolean = false
         private var requireMinMemory: Boolean = false
-        private var requireMaxMemory: Boolean = false
         private var requirePackModrinth: Boolean = false
         private var requirePackCurseForge: Boolean = false
 
@@ -96,7 +82,6 @@ class PackEditOptions private constructor(
         fun requireJavaArgs() = this.also { requireJavaArgs = true }
         fun requireWebsiteUrl() = this.also { requireWebsiteUrl = true }
         fun requireMinMemory() = this.also { requireMinMemory = true }
-        fun requireMaxMemory() = this.also { requireMaxMemory = true }
         fun requirePackModrinth() = this.also { requirePackModrinth = true }
         fun requirePackCurseForge() = this.also { requirePackCurseForge = true }
 
@@ -107,7 +92,6 @@ class PackEditOptions private constructor(
             requireJavaArgs = requireJavaArgs,
             requireWebsiteUrl = requireWebsiteUrl,
             requireMinMemory = requireMinMemory,
-            requireMaxMemory = requireMaxMemory,
             requirePackModrinth = requirePackModrinth,
             requirePackCurseForge = requirePackCurseForge
         )

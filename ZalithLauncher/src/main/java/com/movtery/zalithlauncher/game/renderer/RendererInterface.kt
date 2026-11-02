@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,6 +31,16 @@ interface RendererInterface {
      * 获取渲染器的唯一标识ID
      */
     fun getUniqueIdentifier(): String
+
+    /**
+     * 渲染器是否基于 Mesa
+     */
+    val mesaBased: Boolean get() = false
+
+    /**
+     * 渲染器是否默认支持 SimpleFPEWrapper 兼容层
+     */
+    fun supportsSfpewByDefault(): Boolean = false
 
     /**
      * 获取渲染器的名称

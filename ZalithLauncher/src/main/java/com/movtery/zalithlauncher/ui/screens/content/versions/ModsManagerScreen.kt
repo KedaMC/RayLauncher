@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,7 +43,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -69,6 +68,7 @@ import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.nonInteractiveScrollbar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -93,7 +93,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
@@ -125,7 +124,9 @@ import com.movtery.zalithlauncher.ui.components.LittleTextLabel
 import com.movtery.zalithlauncher.ui.components.ScalingLabel
 import com.movtery.zalithlauncher.ui.components.SimpleTextInputField
 import com.movtery.zalithlauncher.ui.components.TooltipIconButton
+import com.movtery.zalithlauncher.ui.components.animated
 import com.movtery.zalithlauncher.ui.components.fadeEdge
+import com.movtery.zalithlauncher.ui.components.rememberAnimatedContext
 import com.movtery.zalithlauncher.ui.screens.NestedNavKey
 import com.movtery.zalithlauncher.ui.screens.NormalNavKey
 import com.movtery.zalithlauncher.ui.screens.TitledNavKey
@@ -147,7 +148,6 @@ import com.movtery.zalithlauncher.ui.screens.content.versions.layouts.VersionChu
 import com.movtery.zalithlauncher.ui.theme.itemColor
 import com.movtery.zalithlauncher.ui.theme.onItemColor
 import com.movtery.zalithlauncher.utils.animation.getAnimateTween
-import com.movtery.zalithlauncher.utils.animation.swapAnimateDpAsState
 import com.movtery.zalithlauncher.utils.file.FolderFileCounter
 import com.movtery.zalithlauncher.utils.file.formatFileSize
 import com.movtery.zalithlauncher.utils.string.isNotEmptyOrBlank
@@ -161,6 +161,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
@@ -170,6 +171,7 @@ import kotlinx.coroutines.withContext
 import org.apache.commons.io.FileUtils
 import java.io.File
 import java.util.LinkedList
+import java.util.Locale
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 import kotlin.time.Duration.Companion.milliseconds
@@ -314,25 +316,32 @@ private class ModsManageViewModel(
         SortByEnum.FileName, SortByEnum.FileModifiedTime
     )
 
+    private var filterJob: Job? = null
+
     private fun filterMods(context: Context? = null) {
-        refreshCounter()
-        filteredMods = allMods
-            .takeIf { it.isNotEmpty() }
-            ?.filterMods(nameFilter, stateFilter, context)
-            ?.sortedWith { o1, o2 ->
-                val file1 = o1.localMod.file
-                val file2 = o2.localMod.file
-                val value = when (sortByEnum) {
-                    SortByEnum.FileName -> file1.name.compareTo(file2.name)
-                    SortByEnum.FileModifiedTime -> file2.lastModified().compareTo(file1.lastModified())
-                    else -> error("This sorting method is not supported: $sortByEnum")
+        filterJob?.cancel()
+        filterJob = viewModelScope.launch(Dispatchers.Default) {
+            refreshCounter()
+            val result = allMods
+                .takeIf { it.isNotEmpty() }
+                ?.filterMods(nameFilter, stateFilter, context)
+                ?.let { mods ->
+                    //排序前先快照排序键，排序过程中键值不再变化，保证比较结果前后一致
+                    val entries = mods.map { mod ->
+                        val file = mod.localMod.file
+                        mod to ModsSortKey(
+                            name = file.name,
+                            lowercaseName = file.name.lowercase(Locale.ROOT),
+                            lastModified = file.lastModified()
+                        )
+                    }
+                    entries
+                        .sortedWith(compareBy(modsComparator(sortByEnum, isAscending)) { it.second })
+                        .map { (mod, _) -> mod }
                 }
-                if (isAscending) {
-                    value
-                } else {
-                    -value
-                }
-            }
+            if (!isActive) return@launch
+            filteredMods = result
+        }
     }
 
     fun selectAllMods() {
@@ -429,6 +438,28 @@ private class ModsManageViewModel(
     override fun onCleared() {
         viewModelScope.cancel()
     }
+}
+
+/** 模组列表的排序键，排序前一次性读取，保证排序过程中的比较结果稳定 */
+private data class ModsSortKey(
+    /** 原始文件名，用于细分大小写不同的同名文件 */
+    val name: String,
+    /** 转为小写后的文件名，用于忽略大小写的主排序 */
+    val lowercaseName: String,
+    val lastModified: Long
+)
+
+/**
+ * 构建模组列表的比较器：文件名忽略大小写排序；修改时间在升序时最新优先，保持原有展示行为
+ */
+private fun modsComparator(sortByEnum: SortByEnum, isAscending: Boolean): Comparator<ModsSortKey> {
+    val comparator: Comparator<ModsSortKey> = when (sortByEnum) {
+        SortByEnum.FileName -> compareBy({ it.lowercaseName }, { it.name })
+        SortByEnum.FileModifiedTime -> compareByDescending { it.lastModified }
+        else -> error("This sorting method is not supported: $sortByEnum")
+    }
+    //通过 reversed() 翻转顺序，而非对比较结果取反（取反无法翻转 Int.MIN_VALUE 的符号）
+    return if (isAscending) comparator else comparator.reversed()
 }
 
 
@@ -637,149 +668,153 @@ fun ModsManagerScreen(
             }
         )
 
-        val yOffset by swapAnimateDpAsState(
-            targetValue = (-40).dp,
-            swapIn = isVisible
-        )
+        val ctx = rememberAnimatedContext(isVisible = isVisible)
 
         VersionChunkBackground(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(all = 12.dp)
-                .offset { IntOffset(x = 0, y = yOffset.roundToPx()) },
+                .animated(ctx),
             paddingValues = PaddingValues()
         ) {
-            when (viewModel.modsState) {
-                LoadingState.None -> {
-                    var modsOperation by remember { mutableStateOf<ModsOperation>(ModsOperation.None) }
-                    /** 运行任务并刷新模组列表 */
-                    fun runProgress(task: () -> Unit) {
-                        viewModel.doInScope {
-                            withContext(Dispatchers.IO) {
-                                modsOperation = ModsOperation.Progress
-                                task()
-                                modsOperation = ModsOperation.None
-                                viewModel.refresh(context)
+            PullToRefreshBox(
+                modifier = Modifier.fillMaxSize(),
+                isRefreshing = false,
+                enabled = viewModel.modsState !is LoadingState.Loading,
+                onRefresh = { viewModel.refresh(context) }
+            ) {
+                when (viewModel.modsState) {
+                    LoadingState.None -> {
+                        var modsOperation by remember { mutableStateOf<ModsOperation>(ModsOperation.None) }
+                        /** 运行任务并刷新模组列表 */
+                        fun runProgress(task: () -> Unit) {
+                            viewModel.doInScope {
+                                withContext(Dispatchers.IO) {
+                                    modsOperation = ModsOperation.Progress
+                                    task()
+                                    modsOperation = ModsOperation.None
+                                    viewModel.refresh(context)
+                                }
                             }
                         }
-                    }
 
-                    ModsOperation(
-                        modsOperation = modsOperation,
-                        updateOperation = { modsOperation = it },
-                        onDelete = { mod ->
-                            runProgress {
-                                FileUtils.deleteQuietly(mod.file)
-                            }
-                        }
-                    )
-
-                    Column {
-                        ModsActionsHeader(
-                            modifier = Modifier.fillMaxWidth(),
-                            nameFilter = viewModel.nameFilter,
-                            onNameFilterChange = { viewModel.updateFilter(it, context) },
-                            stateFilter = viewModel.stateFilter,
-                            onStateFilterChange = { viewModel.updateStateFilter(it, context) },
-                            allModsCount = viewModel.allMods.size,
-                            enabledModsCount = viewModel.enabledCount.takeIf { it >= 0 },
-                            disabledModsCount = viewModel.disabledCount.takeIf { it >= 0 },
-                            supportedSortByEnums = viewModel.supportedSortByEnums,
-                            sortByEnum = viewModel.sortByEnum,
-                            onSortByChanged = { viewModel.updateSortBy(it, context) },
-                            isAscending = viewModel.isAscending,
-                            onToggleSortOrder = { viewModel.updateSortOrder(context) },
-                            hasModLoader = hasModLoader,
-                            onUpdateMods = {
-                                if (
-                                    updaterViewModel.modsUpdateOperation == ModsUpdateOperation.None &&
-                                    viewModel.deleteAllOperation == DeleteAllOperation.None
-                                ) {
-                                    updaterViewModel.modsUpdateOperation = ModsUpdateOperation.Warning(viewModel.selectedMods)
-                                }
-                            },
-                            modsDir = modsDir,
-                            onDeleteAll = {
-                                if (
-                                    updaterViewModel.modsUpdateOperation == ModsUpdateOperation.None &&
-                                    viewModel.deleteAllOperation == DeleteAllOperation.None &&
-                                    viewModel.selectedMods.isNotEmpty()
-                                ) {
-                                    viewModel.deleteAllOperation = DeleteAllOperation.Warning(
-                                        files = viewModel.selectedMods.map { mod ->
-                                            mod.localMod.file
-                                        }
-                                    )
-                                }
-                            },
-                            isModsSelected = viewModel.selectedMods.isNotEmpty(),
-                            canUpdate = viewModel.canUpdate,
-                            onSelectAll = {
-                                viewModel.selectAllMods()
-                            },
-                            onClearModsSelected = {
-                                viewModel.clearSelected()
-                            },
-                            swapToDownload = swapToDownload,
-                            refresh = { viewModel.refresh(context) },
-                            submitError = submitError
-                        )
-
-                        ModsList(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f),
-                            hasModLoader = hasModLoader,
-                            modsList = viewModel.filteredMods,
-                            selectedMods = viewModel.selectedMods,
-                            removeFromSelected = { mod ->
-                                viewModel.selectedMods.remove(mod)
-                                viewModel.checkCanUpdate()
-                            },
-                            addToSelected = { mod ->
-                                viewModel.selectedMods.add(mod)
-                                viewModel.checkCanUpdate()
-                            },
-                            onLoad = { mod ->
-                                viewModel.loadMod(mod)
-                            },
-                            onForceRefresh = { mod ->
-                                viewModel.loadMod(mod, loadFromCache = false)
-                            },
-                            onEnable = { mod ->
-                                //启用和禁用模组应该避免刷新所有模组，否则将会极度影响体验
-                                viewModel.doInScope {
-                                    withContext(Dispatchers.IO) {
-                                        mod.localMod.enable()
-                                    }
-                                    withContext(Dispatchers.Main) {
-                                        viewModel.refreshCounter()
-                                    }
-                                }
-                            },
-                            onDisable = { mod ->
-                                viewModel.doInScope {
-                                    withContext(Dispatchers.IO) {
-                                        mod.localMod.disable()
-                                    }
-                                    withContext(Dispatchers.Main) {
-                                        viewModel.refreshCounter()
-                                    }
-                                }
-                            },
-                            onSwapMoreInfo = onSwapMoreInfo,
+                        ModsOperation(
+                            modsOperation = modsOperation,
+                            updateOperation = { modsOperation = it },
                             onDelete = { mod ->
-                                modsOperation = ModsOperation.Delete(mod.localMod)
+                                runProgress {
+                                    FileUtils.deleteQuietly(mod.file)
+                                }
                             }
                         )
+
+                        Column {
+                            ModsActionsHeader(
+                                modifier = Modifier.fillMaxWidth(),
+                                nameFilter = viewModel.nameFilter,
+                                onNameFilterChange = { viewModel.updateFilter(it, context) },
+                                stateFilter = viewModel.stateFilter,
+                                onStateFilterChange = { viewModel.updateStateFilter(it, context) },
+                                allModsCount = viewModel.allMods.size,
+                                enabledModsCount = viewModel.enabledCount.takeIf { it >= 0 },
+                                disabledModsCount = viewModel.disabledCount.takeIf { it >= 0 },
+                                supportedSortByEnums = viewModel.supportedSortByEnums,
+                                sortByEnum = viewModel.sortByEnum,
+                                onSortByChanged = { viewModel.updateSortBy(it, context) },
+                                isAscending = viewModel.isAscending,
+                                onToggleSortOrder = { viewModel.updateSortOrder(context) },
+                                hasModLoader = hasModLoader,
+                                onUpdateMods = {
+                                    if (
+                                        updaterViewModel.modsUpdateOperation == ModsUpdateOperation.None &&
+                                        viewModel.deleteAllOperation == DeleteAllOperation.None
+                                    ) {
+                                        updaterViewModel.modsUpdateOperation = ModsUpdateOperation.Warning(viewModel.selectedMods)
+                                    }
+                                },
+                                modsDir = modsDir,
+                                onDeleteAll = {
+                                    if (
+                                        updaterViewModel.modsUpdateOperation == ModsUpdateOperation.None &&
+                                        viewModel.deleteAllOperation == DeleteAllOperation.None &&
+                                        viewModel.selectedMods.isNotEmpty()
+                                    ) {
+                                        viewModel.deleteAllOperation = DeleteAllOperation.Warning(
+                                            files = viewModel.selectedMods.map { mod ->
+                                                mod.localMod.file
+                                            }
+                                        )
+                                    }
+                                },
+                                isModsSelected = viewModel.selectedMods.isNotEmpty(),
+                                canUpdate = viewModel.canUpdate,
+                                onSelectAll = {
+                                    viewModel.selectAllMods()
+                                },
+                                onClearModsSelected = {
+                                    viewModel.clearSelected()
+                                },
+                                swapToDownload = swapToDownload,
+                                refresh = { viewModel.refresh(context) },
+                                submitError = submitError
+                            )
+
+                            ModsList(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f),
+                                hasModLoader = hasModLoader,
+                                modsList = viewModel.filteredMods,
+                                selectedMods = viewModel.selectedMods,
+                                removeFromSelected = { mod ->
+                                    viewModel.selectedMods.remove(mod)
+                                    viewModel.checkCanUpdate()
+                                },
+                                addToSelected = { mod ->
+                                    viewModel.selectedMods.add(mod)
+                                    viewModel.checkCanUpdate()
+                                },
+                                onLoad = { mod ->
+                                    viewModel.loadMod(mod)
+                                },
+                                onForceRefresh = { mod ->
+                                    viewModel.loadMod(mod, loadFromCache = false)
+                                },
+                                onEnable = { mod ->
+                                    //启用和禁用模组应该避免刷新所有模组，否则将会极度影响体验
+                                    viewModel.doInScope {
+                                        withContext(Dispatchers.IO) {
+                                            mod.localMod.enable()
+                                        }
+                                        withContext(Dispatchers.Main) {
+                                            viewModel.refreshCounter()
+                                        }
+                                    }
+                                },
+                                onDisable = { mod ->
+                                    viewModel.doInScope {
+                                        withContext(Dispatchers.IO) {
+                                            mod.localMod.disable()
+                                        }
+                                        withContext(Dispatchers.Main) {
+                                            viewModel.refreshCounter()
+                                        }
+                                    }
+                                },
+                                onSwapMoreInfo = onSwapMoreInfo,
+                                onDelete = { mod ->
+                                    modsOperation = ModsOperation.Delete(mod.localMod)
+                                }
+                            )
+                        }
                     }
-                }
-                LoadingState.Loading -> {
-                    Box(
-                        Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        LoadingIndicator()
+                    LoadingState.Loading -> {
+                        Box(
+                            Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            LoadingIndicator()
+                        }
                     }
                 }
             }
@@ -1119,7 +1154,6 @@ private fun ModsList(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ModItemLayout(
     modifier: Modifier = Modifier,

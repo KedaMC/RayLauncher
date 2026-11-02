@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,6 +50,7 @@ import androidx.compose.material3.MaterialTheme
 import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.nonInteractiveScrollbar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -67,7 +68,6 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
@@ -89,7 +89,9 @@ import com.movtery.zalithlauncher.ui.components.BackgroundCard
 import com.movtery.zalithlauncher.ui.components.GlassItemSurface
 import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
 import com.movtery.zalithlauncher.ui.components.SimpleTextInputField
+import com.movtery.zalithlauncher.ui.components.animated
 import com.movtery.zalithlauncher.ui.components.fadeEdge
+import com.movtery.zalithlauncher.ui.components.rememberAnimatedContext
 import com.movtery.zalithlauncher.ui.screens.NestedNavKey
 import com.movtery.zalithlauncher.ui.screens.NormalNavKey
 import com.movtery.zalithlauncher.ui.screens.TitledNavKey
@@ -97,7 +99,6 @@ import com.movtery.zalithlauncher.ui.screens.content.elements.backgroundGlass
 import com.movtery.zalithlauncher.ui.theme.cardColor
 import com.movtery.zalithlauncher.ui.theme.onCardColor
 import com.movtery.zalithlauncher.utils.animation.getAnimateTween
-import com.movtery.zalithlauncher.utils.animation.swapAnimateDpAsState
 import com.movtery.zalithlauncher.utils.classes.Quadruple
 import com.movtery.zalithlauncher.utils.formatDate
 import com.movtery.zalithlauncher.utils.logging.Logger
@@ -210,7 +211,7 @@ sealed interface SelectGameVersionHost {
 fun SelectGameVersionScreen(
     host: SelectGameVersionHost,
     eventViewModel: EventViewModel,
-    onVersionSelect: (String) -> Unit = {}
+    onVersionSelect: (MinecraftVersion) -> Unit = {}
 ) {
     val viewModel = viewModel(
         key = NormalNavKey.DownloadGame.SelectGameVersion.toString()
@@ -255,82 +256,86 @@ private fun SelectGameVersionContent(
     isVisible: Boolean,
     viewModel: VersionsViewModel,
     eventViewModel: EventViewModel,
-    onVersionSelect: (String) -> Unit
+    onVersionSelect: (MinecraftVersion) -> Unit
 ) {
-    val yOffset by swapAnimateDpAsState(
-        targetValue = (-40).dp,
-        swapIn = isVisible
-    )
+    val ctx = rememberAnimatedContext(isVisible = isVisible)
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .offset { IntOffset(x = 0, y = yOffset.roundToPx()) }
+            .animated(ctx)
     ) {
-        when (val state = viewModel.versionState) {
-            is VersionState.Loading -> {
-                Box(
-                    Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    LinearWavyProgressIndicator(
-                        modifier = Modifier.width(168.dp),
-                        wavelength = 32.dp
-                    )
-                }
-            }
-
-            is VersionState.Failure -> {
-                Box(Modifier.fillMaxSize()) {
-                    ScalingLabel(
-                        modifier = Modifier.align(Alignment.Center),
-                        text = {
-                            AndroidStringText(
-                                text = androidText(
-                                    R.string.download_game_failed_to_get_versions,
-                                    state.message
-                                )
-                            )
-                        },
-                        onClick = {
-                            viewModel.refresh(true)
-                        }
-                    )
-                }
-            }
-
-            is VersionState.None -> {
-                Column {
-                    BackgroundCard(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp),
-                        shape = MaterialTheme.shapes.large,
-                        liquidGlass = true
+        PullToRefreshBox(
+            modifier = Modifier.fillMaxSize(),
+            isRefreshing = false,
+            enabled = viewModel.versionState !is VersionState.Loading,
+            onRefresh = { viewModel.refresh(true) }
+        ) {
+            when (val state = viewModel.versionState) {
+                is VersionState.Loading -> {
+                    Box(
+                        Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        val glassActive = liquidGlassBackdrop() != null
-                        VersionHeader(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 8.dp, vertical = 8.dp),
-                            versionFilter = viewModel.versionFilter,
-                            onVersionFilterChange = { viewModel.filterWith(it) },
-                            itemContainerColor = if (glassActive) Color.Transparent else cardColor(),
-                            itemContentColor = if (glassActive) Color.White else onCardColor(),
-                            onRefreshClick = {
+                        LinearWavyProgressIndicator(
+                            modifier = Modifier.width(168.dp),
+                            wavelength = 32.dp
+                        )
+                    }
+                }
+
+                is VersionState.Failure -> {
+                    Box(Modifier.fillMaxSize()) {
+                        ScalingLabel(
+                            modifier = Modifier.align(Alignment.Center),
+                            text = {
+                                AndroidStringText(
+                                    text = androidText(
+                                        R.string.download_game_failed_to_get_versions,
+                                        state.message
+                                    )
+                                )
+                            },
+                            onClick = {
                                 viewModel.refresh(true)
                             }
                         )
                     }
+                }
 
-                    VersionList(
-                        modifier = Modifier.weight(1f),
-                        versions = state.versions,
-                        onVersionSelect = onVersionSelect,
-                        openLink = { url ->
-                            eventViewModel.sendEvent(EventViewModel.Event.OpenLink(url))
+                is VersionState.None -> {
+                    Column {
+                        BackgroundCard(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp),
+                            shape = MaterialTheme.shapes.large,
+                            liquidGlass = true
+                        ) {
+                            val glassActive = liquidGlassBackdrop() != null
+                            VersionHeader(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 8.dp, vertical = 8.dp),
+                                versionFilter = viewModel.versionFilter,
+                                onVersionFilterChange = { viewModel.filterWith(it) },
+                                itemContainerColor = if (glassActive) Color.Transparent else cardColor(),
+                                itemContentColor = if (glassActive) Color.White else onCardColor(),
+                                onRefreshClick = {
+                                    viewModel.refresh(true)
+                                }
+                            )
                         }
-                    )
+
+                        VersionList(
+                            modifier = Modifier.weight(1f),
+                            versions = state.versions,
+                            onVersionSelect = onVersionSelect,
+                            openLink = { url ->
+                                eventViewModel.sendEvent(EventViewModel.Event.OpenLink(url))
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -478,7 +483,7 @@ private fun VersionTypeItem(
 private fun VersionList(
     modifier: Modifier = Modifier,
     versions: List<MinecraftVersion>,
-    onVersionSelect: (String) -> Unit,
+    onVersionSelect: (MinecraftVersion) -> Unit,
     openLink: (url: String) -> Unit
 ) {
     val scrollState = rememberLazyListState()
@@ -497,7 +502,7 @@ private fun VersionList(
                     .padding(vertical = 6.dp),
                 version = version,
                 onClick = {
-                    onVersionSelect(version.version.id)
+                    onVersionSelect(version)
                 },
                 onAccessWiki = { wikiUrl ->
                     openLink(wikiUrl)

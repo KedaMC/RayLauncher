@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,11 +40,9 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil3.ImageLoader
 import coil3.compose.AsyncImage
-import coil3.gif.GifDecoder
+import coil3.request.ImageRequest
 import coil3.request.crossfade
-import coil3.svg.SvgDecoder
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.bridge.CursorShape
 import com.movtery.zalithlauncher.bridge.ZLBridgeStates
@@ -324,15 +322,6 @@ fun MousePointer(
     crossfade: Boolean = false
 ) {
     val context = LocalContext.current
-    val loader = remember(triggerRefresh, crossfade, mouseSize) {
-        ImageLoader.Builder(context)
-            .components {
-                add(GifDecoder.Factory())
-                add(SvgDecoder.Factory())
-            }
-            .crossfade(crossfade)
-            .build()
-    }
 
     val fileExists by produceState(initialValue = false, triggerRefresh, mouseFile) {
         value = withContext(Dispatchers.IO) { mouseFile?.exists() == true }
@@ -348,15 +337,17 @@ fun MousePointer(
         CursorShape.NotAllowed -> R.drawable.img_mouse_pointer_not_allowed
     }
 
-    val model = remember(fileExists, triggerRefresh, cursorShape) {
-        if (fileExists && mouseFile != null) mouseFile else defaultRes
+    val model = remember(fileExists, triggerRefresh, cursorShape, crossfade) {
+        ImageRequest.Builder(context)
+            .data(if (fileExists && mouseFile != null) mouseFile else defaultRes)
+            .crossfade(crossfade)
+            .build()
     }
 
     val imageAlignment = if (centerIcon) Alignment.Center else Alignment.TopStart
 
     AsyncImage(
         model = model,
-        imageLoader = loader,
         contentDescription = null,
         alignment = imageAlignment,
         contentScale = ContentScale.Fit,

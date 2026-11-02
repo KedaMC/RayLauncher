@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import com.movtery.zalithlauncher.game.addons.modloader.ModLoader
 import com.movtery.zalithlauncher.game.version.installed.VersionInfo
+import com.movtery.zalithlauncher.game.versioninfo.models.checkVersionType
 import com.movtery.zalithlauncher.utils.logging.Logger
 import com.movtery.zalithlauncher.utils.string.isNotEmptyOrBlank
 import java.io.File
@@ -84,7 +85,13 @@ fun parseJsonToVersionInfo(jsonFile: File): VersionInfo? {
             )
         }
         val (versionId, loaderInfos) = detectMinecraftAndLoader(jsonObject)
-        VersionInfo(versionId, quickPlay, loaderInfos)
+        val type = detectMinecraftType(jsonObject)
+        VersionInfo(
+            minecraftVersion = versionId,
+            quickPlay = quickPlay,
+            loaderInfos = loaderInfos,
+            type = checkVersionType(versionId, type)
+        )
     }.getOrElse {
         Logger.error(TAG, "Error parsing version json", it)
         null
@@ -132,6 +139,13 @@ private fun detectMinecraftAndLoader(versionJson: JsonObject): Pair<String, List
     val mcVersion = extractMinecraftVersion(versionJson)
     val loaderInfos = detectModLoaders(versionJson)
     return mcVersion to loaderInfos
+}
+
+private fun detectMinecraftType(versionJson: JsonObject): String? {
+    return versionJson.takeIf { it.has("type") }
+        ?.get("type")
+        ?.takeIf(JsonElement::isJsonPrimitive)
+        ?.asString
 }
 
 private fun extractMinecraftVersion(json: JsonObject): String {
@@ -253,10 +267,6 @@ private fun detectModLoaders(versionJson: JsonObject): List<VersionInfo.LoaderIn
             //LiteLoader
             group == "com.mumfrey" && artifact == "liteloader" ->
                 loaderInfos.add(VersionInfo.LoaderInfo(ModLoader.LITE_LOADER, version))
-
-            //Cleanroom
-            group == "com.cleanroommc" && artifact == "cleanroom" ->
-                loaderInfos.add(VersionInfo.LoaderInfo(ModLoader.CLEANROOM, version))
         }
     }
 

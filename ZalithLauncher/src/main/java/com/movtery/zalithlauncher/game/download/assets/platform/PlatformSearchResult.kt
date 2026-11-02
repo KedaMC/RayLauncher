@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,18 +53,18 @@ fun <T> List<T>.searchRankWithChineseBias(
     classes: PlatformClasses,
     getSlug: (T) -> String?
 ): List<T> {
+    val translations = classes.getTranslations()
     val (chineseResults, englishResults) = partition { mod ->
-        classes.getTranslations()
-            .getModBySlugId(getSlug(mod))
-            ?.name
+        translations
+            ?.getInfoByCurseForgeId(getSlug(mod))
+            ?.mainName()
             ?.takeIf { it.isNotBlank() && it.containsChinese() } != null
     }
 
     val levCalculator = LevCalculator()
     val sortedChineseResults = chineseResults.map { mod ->
-        val translation = classes.getTranslations()
-            .getModBySlugId(getSlug(mod))!!
-        val modName = translation.name
+        val translation = translations?.getInfoByCurseForgeId(getSlug(mod))
+        val modName = translation?.mainName() ?: ""
 
         val relevanceScore = when {
             searchFilter.isEmpty() || modName.isEmpty() ->

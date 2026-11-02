@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -68,6 +68,9 @@ fun FloatingBall(
     val currentOnClick by rememberUpdatedState(onClick)
     val currentOnSavePos by rememberUpdatedState(onSavePos)
 
+    var dragging by remember { mutableStateOf(false) }
+    var dragPosition by remember { mutableStateOf(Offset.Zero) }
+
     //在首次启动时，将悬浮球放到屏幕的 TopCenter
     //确保这个行为只触发一次
     var isInitialized by rememberSaveable { mutableStateOf(false) }
@@ -106,11 +109,12 @@ fun FloatingBall(
                     onPositionChanged(Offset(positionX, positionY))
                 }
                 .offset {
+                    val renderPosition = if (dragging) dragPosition else currentPosition
                     val maxX = (parentWidth - ballSize.width).coerceAtLeast(0)
                     val maxY = (parentHeight - ballSize.height).coerceAtLeast(0)
                     IntOffset(
-                        currentPosition.x.roundToInt().coerceIn(0, maxX),
-                        currentPosition.y.roundToInt().coerceIn(0, maxY)
+                        renderPosition.x.roundToInt().coerceIn(0, maxX),
+                        renderPosition.y.roundToInt().coerceIn(0, maxY)
                     )
                 }
                 .pointerInput(Unit) {
@@ -137,17 +141,18 @@ fun FloatingBall(
                                 //超出了拖动检测距离，说明是真的在进行拖动
                                 //标记当前为拖动，避免松开手指后，判定为点击事件
                                 isDragging = true
+                                dragging = true
+                                dragPosition = Offset(clampedX, clampedY)
                             }
 
                             if (isDragging) { //只有在拖动的情况下，才会变更位置
                                 val deltaX = if (isRtl) -delta.x else delta.x
-                                val newX = currentPosition.x + deltaX
-                                val newY = currentPosition.y + delta.y
-                                val positionX =
-                                    newX.coerceIn(0f, (parentWidth - ballSize.width).toFloat())
-                                val positionY =
+                                val newX = dragPosition.x + deltaX
+                                val newY = dragPosition.y + delta.y
+                                dragPosition = Offset(
+                                    newX.coerceIn(0f, (parentWidth - ballSize.width).toFloat()),
                                     newY.coerceIn(0f, (parentHeight - ballSize.height).toFloat())
-                                onPositionChanged(Offset(positionX, positionY))
+                                )
                             }
                             change.consume()
                         }
@@ -159,13 +164,16 @@ fun FloatingBall(
                         } else {
                             true
                         }
-                        if (!upConsumed) {
-                            if (isDragging) {
+                        if (isDragging) {
+                            //拖动结束才一次性同步位置
+                            onPositionChanged(dragPosition)
+                            if (!upConsumed) {
                                 currentOnSavePos()
-                            } else {
-                                //非拖动事件，判定为一次点击
-                                currentOnClick()
                             }
+                            dragging = false
+                        } else if (!upConsumed) {
+                            //非拖动事件，判定为一次点击
+                            currentOnClick()
                         }
                     }
                 }.then(modifier)
