@@ -180,16 +180,11 @@ fun MenuSubscreen(
 }
 
 /**
- * Panel tint. In game with Liquid Glass on, panels use the same tint as the floating toolbar
- * ([FloatingBall]) so both look identical; otherwise the regular themed color.
+ * Panel tint shared by the dual menu panels and the in-game floating toolbar, so the game menu
+ * looks the same as the control layout editor menu (themed tint over the glass).
  */
 @Composable
-private fun menuPanelColor(): Color =
-    if (LocalLiquidGlassInGame.current && liquidGlassBackdrop() != null) {
-        Color.Black.copy(alpha = 0.25f)
-    } else {
-        backgroundColor()
-    }
+internal fun menuPanelColor(): Color = backgroundColor()
 
 @Composable
 fun DualMenuSubscreen(
