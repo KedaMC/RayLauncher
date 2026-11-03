@@ -989,7 +989,6 @@
     <string name="generic_disabled">Matikan</string>
     <string name="generic_no_matching_items">Tidak ada item yang cocok</string>
     <string name="generic_follow_system">Ikuti sistem</string>
-    <string name="notification_data_terracotta_message">Saat mode multiplayer, launcher akan memakai layanan foreground untuk menampilkan status koneksi saat ini, jadi membutuh izin notifikasi.</string>
     <string name="settings_control_mouse_enable_click_title">Mode Touchpad</string>
     <string name="settings_control_mouse_enable_click_summary">Mengetuk layar dianggap sebagai klik kiri, tekan lama dianggap sebagai tahan klik kiri; pengaturan ini tidak memengaruhi kontrol dengan mouse fisik atau kontrol ketuk</string>
     <string name="settings_launcher_dark_mode_title">Mode Gelap</string>
