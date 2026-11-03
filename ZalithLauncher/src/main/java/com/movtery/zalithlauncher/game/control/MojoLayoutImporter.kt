@@ -27,6 +27,7 @@ internal object MojoLayoutImporter {
     private const val MAX_MJ_VERSION = 9
     private const val PREFERRED_SCALE = 100f
     private const val MJ_SPECIAL_KEYBOARD = -1
+    private const val MJ_SPECIAL_TOGGLE_CONTROLS = -2
 
     data class Payload(val json: String)
     private data class Point(val x: Float, val y: Float)
@@ -39,6 +40,11 @@ internal object MojoLayoutImporter {
     ) {
         val styles = mutableListOf<ButtonStyle>()
         val joystickStyles = mutableListOf<JoystickStyle>()
+        /** Identical looks share one style instead of one style per button. */
+        val styleCache = HashMap<List<Any>, ButtonStyle>()
+        val joystickStyleCache = HashMap<List<Any>, JoystickStyle>()
+        /** Events fired by the MJ GUI (toggle controls) button; set before any button is built. */
+        var guiEvents: List<ClickEvent> = emptyList()
         var buttons = 0
         var joysticks = 0
         var drawers = 0
@@ -72,16 +78,27 @@ internal object MojoLayoutImporter {
             metrics.density.coerceAtLeast(0.1f),
             root.optDouble("scaledAt", 100.0).toFloat().takeIf { it.isFinite() && it > 0f } ?: 100f
         )
+        val mainLayerId = id()
+        val drawerLayerIds = List(root.optJSONArray("mDrawerDataList")?.length() ?: 0) { id() }
+        // MJ GUI button: hide every button and joystick except itself. It lives in its own
+        // always-visible layer, toggles the main layer and force-closes all drawer layers.
+        state.guiEvents = buildList {
+            add(ClickEvent(ClickEvent.Type.SwitchLayer, mainLayerId))
+            drawerLayerIds.forEach { add(ClickEvent(ClickEvent.Type.HideLayer, it)) }
+        }
         val mainButtons = mutableListOf<NormalData>()
+        val guiButtons = mutableListOf<NormalData>()
         val mainJoysticks = mutableListOf<JoystickData>()
-        root.optJSONArray("mControlDataList").each { mainButtons += state.button(it) }
+        root.optJSONArray("mControlDataList").each {
+            if (it.isGuiToggle()) guiButtons += state.button(it) else mainButtons += state.button(it)
+        }
         root.optJSONArray("mJoystickDataList").each { mainJoysticks += state.joystick(it) }
 
         val layers = mutableListOf<ControlLayer>()
         root.optJSONArray("mDrawerDataList").eachIndexed { index, drawer ->
             val properties = drawer.optJSONObject("properties") ?: return@eachIndexed
             val children = drawer.optJSONArray("buttonProperties") ?: JSONArray()
-            val layerId = id()
+            val layerId = drawerLayerIds[index]
             val w = state.scaled(properties.optDouble("width", 50.0).toFloat()).coerceAtLeast(5f)
             val h = state.scaled(properties.optDouble("height", 50.0).toFloat()).coerceAtLeast(5f)
             val wp = w * state.density
@@ -122,9 +139,20 @@ internal object MojoLayoutImporter {
             state.drawers++
         }
 
+        if (guiButtons.isNotEmpty()) {
+            // First in the list = top-most layer, so GUI stays reachable above everything.
+            layers.add(0, ControlLayer(
+                name = "MJ GUI",
+                uuid = id(),
+                hide = false,
+                visibilityType = VisibilityType.ALWAYS,
+                normalButtons = guiButtons
+            ))
+        }
+
         layers += ControlLayer(
                 name = "MojoLauncher",
-                uuid = id(),
+                uuid = mainLayerId,
                 hide = false,
                 visibilityType = VisibilityType.ALWAYS,
                 normalButtons = mainButtons,
@@ -172,6 +200,10 @@ internal object MojoLayoutImporter {
         val events = mutableListOf<ClickEvent>()
         src.optJSONArray("keycodes").eachInt { code ->
             if (code == 0) return@eachInt // unused MJ key slot
+            if (code == MJ_SPECIAL_TOGGLE_CONTROLS) {
+                events += guiEvents
+                return@eachInt
+            }
             if (code == MJ_SPECIAL_KEYBOARD) {
                 // MJ on-screen keyboard button -> launcher "switch input method" event
                 val ime = ClickEvent(ClickEvent.Type.LauncherEvent, LAUNCHER_EVENT_SWITCH_IME)
@@ -183,14 +215,13 @@ internal object MojoLayoutImporter {
         }
         events += extra
         val style = buttonStyle(
-            name, w, h,
+            w, h,
             src.optDouble("opacity", 1.0).toFloat(),
             src.optInt("bgColor", 0x4D000000),
             src.optInt("strokeColor", -1),
             strokeScaled(src.optDouble("strokeWidth", 0.0).toFloat()),
             src.optDouble("cornerRadius", 0.0).toFloat()
         )
-        styles += style
         buttons++
         if (src.optString("bitmapTag", "").let { it.isNotBlank() && it != "null" }) bitmapControls++
         return NormalData(
@@ -220,7 +251,6 @@ internal object MojoLayoutImporter {
         val h = scaled(src.optDouble("height", src.optDouble("width", 100.0)).toFloat()).coerceAtLeast(20f)
         val size = max(w, h)
         val sizePx = size * density
-        val styleId = id()
         val alpha = src.optDouble("opacity", 1.0).toFloat().coerceIn(0f, 1f)
         val stroke = (strokeScaled(src.optDouble("strokeWidth", 0.0).toFloat()) / size * 100f)
             .roundToInt().coerceIn(0, 50)
@@ -237,7 +267,14 @@ internal object MojoLayoutImporter {
             joystickShape = 50,
             joystickSize = 0.5f
         )
-        joystickStyles += JoystickStyle("MJ Joystick", styleId, true, config, config)
+        val key = listOf<Any>(
+            (alpha * 100).roundToInt(), src.optInt("bgColor", 0x4D000000),
+            src.optInt("strokeColor", -1), stroke, config.backgroundShape
+        )
+        val styleId = joystickStyleCache.getOrPut(key) {
+            JoystickStyle("MJ Joystick Style ${joystickStyles.size + 1}", id(), true, config, config)
+                .also { joystickStyles += it }
+        }.uuid
         joysticks++
         return JoystickData(
             uuid = id(),
@@ -256,20 +293,30 @@ internal object MojoLayoutImporter {
     }
 
     private fun State.buttonStyle(
-        name: String, w: Float, h: Float, opacity: Float,
+        w: Float, h: Float, opacity: Float,
         bg: Int, border: Int, borderWidth: Float, radiusPercent: Float
     ): ButtonStyle {
         val alpha = opacity.coerceIn(0f, 1f)
         val radius = (min(w, h) * radiusPercent.coerceIn(0f, 100f) / 100f).coerceIn(0f, 100f)
-        val background = Color(bg)
-        val borderColor = Color(border)
         val width = borderWidth.coerceIn(0f, 50f).roundToInt()
-        val shape = ButtonShape(radius)
-        val config = ButtonStyle.StyleConfig(
-            alpha, alpha, background, background, Color.White, Color.White,
-            null, null, width, width, borderColor, borderColor, shape, shape
-        )
-        return ButtonStyle("MJ: $name", id(), false, true, config, config)
+        val key = listOf<Any>((alpha * 100).roundToInt(), bg, border, width, (radius * 10).roundToInt())
+        return styleCache.getOrPut(key) {
+            val background = Color(bg)
+            val borderColor = Color(border)
+            val shape = ButtonShape(radius)
+            val config = ButtonStyle.StyleConfig(
+                alpha, alpha, background, background, Color.White, Color.White,
+                null, null, width, width, borderColor, borderColor, shape, shape
+            )
+            ButtonStyle("MJ Style ${styles.size + 1}", id(), false, true, config, config)
+                .also { styles += it }
+        }
+    }
+
+    private fun JSONObject.isGuiToggle(): Boolean {
+        val codes = optJSONArray("keycodes") ?: return false
+        for (i in 0 until codes.length()) if (codes.optInt(i, 0) == MJ_SPECIAL_TOGGLE_CONTROLS) return true
+        return false
     }
 
     /** MJ serializes the drawer orientation as an enum name; older exports may use its int index. */
