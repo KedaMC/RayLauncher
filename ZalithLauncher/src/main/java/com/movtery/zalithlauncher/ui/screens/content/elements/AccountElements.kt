@@ -1407,6 +1407,7 @@ sealed interface ChangeCape {
     ) : ChangeCape
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ChangeSkinDialog(
     account: Account,
