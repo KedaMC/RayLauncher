@@ -52,6 +52,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.isSpecified
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
@@ -107,6 +109,7 @@ import com.styropyr0.prismal.PrismalBackdrop
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.movtery.zalithlauncher.setting.AllSettings
+import com.movtery.zalithlauncher.setting.enums.isLauncherInDarkTheme
 import com.movtery.zalithlauncher.setting.enums.GlassTier
 import com.movtery.zalithlauncher.viewmodel.LocalBackgroundViewModel
 import com.styropyr0.prismal.PrismalGlassSurface
@@ -469,6 +472,25 @@ fun GlassDialog(
 /** 容器色叠加在玻璃上的不透明度，保证文字可读 */
 private const val GLASS_SURFACE_ALPHA = 0.3f
 
+/** Share of the original color kept when a light tint is darkened for glass in light theme. */
+private const val LIGHT_THEME_TINT_KEEP = 0.2f
+
+/** Tints at or below this luminance are already dark and are left alone. */
+private const val LIGHT_TINT_LUMINANCE = 0.35f
+
+/**
+ * Tint to lay over the glass. Light theme surfaces are near white, which washes the blur out into a
+ * white haze (glass content is always white too). In light theme such tints are darkened to the level
+ * of their dark theme counterparts, so glass blurs the same way in both themes. Dark theme, dark tints
+ * (e.g. error buttons) and unspecified colors pass through unchanged.
+ */
+@Composable
+internal fun glassTint(color: Color): Color {
+    if (!color.isSpecified || isLauncherInDarkTheme()) return color
+    if (color.luminance() <= LIGHT_TINT_LUMINANCE) return color
+    return lerp(Color.Black, color, LIGHT_THEME_TINT_KEEP).copy(alpha = color.alpha)
+}
+
 /**
  * Cheap stand-in for [LiquidGlassSurface]: the same tint at the same opacity, but no blur, refraction
  * or backdrop sampling. Use it for glass that is mostly covered by other content or that belongs to a
@@ -529,7 +551,7 @@ fun LiquidGlassSurface(
         onClick = stableOnClick,
         blurRadius = if (liquidGlassTier() == GlassTier.LITE) blurRadius * LITE_BLUR_FACTOR else blurRadius,
         surfaceColor = if (containerColor.isSpecified) {
-            containerColor.copy(alpha = GLASS_SURFACE_ALPHA)
+            glassTint(containerColor).copy(alpha = GLASS_SURFACE_ALPHA)
         } else {
             Color.Unspecified
         }
