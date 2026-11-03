@@ -109,7 +109,6 @@ import com.styropyr0.prismal.PrismalBackdrop
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.movtery.zalithlauncher.setting.AllSettings
-import com.movtery.zalithlauncher.setting.enums.isLauncherInDarkTheme
 import com.movtery.zalithlauncher.setting.enums.GlassTier
 import com.movtery.zalithlauncher.viewmodel.LocalBackgroundViewModel
 import com.styropyr0.prismal.PrismalGlassSurface
@@ -481,12 +480,13 @@ private const val LIGHT_TINT_LUMINANCE = 0.35f
 /**
  * Tint to lay over the glass. Light theme surfaces are near white, which washes the blur out into a
  * white haze (glass content is always white too). In light theme such tints are darkened to the level
- * of their dark theme counterparts, so glass blurs the same way in both themes. Dark theme, dark tints
- * (e.g. error buttons) and unspecified colors pass through unchanged.
+ * of their dark theme counterparts, so glass blurs the same way in both themes. A dark palette (dark
+ * theme, or light theme with glass on), dark tints (e.g. error buttons) and unspecified colors pass
+ * through unchanged.
  */
 @Composable
 internal fun glassTint(color: Color): Color {
-    if (!color.isSpecified || isLauncherInDarkTheme()) return color
+    if (!color.isSpecified || MaterialTheme.colorScheme.surface.luminance() < 0.5f) return color
     if (color.luminance() <= LIGHT_TINT_LUMINANCE) return color
     return lerp(Color.Black, color, LIGHT_THEME_TINT_KEEP).copy(alpha = color.alpha)
 }
