@@ -20,6 +20,7 @@ package com.movtery.zalithlauncher.ui.screens.main
 
 import com.movtery.zalithlauncher.ui.components.effectiveBackgroundOpacity
 import com.movtery.zalithlauncher.ui.components.launcherGlassOn
+import com.movtery.zalithlauncher.ui.components.glassTint
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -170,8 +171,10 @@ fun MainScreen(
     val isBackgroundValid = LocalBackgroundViewModel.current?.isValid == true
     val launcherBackgroundOpacity = effectiveBackgroundOpacity().toFloat() / 100f
 
+    //With Liquid Glass on, a light theme veil over the wallpaper would wash it out to white
     val backgroundColor = if (isBackgroundValid) {
-        backgroundColor().copy(alpha = launcherBackgroundOpacity)
+        val base = if (launcherGlassOn()) glassTint(backgroundColor()) else backgroundColor()
+        base.copy(alpha = launcherBackgroundOpacity)
     } else backgroundColor()
 
     Surface(

@@ -735,6 +735,13 @@ fun GlassItemSurface(
 }
 
 /**
+ * Opacity of the flat surface glass samples in game. The game itself cannot be sampled, so this stands
+ * in for it: low enough that the game stays visible through panels (frosted look, like the control
+ * editor menu) instead of a solid dark box.
+ */
+private const val GAME_GLASS_BACKDROP_ALPHA = 0.2f
+
+/**
  * Backdrop for screens that have no launcher background (the in-game UI). Records a flat dark
  * surface into the shared glass layer, so glass boxes still render blur, edge highlights and the
  * springy press. It is drawn at (almost) zero alpha, so it never visibly covers the game.
@@ -750,7 +757,7 @@ fun GameGlassBackdrop(modifier: Modifier = Modifier) {
         Box(
             modifier = Modifier
                 .matchParentSize()
-                .background(Color(0xFF3A3F47))
+                .background(Color(0xFF3A3F47).copy(alpha = GAME_GLASS_BACKDROP_ALPHA))
         )
     }
 }
