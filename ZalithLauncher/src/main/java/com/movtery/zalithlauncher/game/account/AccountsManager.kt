@@ -23,6 +23,7 @@ import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.coroutine.Task
 import com.movtery.zalithlauncher.coroutine.TaskSystem
 import com.movtery.zalithlauncher.database.AppDatabase
+import com.movtery.zalithlauncher.game.account.wardrobe.AccountCapeCollection
 import com.movtery.zalithlauncher.game.account.auth_server.data.AuthServer
 import com.movtery.zalithlauncher.game.account.auth_server.data.AuthServerDao
 import com.movtery.zalithlauncher.setting.AllSettings
@@ -266,6 +267,8 @@ object AccountsManager {
             accountDao.deleteAccount(account)
             val skinFile = account.getSkinFile()
             FileUtils.deleteQuietly(skinFile)
+            FileUtils.deleteQuietly(account.getLegacyCapeFile())
+            AccountCapeCollection.deleteCollection(account.uniqueUUID)
             suspendReloadAccounts()
         }
     }

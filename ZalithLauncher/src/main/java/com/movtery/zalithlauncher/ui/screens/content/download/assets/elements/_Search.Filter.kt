@@ -18,7 +18,9 @@
 
 package com.movtery.zalithlauncher.ui.screens.content.download.assets.elements
 
+import com.movtery.zalithlauncher.ui.components.effectiveBackgroundBlur
 import androidx.compose.animation.AnimatedVisibility
+import com.movtery.zalithlauncher.ui.components.glassRadioColors
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandVertically
@@ -43,16 +45,18 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExposedDropdownMenu
+import com.movtery.zalithlauncher.ui.components.Checkbox
+import com.movtery.zalithlauncher.ui.components.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import com.movtery.zalithlauncher.ui.components.ExposedDropdownMenu
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import com.movtery.zalithlauncher.ui.components.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Surface
+import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -64,6 +68,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalFocusManager
@@ -80,6 +87,8 @@ import com.movtery.zalithlauncher.game.download.assets.platform.PlatformFilterCo
 import com.movtery.zalithlauncher.game.download.assets.platform.PlatformSortField
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.ui.components.LittleTextLabel
+import com.movtery.zalithlauncher.ui.components.LiquidGlassSurface
+import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
 import com.movtery.zalithlauncher.ui.components.OwnOutlinedTextField
 import com.movtery.zalithlauncher.ui.screens.content.elements.backgroundGlass
 import com.movtery.zalithlauncher.ui.theme.cardColor
@@ -104,6 +113,31 @@ import org.jackhuang.hmcl.addon.AddonProjectInfo
  * @param onModLoaderChange 模组加载器变更时
  * @param extraFilter 额外的过滤器UI
  */
+@OptIn(ExperimentalMaterial3Api::class)
+/** True while inside a [DownloadFilterGlass] box, so inner filter layouts don't add a second glass. */
+internal val LocalInsideGlassFilter = compositionLocalOf { false }
+
+@Composable
+private fun DownloadFilterGlass(content: @Composable () -> Unit) {
+    val backdrop = liquidGlassBackdrop()
+    if (backdrop != null) {
+        // Same glass as the entries in the result list: default blur, card tint, white text
+        LiquidGlassSurface(
+            backdrop = backdrop,
+            shape = MaterialTheme.shapes.large,
+            modifier = Modifier.fillMaxWidth(),
+            containerColor = cardColor(),
+            contentColor = Color.White
+        ) {
+            CompositionLocalProvider(LocalInsideGlassFilter provides true) {
+                content()
+            }
+        }
+    } else {
+        content()
+    }
+}
+
 @Composable
 fun SearchFilter(
     modifier: Modifier = Modifier,
@@ -135,6 +169,7 @@ fun SearchFilter(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {
+            DownloadFilterGlass {
             SuggestionsText(
                 value = searchName,
                 onValueChange = onSearchNameChange,
@@ -163,9 +198,11 @@ fun SearchFilter(
                     onSearch()
                 }
             )
+            }
         }
 
         item {
+            DownloadFilterGlass {
             SuggestionsText(
                 value = gameVersion,
                 onValueChange = onGameVersionChange,
@@ -183,21 +220,25 @@ fun SearchFilter(
                     onSearch()
                 }
             )
+            }
         }
 
         extraFilter?.invoke(this@LazyColumn)
 
         if (enablePlatform) {
             item {
+            DownloadFilterGlass {
                 PlatformListLayout(
                     modifier = Modifier.fillMaxWidth(),
                     searchPlatform = searchPlatform,
                     onPlatformChange = onPlatformChange,
                 )
             }
+            }
         }
 
         item {
+            DownloadFilterGlass {
             FilterListLayout(
                 modifier = Modifier.fillMaxWidth(),
                 items = PlatformSortField.entries,
@@ -214,9 +255,11 @@ fun SearchFilter(
                 title = stringResource(R.string.sort_by),
                 cancelable = false
             )
+            }
         }
 
         item {
+            DownloadFilterGlass {
             FilterListLayout(
                 modifier = Modifier.fillMaxWidth(),
                 items = allCategories,
@@ -232,10 +275,12 @@ fun SearchFilter(
                 },
                 title = stringResource(R.string.download_assets_filter_category)
             )
+            }
         }
 
         if (enableModLoader) {
             item {
+            DownloadFilterGlass {
                 FilterListLayout(
                     modifier = Modifier.fillMaxWidth(),
                     items = modloaders,
@@ -250,6 +295,7 @@ fun SearchFilter(
                     },
                     title = stringResource(R.string.download_assets_filter_modloader)
                 )
+            }
             }
         }
     }
@@ -304,6 +350,15 @@ private fun <E> SuggestionsText(
             value = value,
             onValueChange = onValueChange,
             shape = fieldShape,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent,
+                disabledContainerColor = Color.Transparent,
+                errorContainerColor = Color.Transparent,
+                focusedBorderColor = Color.White.copy(alpha = 0.45f),
+                unfocusedBorderColor = Color.Transparent,
+                disabledBorderColor = Color.Transparent
+            ),
             label = {
                 Text(text = label)
             },
@@ -370,18 +425,37 @@ fun BaseFilterLayout(
     influencedByBackground: Boolean = true,
     color: Color = cardColor(influencedByBackground),
     contentColor: Color = onCardColor(),
-    blur: Int = AllSettings.backgroundBlur.state,
+    blur: Int = effectiveBackgroundBlur(),
+    glassBlur: Dp = 8.dp,
     onClick: (() -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
     @Composable
-    fun Content() {
+    fun Content(glass: Boolean = false) {
         Column(
-            modifier = Modifier.backgroundGlass(blur, color, influencedByBackground)
+            modifier = if (glass) Modifier else Modifier.backgroundGlass(blur, color, influencedByBackground)
         ) { content() }
     }
 
-    if (onClick != null) {
+    val glassBackdrop = liquidGlassBackdrop()
+    if (glassBackdrop != null && LocalInsideGlassFilter.current) {
+        // Already inside a filter glass box: no second glass layer
+        Box(modifier = if (onClick != null) modifier.clickable(onClick = onClick) else modifier) {
+            Content(glass = true)
+        }
+    } else if (glassBackdrop != null) {
+        LiquidGlassSurface(
+            backdrop = glassBackdrop,
+            shape = shape,
+            modifier = modifier,
+            containerColor = color,
+            contentColor = Color.White,
+            blurRadius = glassBlur,
+            onClick = onClick
+        ) {
+            Content(glass = true)
+        }
+    } else if (onClick != null) {
         Surface(
             modifier = modifier,
             shape = shape,
@@ -625,7 +699,7 @@ private fun FilterListItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         when (selectionMode) {
-            FilterSelectionMode.Single -> RadioButton(selected = selected, onClick = onClick)
+            FilterSelectionMode.Single -> RadioButton(selected = selected, onClick = onClick, colors = glassRadioColors())
             FilterSelectionMode.Multiple -> Checkbox(checked = selected, onCheckedChange = onCheckedChange)
         }
         itemLayout()

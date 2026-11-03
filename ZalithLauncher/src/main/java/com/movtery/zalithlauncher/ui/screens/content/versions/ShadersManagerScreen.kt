@@ -45,15 +45,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import com.movtery.zalithlauncher.ui.components.DropdownMenu
+import com.movtery.zalithlauncher.ui.components.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import com.movtery.zalithlauncher.ui.components.IconButton
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.nonInteractiveScrollbar
@@ -541,6 +541,8 @@ private fun ShadersActionsHeader(
                         )
                         .widthIn(max = this@BoxWithConstraints.maxWidth / 2)
                         .horizontalScroll(scrollState),
+                    // Import and Download glass boxes used to touch; extra gap shifts Import left and trims the search box
+                    horizontalArrangement = Arrangement.spacedBy(3.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Spacer(modifier = Modifier.width(6.dp))

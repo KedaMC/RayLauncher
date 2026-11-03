@@ -34,7 +34,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.nonInteractiveScrollbar
 import androidx.compose.runtime.Composable
@@ -64,7 +64,6 @@ import com.movtery.zalithlauncher.game.account.auth_server.data.AuthServer
 import com.movtery.zalithlauncher.game.account.isAuthServerAccount
 import com.movtery.zalithlauncher.game.account.isMicrosoftAccount
 import com.movtery.zalithlauncher.game.account.isMicrosoftLogging
-import com.movtery.zalithlauncher.game.account.wardrobe.toArmModel
 import com.movtery.zalithlauncher.game.account.yggdrasil.PlayerProfile
 import com.movtery.zalithlauncher.ui.AndroidStringText
 import com.movtery.zalithlauncher.ui.androidText
@@ -72,7 +71,6 @@ import com.movtery.zalithlauncher.ui.base.BaseScreen
 import com.movtery.zalithlauncher.ui.components.AnimatedDirection
 import com.movtery.zalithlauncher.ui.components.BackgroundCard
 import com.movtery.zalithlauncher.ui.components.MarqueeText
-import com.movtery.zalithlauncher.ui.components.PetModelView
 import com.movtery.zalithlauncher.ui.components.ScalingActionButton
 import com.movtery.zalithlauncher.ui.components.ScalingLabel
 import com.movtery.zalithlauncher.ui.components.SimpleAlertDialog
@@ -110,6 +108,7 @@ import com.movtery.zalithlauncher.viewmodel.ScreenBackStackViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+import com.movtery.zalithlauncher.ui.components.SkinPreview3D
 /**
  * 封装账号界面 UI 交互的回调函数
  * 
@@ -286,31 +285,20 @@ private fun ActionsLayout(
     ) {
         //玩家模型预览
         val refreshWardrobe by AccountsManager.refreshWardrobe.collectAsStateWithLifecycle()
-        val armModel = currentAccount?.skinModelType?.toArmModel()
-        val skinStamp = currentAccount?.getSkinFile()?.lastModified()
-        val capeStamp = currentAccount?.getCapeFile()?.lastModified()
-        val skinBytes by produceState<ByteArray?>(
-            null, currentAccount, refreshWardrobe, skinStamp, armModel
-        ) {
-            value = withContext(Dispatchers.IO) {
-                currentAccount?.getSkinFile()?.takeIf { it.exists() }
-                    ?.inputStream()?.use { it.readBytes() }
-            }
+        val skinFile = remember(currentAccount, refreshWardrobe) {
+            currentAccount?.getSkinFile()?.takeIf { it.exists() }
         }
-        val capeBytes by produceState<ByteArray?>(null, currentAccount, refreshWardrobe, capeStamp) {
-            value = withContext(Dispatchers.IO) {
-                currentAccount?.getCapeFile()?.takeIf { it.exists() }
-                    ?.inputStream()?.use { it.readBytes() }
-            }
+        val capeFile = remember(currentAccount, refreshWardrobe) {
+            currentAccount?.getCapeFile()?.takeIf { it.exists() }
         }
-        PetModelView(
+        SkinPreview3D(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth(),
-            skin = skinBytes,
-            cape = capeBytes,
-            arm = armModel,
-            yaw = Math.toRadians(35.0).toFloat()
+            skinFile = skinFile,
+            capeFile = capeFile,
+            modelType = currentAccount?.skinModelType,
+            refreshKey = listOf(currentAccount?.uniqueUUID, refreshWardrobe, skinFile?.lastModified() ?: 0L, capeFile?.lastModified() ?: 0L)
         )
 
         //添加账号

@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.setting.enums.FpsDisplayMode
 import com.movtery.zalithlauncher.ui.components.FloatingBall
+import com.movtery.zalithlauncher.ui.components.menuPanelColor
 import com.movtery.zalithlauncher.ui.screens.content.elements.MemoryPreview
 
 @Composable
@@ -78,7 +79,9 @@ fun DraggableGameBall(
         onPositionChanged = onPositionChanged,
         onSavePos = onSavePos,
         onClick = onClick,
-        alpha = alpha
+        alpha = alpha,
+        glass = true,
+        glassColor = menuPanelColor()
     ) {
         GameBallContent(
             gameFps = gameFps,

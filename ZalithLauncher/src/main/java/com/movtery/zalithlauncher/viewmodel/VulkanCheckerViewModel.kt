@@ -53,6 +53,9 @@ private const val KEY_VULKAN_CHECK_RECORD = "vulkanCheckRecord"
 data class VulkanCheckRecord(
     val useTurnip: Boolean,
     val driverPath: String,
+    /** 驱动库名与 GPU 家族参与缓存身份；旧记录缺失时为 null，与新状态比对必然失效并重检一次 */
+    val driverLib: String? = null,
+    val driverGpu: String? = null,
     /** 设备可支持的 Minecraft 版本范围，[Range.until] 为排他上界，null 表示无上界 */
     val supportedRanges: List<Range> = emptyList(),
     val version: Int = 0,
@@ -110,6 +113,8 @@ class VulkanCheckerViewModel: ViewModel() {
                 VulkanCheckRecord(
                     useTurnip = useTurnip,
                     driverPath = driverPath(useTurnip, driver),
+                    driverLib = driverLib(useTurnip, driver),
+                    driverGpu = driverGpu(useTurnip, driver),
                     supportedRanges = capabilities?.profileSupport()
                         ?.filter { it.supported }
                         ?.map { VulkanCheckRecord.Range(since = it.since, until = it.until) }
@@ -131,7 +136,9 @@ class VulkanCheckerViewModel: ViewModel() {
             //判断是否使用当前版本的检查器进行检测，版本不一致则数据失效重新检查
             last.version == VulkanRequirements.VULKAN_REQUIREMENTS_VERSION &&
             //判断Turnip环境是否不一致，不一致则数据失效重新检查
-            last.useTurnip == useTurnip && last.driverPath == path
+            last.useTurnip == useTurnip && last.driverPath == path &&
+            last.driverLib == driverLib(useTurnip, driver) &&
+            last.driverGpu == driverGpu(useTurnip, driver)
         }?.let {
             //同一驱动状态下设备能力不变，直接按已支持的版本范围判定
             return mcVersion != null && it.isSupported(mcVersion)
@@ -147,13 +154,21 @@ class VulkanCheckerViewModel: ViewModel() {
         return if (useTurnip) driver.path else ""
     }
 
+    private fun driverLib(useTurnip: Boolean, driver: Driver): String? {
+        return if (useTurnip) driver.driverLib else null
+    }
+
+    private fun driverGpu(useTurnip: Boolean, driver: Driver): String? {
+        return if (useTurnip) driver.driverGpu else null
+    }
+
     private suspend fun doCheck(useTurnip: Boolean, driver: Driver): VulkanCapabilities? {
         return withContext(Dispatchers.IO) {
             if (useTurnip) {
                 val tempDir = File(PathManager.DIR_CACHE, "vulkan_temp")
-                VulkanChecker.checkCapabilities(null, driver.path, tempDir.absolutePath)
+                VulkanChecker.checkCapabilities(driver.driverLib, driver.driverGpu, driver.path, tempDir.absolutePath)
             } else {
-                VulkanChecker.checkCapabilities(null, null, null)
+                VulkanChecker.checkCapabilities(null, null, null, null)
             }
         }
     }

@@ -39,13 +39,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.FilledTonalButton
+import com.movtery.zalithlauncher.ui.components.Button
+import com.movtery.zalithlauncher.ui.components.Checkbox
+import com.movtery.zalithlauncher.ui.components.FilledTonalButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import com.movtery.zalithlauncher.ui.components.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.nonInteractiveScrollbar
 import androidx.compose.runtime.Composable
@@ -63,7 +63,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
+import com.movtery.zalithlauncher.ui.components.GlassDialog as Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.game.renderer.ConfigurableRenderer

@@ -21,6 +21,12 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        //PrismalAGSL (Liquid Glass) is only published on JitPack
+        maven("https://jitpack.io") {
+            content {
+                includeGroupByRegex("com\\.github\\.styropyr0.*")
+            }
+        }
     }
 }
 
@@ -36,7 +42,4 @@ project(":LWJGL:lwjgl-3.4.1").projectDir = file("LWJGL/3.4.1")
 include(":LayerController")
 include(":ColorPicker")
 include(":CardGrid")
-include(":Terracotta")
 include(":InputMap")
-include(":Guide")
-include(":PetLib")

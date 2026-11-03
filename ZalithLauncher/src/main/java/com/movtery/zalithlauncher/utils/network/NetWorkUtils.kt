@@ -24,7 +24,7 @@ import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import androidx.core.net.toUri
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.movtery.zalithlauncher.ui.components.GlobalDialogs
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.context.COPY_LABEL_LINK
 import com.movtery.zalithlauncher.game.download.engine.DownloadEngine
@@ -32,7 +32,6 @@ import com.movtery.zalithlauncher.game.download.engine.DownloadRequest
 import com.movtery.zalithlauncher.path.DOWNLOAD_OKHTTP_CLIENT
 import com.movtery.zalithlauncher.path.TIME_OUT
 import com.movtery.zalithlauncher.path.createRequestBuilder
-import com.movtery.zalithlauncher.ui.theme.showThemed
 import com.movtery.zalithlauncher.utils.copyText
 import com.movtery.zalithlauncher.utils.logging.Logger
 import com.movtery.zalithlauncher.utils.string.isEmptyOrBlank
@@ -242,20 +241,18 @@ fun Activity.openLink(link: String, dataType: String?) {
         return
     }
 
-    MaterialAlertDialogBuilder(this)
-        .setTitle(R.string.generic_open_link)
-        .setMessage(link)
-        .setPositiveButton(R.string.generic_confirm) { _, _ ->
+    GlobalDialogs.show(
+        context = this,
+        title = getString(R.string.generic_open_link),
+        message = link,
+        positive = GlobalDialogs.Action(getString(R.string.generic_confirm)) {
             openLinkInternal(link, dataType)
-        }
-        .setNegativeButton(R.string.generic_cancel) { dialog, _ ->
-            dialog.dismiss()
-        }
-        .setNeutralButton(R.string.generic_copy) { dialog, _ ->
+        },
+        negative = GlobalDialogs.Action(getString(R.string.generic_cancel)),
+        neutral = GlobalDialogs.Action(getString(R.string.generic_copy)) {
             copyText(COPY_LABEL_LINK, link, this)
-            dialog.dismiss()
         }
-        .showThemed()
+    )
 }
 
 /**

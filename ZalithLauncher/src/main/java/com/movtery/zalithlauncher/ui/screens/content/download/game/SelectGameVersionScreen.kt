@@ -18,6 +18,7 @@
 
 package com.movtery.zalithlauncher.ui.screens.content.download.game
 
+import com.movtery.zalithlauncher.ui.components.effectiveBackgroundBlur
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.Orientation
@@ -31,6 +32,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -41,10 +44,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import com.movtery.zalithlauncher.ui.components.IconButton
 import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.nonInteractiveScrollbar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -82,6 +85,9 @@ import com.movtery.zalithlauncher.ui.components.CheckChip
 import com.movtery.zalithlauncher.ui.components.EdgeDirection
 import com.movtery.zalithlauncher.ui.components.LittleTextLabel
 import com.movtery.zalithlauncher.ui.components.ScalingLabel
+import com.movtery.zalithlauncher.ui.components.BackgroundCard
+import com.movtery.zalithlauncher.ui.components.GlassItemSurface
+import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
 import com.movtery.zalithlauncher.ui.components.SimpleTextInputField
 import com.movtery.zalithlauncher.ui.components.animated
 import com.movtery.zalithlauncher.ui.components.fadeEdge
@@ -123,14 +129,11 @@ private sealed interface VersionState {
  * 版本过滤条件
  * @param release 是否保留正式版本
  * @param snapshot 是否保留快照版本
- * @param old 是否保留旧版本
  * @param id 搜索并过滤版本ID
  */
 private data class VersionFilter(
     val release: Boolean = true,
     val snapshot: Boolean = false,
-    val aprilFools: Boolean = false,
-    val old: Boolean = false,
     val id: String = ""
 )
 
@@ -302,18 +305,27 @@ private fun SelectGameVersionContent(
 
                 is VersionState.None -> {
                     Column {
-                        VersionHeader(
+                        BackgroundCard(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 12.dp),
-                            versionFilter = viewModel.versionFilter,
-                            onVersionFilterChange = { viewModel.filterWith(it) },
-                            itemContainerColor = cardColor(),
-                            itemContentColor = onCardColor(),
-                            onRefreshClick = {
-                                viewModel.refresh(true)
-                            }
-                        )
+                            shape = MaterialTheme.shapes.large,
+                            liquidGlass = true
+                        ) {
+                            val glassActive = liquidGlassBackdrop() != null
+                            VersionHeader(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 8.dp, vertical = 8.dp),
+                                versionFilter = viewModel.versionFilter,
+                                onVersionFilterChange = { viewModel.filterWith(it) },
+                                itemContainerColor = if (glassActive) Color.Transparent else cardColor(),
+                                itemContentColor = if (glassActive) Color.White else onCardColor(),
+                                onRefreshClick = {
+                                    viewModel.refresh(true)
+                                }
+                            )
+                        }
 
                         VersionList(
                             modifier = Modifier.weight(1f),
@@ -339,8 +351,9 @@ private fun List<MinecraftVersion>.filterVersions(
     version.isType(
         release = versionFilter.release,
         snapshot = versionFilter.snapshot,
-        aprilFools = versionFilter.aprilFools,
-        old = versionFilter.old
+        //Lite: 已移除“愚人节版”与“旧版本”筛选项，这两类版本不再显示
+        aprilFools = false,
+        old = false,
     )
 }.filter { version ->
     //Fix：单独过滤版本名称
@@ -390,20 +403,6 @@ private fun VersionHeader(
                         },
                         text = stringResource(R.string.download_game_type_snapshot)
                     )
-                    VersionTypeItem(
-                        selected = versionFilter.aprilFools,
-                        onClick = {
-                            onVersionFilterChange(versionFilter.copy(aprilFools = versionFilter.aprilFools.not()))
-                        },
-                        text = stringResource(R.string.download_game_type_april_fools)
-                    )
-                    VersionTypeItem(
-                        selected = versionFilter.old,
-                        onClick = {
-                            onVersionFilterChange(versionFilter.copy(old = versionFilter.old.not()))
-                        },
-                        text = stringResource(R.string.download_game_type_old)
-                    )
                 }
 
                 //搜索、刷新
@@ -412,20 +411,37 @@ private fun VersionHeader(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    SimpleTextInputField(
-                        modifier = Modifier.weight(1f),
-                        value = versionFilter.id,
-                        onValueChange = { onVersionFilterChange(versionFilter.copy(id = it)) },
-                        color = itemContainerColor,
-                        contentColor = itemContentColor,
-                        singleLine = true,
-                        hint = {
-                            Text(
-                                text = stringResource(R.string.generic_search),
-                                style = TextStyle(color = itemContentColor).copy(fontSize = 12.sp)
-                            )
+                    //Liquid Glass: the search field is its own glass box instead of a flat pill
+                    val searchShape = RoundedCornerShape(percent = 50)
+                    val searchField = @Composable { fieldModifier: Modifier ->
+                        SimpleTextInputField(
+                            modifier = fieldModifier,
+                            value = versionFilter.id,
+                            onValueChange = { onVersionFilterChange(versionFilter.copy(id = it)) },
+                            color = itemContainerColor,
+                            contentColor = itemContentColor,
+                            shape = searchShape,
+                            singleLine = true,
+                            hint = {
+                                Text(
+                                    text = stringResource(R.string.generic_search),
+                                    style = TextStyle(color = itemContentColor).copy(fontSize = 12.sp)
+                                )
+                            }
+                        )
+                    }
+                    if (liquidGlassBackdrop() != null) {
+                        GlassItemSurface(
+                            modifier = Modifier.weight(1f),
+                            shape = searchShape,
+                            color = Color.Transparent,
+                            contentColor = Color.White
+                        ) {
+                            searchField(Modifier.fillMaxWidth())
                         }
-                    )
+                    } else {
+                        searchField(Modifier.weight(1f))
+                    }
 
                     IconButton(
                         onClick = onRefreshClick
@@ -506,7 +522,7 @@ private fun VersionItemLayout(
     influencedByBackground: Boolean = true,
     color: Color = cardColor(influencedByBackground),
     contentColor: Color = onCardColor(),
-    blur: Int = AllSettings.backgroundBlur.state,
+    blur: Int = effectiveBackgroundBlur(),
 ) {
     val scale = remember { Animatable(initialValue = 0.95f) }
     LaunchedEffect(Unit) {
@@ -515,7 +531,8 @@ private fun VersionItemLayout(
 
     val (icon, versionType, wikiUrl, summary) = getVersionComponents(version)
 
-    Surface(
+    val glassItem = liquidGlassBackdrop() != null
+    GlassItemSurface(
         modifier = modifier.graphicsLayer(scaleY = scale.value, scaleX = scale.value),
         onClick = onClick,
         shape = shape,
@@ -525,7 +542,7 @@ private fun VersionItemLayout(
         Row(
             modifier = Modifier
                 .clip(shape = shape)
-                .backgroundGlass(blur, color, influencedByBackground)
+                .backgroundGlass(blur, color, influencedByBackground && !glassItem)
                 .padding(all = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {

@@ -18,7 +18,15 @@
 
 package com.movtery.zalithlauncher.ui.screens.game.elements
 
+import android.Manifest
+import android.app.Activity
+import android.content.pm.PackageManager
+import android.media.projection.MediaProjectionManager
+import android.os.Build
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -57,9 +65,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.game.sdl.SdlBridge
+import com.movtery.zalithlauncher.recorder.RecorderController
+import com.movtery.zalithlauncher.recorder.RecorderService
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.setting.enums.FpsDisplayMode
-import com.movtery.zalithlauncher.setting.enums.GamepadInputMode
 import com.movtery.zalithlauncher.setting.enums.GestureActionType
 import com.movtery.zalithlauncher.setting.enums.MouseControlMode
 import com.movtery.zalithlauncher.setting.enums.MouseTouchBlockMode
@@ -77,7 +86,6 @@ import com.movtery.zalithlauncher.ui.components.MenuSwitchButton
 import com.movtery.zalithlauncher.ui.components.MenuTextButton
 import com.movtery.zalithlauncher.ui.components.lazyScrollWithBar
 import com.movtery.zalithlauncher.ui.control.HotbarRule
-import com.movtery.zalithlauncher.ui.control.gyroscope.isGyroscopeAvailable
 import com.movtery.zalithlauncher.ui.theme.cardColor
 import com.movtery.zalithlauncher.ui.theme.cardTitleColor
 import com.movtery.zalithlauncher.ui.theme.onCardColor
@@ -85,7 +93,6 @@ import com.movtery.zalithlauncher.utils.animation.getAnimateTween
 import com.movtery.zalithlauncher.utils.customResolutionRange
 import com.movtery.zalithlauncher.utils.ensureCustomResolutionInitialized
 import com.movtery.zalithlauncher.utils.getRealScreenSize
-import com.movtery.zalithlauncher.viewmodel.GamepadViewModel
 
 private data class IconTab(val iconRes: Int, val iconSize: Dp = 18.dp)
 
@@ -94,12 +101,10 @@ private val controlTabs = listOf(
     IconTab(R.drawable.ic_dashboard_filled),
     //虚拟鼠标设置
     IconTab(R.drawable.ic_mouse_filled, iconSize = 16.dp),
-    //手柄设置
-    IconTab(R.drawable.ic_sports_esports_filled),
     //手势控制设置
     IconTab(R.drawable.ic_touch_app_filled),
-    //陀螺仪设置
-    IconTab(R.drawable.ic_mobile_rotate_filled)
+    //录制（Lite 新增）
+    IconTab(R.drawable.ic_movie_filled),
 )
 
 @Composable
@@ -107,12 +112,9 @@ fun GameMenuSubscreen(
     state: MenuState,
     controlMenuTabIndex: Int,
     onControlMenuTabChange: (Int) -> Unit,
-    gamepadViewModel: GamepadViewModel,
     closeScreen: () -> Unit,
     onForceClose: () -> Unit,
     onSwitchLog: () -> Unit,
-    enableTerracotta: Boolean,
-    onOpenTerracottaMenu: () -> Unit,
     onRefreshWindowSize: () -> Unit,
     onInputMethod: () -> Unit,
     onSendKeycode: () -> Unit,
@@ -174,12 +176,12 @@ fun GameMenuSubscreen(
                             )
                         }
                         1 -> ControlMouse(modifier = Modifier.fillMaxSize())
-                        2 -> ControlGamepad(
+                        2 -> ControlGesture(modifier = Modifier.fillMaxSize())
+                        3 -> ControlRecorder(
                             modifier = Modifier.fillMaxSize(),
-                            gamepadViewModel = gamepadViewModel
+                            closeScreen = closeScreen,
+                            onShowToast = onShowToast
                         )
-                        3 -> ControlGesture(modifier = Modifier.fillMaxSize())
-                        4 -> ControlGyroscope(modifier = Modifier.fillMaxSize())
                     }
                 }
             }
@@ -196,8 +198,6 @@ fun GameMenuSubscreen(
                 modifier = Modifier.weight(1f),
                 onForceClose = onForceClose,
                 onSwitchLog = onSwitchLog,
-                enableTerracotta = enableTerracotta,
-                onOpenTerracottaMenu = onOpenTerracottaMenu,
                 onRefreshWindowSize = onRefreshWindowSize,
                 onShowToast = onShowToast
             )
@@ -209,8 +209,6 @@ fun GameMenuSubscreen(
 private fun GameActionContent(
     onForceClose: () -> Unit,
     onSwitchLog: () -> Unit,
-    enableTerracotta: Boolean,
-    onOpenTerracottaMenu: () -> Unit,
     onRefreshWindowSize: () -> Unit,
     onShowToast: (AndroidStringText, Int) -> Unit,
     modifier: Modifier = Modifier,
@@ -244,24 +242,6 @@ private fun GameActionContent(
                 color = color,
                 contentColor = contentColor,
             )
-        }
-
-        //如果开启多人联机，则展示这个按钮
-        if (enableTerracotta) {
-            item {
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-
-            //打开联机菜单
-            item {
-                MenuTextButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = stringResource(R.string.terracotta_menu),
-                    onClick = onOpenTerracottaMenu,
-                    color = color,
-                    contentColor = contentColor,
-                )
-            }
         }
 
         item {
@@ -344,6 +324,17 @@ private fun GameActionContent(
                 color = color,
                 contentColor = contentColor,
                 enabled = AllSettings.showMenuBall.state
+            )
+        }
+        //Liquid Glass 开关
+        item {
+            MenuSwitchButton(
+                modifier = Modifier.fillMaxWidth(),
+                text = stringResource(R.string.game_menu_option_liquid_glass),
+                switch = AllSettings.gameLiquidGlass.state,
+                onSwitch = { AllSettings.gameLiquidGlass.save(it) },
+                color = color,
+                contentColor = contentColor
             )
         }
         //请求最高刷新率
@@ -733,137 +724,157 @@ private fun ControlMouse(
     }
 }
 
+/**
+ * Panel perekam video game, satu baris tab dengan pengaturan mouse dan gestur.
+ * Status (merekam / dijeda) dibaca dari [RecorderController], jadi selalu sama dengan
+ * kondisi perekam yang sebenarnya.
+ */
 @Composable
-private fun ControlGamepad(
-    gamepadViewModel: GamepadViewModel,
+private fun ControlRecorder(
+    closeScreen: () -> Unit,
+    onShowToast: (AndroidStringText, Int) -> Unit,
     modifier: Modifier = Modifier,
     color: Color = cardColor(false),
     contentColor: Color = onCardColor(),
 ) {
+    val context = LocalContext.current
     val listState = rememberLazyListState()
-    //重映射相关设置仅在映射模式下可用
-    val remapEnabled = AllSettings.gamepadControl.state &&
-        AllSettings.gamepadInputMode.state == GamepadInputMode.Mapped
+    val isActive = RecorderController.isActive
+    val isPaused = RecorderController.isPaused
+
+    // Video only, used when game audio cannot be captured.
+    fun startVideoOnly() {
+        if (RecorderController.start(context)) {
+            onShowToast(androidText(R.string.game_menu_recorder_started), Toast.LENGTH_SHORT)
+            closeScreen()
+        } else {
+            onShowToast(androidText(R.string.game_menu_recorder_start_failed), Toast.LENGTH_LONG)
+        }
+    }
+
+    // Step 2: the system "start recording" prompt. Android only allows capturing the
+    // game's audio with it; RecorderService then starts the recorder with the token.
+    val requestScreenCapture = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val data = result.data
+        if (result.resultCode == Activity.RESULT_OK && data != null) {
+            RecorderService.start(context, result.resultCode, data)
+            closeScreen()
+        } else {
+            onShowToast(androidText(R.string.game_menu_recorder_consent_cancelled), Toast.LENGTH_SHORT)
+        }
+    }
+
+    fun launchScreenCapturePrompt() {
+        val manager = context.getSystemService(MediaProjectionManager::class.java)
+        if (manager == null) {
+            startVideoOnly()
+        } else {
+            requestScreenCapture.launch(manager.createScreenCaptureIntent())
+        }
+    }
+
+    // Step 1: RECORD_AUDIO, which audio playback capture requires.
+    val requestAudioPermission = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            launchScreenCapturePrompt()
+        } else {
+            onShowToast(androidText(R.string.game_menu_recorder_audio_denied), Toast.LENGTH_LONG)
+            startVideoOnly()
+        }
+    }
+
+    fun startRecordingWithAudio() {
+        when {
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.Q -> startVideoOnly()
+            ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
+                PackageManager.PERMISSION_GRANTED -> launchScreenCapturePrompt()
+            else -> requestAudioPermission.launch(Manifest.permission.RECORD_AUDIO)
+        }
+    }
+
     LazyColumn(
         modifier = modifier.lazyScrollWithBar(listState),
         state = listState,
         contentPadding = PaddingValues(all = 8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        //手柄控制总开关
+        //状态
         item {
-            MenuSwitchButton(
+            Text(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp, vertical = 4.dp),
+                text = stringResource(
+                    when {
+                        !isActive -> R.string.game_menu_recorder_status_idle
+                        isPaused -> R.string.game_menu_recorder_status_paused
+                        else -> R.string.game_menu_recorder_status_recording
+                    }
+                ),
+                style = MaterialTheme.typography.titleSmall
+            )
+        }
+        //开始录制
+        item {
+            MenuTextButton(
                 modifier = Modifier.fillMaxWidth(),
-                text = stringResource(R.string.settings_gamepad_title),
-                switch = AllSettings.gamepadControl.state,
-                onSwitch = { AllSettings.gamepadControl.save(it) },
+                text = stringResource(R.string.game_menu_recorder_start),
+                enabled = !isActive,
+                onClick = { startRecordingWithAudio() },
                 color = color,
                 contentColor = contentColor,
             )
         }
-
+        //暂停 / 继续
         item {
-            Spacer(modifier = Modifier.height(8.dp))
-        }
-
-        //手柄输入模式
-        item {
-            MenuListLayout(
+            MenuTextButton(
                 modifier = Modifier.fillMaxWidth(),
-                title = stringResource(R.string.settings_gamepad_input_mode_title),
-                items = GamepadInputMode.entries,
-                currentItem = AllSettings.gamepadInputMode.state,
-                onItemChange = { AllSettings.gamepadInputMode.save(it) },
-                getItemText = { stringResource(it.titleRes) },
-                color = color,
-                contentColor = contentColor,
-                enabled = AllSettings.gamepadControl.state,
-            )
-        }
-
-        item {
-            Spacer(modifier = Modifier.height(8.dp))
-        }
-
-        //手柄死区缩放
-        item {
-            MenuSliderLayout(
-                modifier = Modifier.fillMaxWidth(),
-                title = stringResource(R.string.settings_gamepad_deadzone_title),
-                value = AllSettings.gamepadDeadZoneScale.state,
-                valueRange = AllSettings.gamepadDeadZoneScale.floatRange,
-                enabled = remapEnabled,
-                onValueChange = { AllSettings.gamepadDeadZoneScale.updateState(it) },
-                onValueChangeFinished = { AllSettings.gamepadDeadZoneScale.save(it) },
-                suffix = "%",
+                text = stringResource(
+                    if (isPaused) R.string.game_menu_recorder_resume else R.string.game_menu_recorder_pause
+                ),
+                enabled = isActive,
+                onClick = {
+                    if (isPaused) {
+                        RecorderController.resume()
+                        closeScreen()
+                    } else {
+                        RecorderController.pause()
+                    }
+                },
                 color = color,
                 contentColor = contentColor,
             )
         }
-
-        //摇杆指针灵敏度
+        //停止并保存
         item {
-            MenuSliderLayout(
+            MenuTextButton(
                 modifier = Modifier.fillMaxWidth(),
-                title = stringResource(R.string.settings_gamepad_cursor_sensitivity_title),
-                value = AllSettings.gamepadCursorSensitivity.state,
-                valueRange = AllSettings.gamepadCursorSensitivity.floatRange,
-                enabled = remapEnabled,
-                onValueChange = { AllSettings.gamepadCursorSensitivity.updateState(it) },
-                onValueChangeFinished = { AllSettings.gamepadCursorSensitivity.save(it) },
-                suffix = "%",
+                text = stringResource(R.string.game_menu_recorder_stop),
+                enabled = isActive,
+                onClick = {
+                    RecorderController.stop(context)
+                    onShowToast(
+                        androidText(R.string.game_menu_recorder_stopped),
+                        Toast.LENGTH_SHORT
+                    )
+                },
                 color = color,
                 contentColor = contentColor,
             )
         }
-
-        //摇杆视角灵敏度
+        //说明
         item {
-            MenuSliderLayout(
-                modifier = Modifier.fillMaxWidth(),
-                title = stringResource(R.string.settings_gamepad_camera_sensitivity_title),
-                value = AllSettings.gamepadCameraSensitivity.state,
-                valueRange = AllSettings.gamepadCameraSensitivity.floatRange,
-                enabled = remapEnabled,
-                onValueChange = { AllSettings.gamepadCameraSensitivity.updateState(it) },
-                onValueChangeFinished = { AllSettings.gamepadCameraSensitivity.save(it) },
-                suffix = "%",
-                color = color,
-                contentColor = contentColor,
+            Text(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp, vertical = 4.dp),
+                text = stringResource(R.string.game_menu_recorder_hint),
+                style = MaterialTheme.typography.bodySmall
             )
-        }
-
-        //手柄映射配置切换
-        item {
-            val list = remember(gamepadViewModel) {
-                gamepadViewModel.getAllConfigKeys()
-            }
-
-            if (list.isNotEmpty()) {
-                MenuListLayout(
-                    modifier = Modifier.fillMaxWidth(),
-                    title = stringResource(R.string.settings_gamepad_config_title),
-                    items = list,
-                    currentItem = AllSettings.gamepadMappingConfig.state,
-                    onItemChange = { name ->
-                        AllSettings.gamepadMappingConfig.save(name)
-                        gamepadViewModel.reloadAllMappings()
-                    },
-                    getItemText = { it },
-                    color = color,
-                    contentColor = contentColor,
-                    enabled = remapEnabled,
-                )
-            } else {
-                MenuTextButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = stringResource(R.string.settings_gamepad_config_no_items),
-                    onClick = {},
-                    color = color,
-                    contentColor = contentColor,
-                    enabled = false
-                )
-            }
         }
     }
 }
@@ -1038,125 +1049,6 @@ private fun ControlGesture(
                 enabled = AllSettings.hotbarLongClick.state,
                 color = color,
                 contentColor = contentColor,
-            )
-        }
-    }
-}
-
-@Composable
-private fun ControlGyroscope(
-    modifier: Modifier = Modifier,
-    color: Color = cardColor(false),
-    contentColor: Color = onCardColor(),
-) {
-    val context = LocalContext.current
-    val isGyroscopeAvailable = remember(context) {
-        isGyroscopeAvailable(context = context)
-    }
-
-    val listState = rememberLazyListState()
-    LazyColumn(
-        modifier = modifier.lazyScrollWithBar(listState),
-        state = listState,
-        contentPadding = PaddingValues(all = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        //陀螺仪控制
-        item {
-            MenuSwitchButton(
-                modifier = Modifier.fillMaxWidth(),
-                text = stringResource(R.string.settings_control_gyroscope_title),
-                switch = AllSettings.gyroscopeControl.state,
-                onSwitch = { AllSettings.gyroscopeControl.save(it) },
-                color = color,
-                contentColor = contentColor,
-                enabled = isGyroscopeAvailable
-            )
-        }
-
-        //陀螺仪控制灵敏度
-        item {
-            MenuSliderLayout(
-                modifier = Modifier.fillMaxWidth(),
-                title = stringResource(R.string.settings_control_gyroscope_sensitivity_title),
-                value = AllSettings.gyroscopeSensitivity.state,
-                valueRange = AllSettings.gyroscopeSensitivity.floatRange,
-                enabled = isGyroscopeAvailable && AllSettings.gyroscopeControl.state,
-                onValueChange = { AllSettings.gyroscopeSensitivity.updateState(it) },
-                onValueChangeFinished = { AllSettings.gyroscopeSensitivity.save(it) },
-                suffix = "%",
-                color = color,
-                contentColor = contentColor,
-            )
-        }
-
-        //陀螺仪采样率
-        item {
-            MenuSliderLayout(
-                modifier = Modifier.fillMaxWidth(),
-                title = stringResource(R.string.settings_control_gyroscope_sample_rate_title),
-                value = AllSettings.gyroscopeSampleRate.state,
-                valueRange = AllSettings.gyroscopeSampleRate.floatRange,
-                enabled = isGyroscopeAvailable && AllSettings.gyroscopeControl.state,
-                onValueChange = { AllSettings.gyroscopeSampleRate.updateState(it) },
-                onValueChangeFinished = { AllSettings.gyroscopeSampleRate.save(it) },
-                suffix = "ms",
-                color = color,
-                contentColor = contentColor,
-            )
-        }
-
-        //陀螺仪数值平滑
-        item {
-            MenuSwitchButton(
-                modifier = Modifier.fillMaxWidth(),
-                text = stringResource(R.string.settings_control_gyroscope_smoothing_title),
-                switch = AllSettings.gyroscopeSmoothing.state,
-                onSwitch = { AllSettings.gyroscopeSmoothing.save(it) },
-                color = color,
-                contentColor = contentColor,
-                enabled = isGyroscopeAvailable && AllSettings.gyroscopeControl.state
-            )
-        }
-
-        //陀螺仪平滑处理的窗口大小
-        item {
-            MenuSliderLayout(
-                modifier = Modifier.fillMaxWidth(),
-                title = stringResource(R.string.settings_control_gyroscope_smoothing_window_title),
-                value = AllSettings.gyroscopeSmoothingWindow.state,
-                valueRange = AllSettings.gyroscopeSmoothingWindow.floatRange,
-                enabled = isGyroscopeAvailable && AllSettings.gyroscopeControl.state && AllSettings.gyroscopeSmoothing.state,
-                onValueChange = { AllSettings.gyroscopeSmoothingWindow.updateState(it) },
-                onValueChangeFinished = { AllSettings.gyroscopeSmoothingWindow.save(it) },
-                color = color,
-                contentColor = contentColor,
-            )
-        }
-
-        //反转 X 轴
-        item {
-            MenuSwitchButton(
-                modifier = Modifier.fillMaxWidth(),
-                text = stringResource(R.string.settings_control_gyroscope_invert_x_title),
-                switch = AllSettings.gyroscopeInvertX.state,
-                onSwitch = { AllSettings.gyroscopeInvertX.save(it) },
-                color = color,
-                contentColor = contentColor,
-                enabled = isGyroscopeAvailable && AllSettings.gyroscopeControl.state
-            )
-        }
-
-        //反转 Y 轴
-        item {
-            MenuSwitchButton(
-                modifier = Modifier.fillMaxWidth(),
-                text = stringResource(R.string.settings_control_gyroscope_invert_y_title),
-                switch = AllSettings.gyroscopeInvertY.state,
-                onSwitch = { AllSettings.gyroscopeInvertY.save(it) },
-                color = color,
-                contentColor = contentColor,
-                enabled = isGyroscopeAvailable && AllSettings.gyroscopeControl.state
             )
         }
     }

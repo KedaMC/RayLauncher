@@ -35,12 +35,13 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Surface
+
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldLabelPosition
@@ -81,7 +82,7 @@ fun SimpleTextInputField(
     color: Color = cardColor(influencedByBackground),
     contentColor: Color = onCardColor(),
     shape: Shape = RoundedCornerShape(percent = 50),
-    blur: Int = AllSettings.backgroundBlur.state,
+    blur: Int = effectiveBackgroundBlur(),
     contextPadding: PaddingValues = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
     textStyle: TextStyle = TextStyle(color = contentColor).copy(fontSize = 12.sp),
     cursorBrush: Brush = SolidColor(LocalTextSelectionColors.current.handleColor),
@@ -260,6 +261,44 @@ fun SmallOutlinedEditField(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Outlined text field colors: white text, outline and hints while Liquid Glass is active (the field
+ * sits on glass like every other control), Material defaults otherwise.
+ */
+@Composable
+fun glassOutlinedTextFieldColors(): TextFieldColors {
+    if (liquidGlassBackdrop() == null) return OutlinedTextFieldDefaults.colors()
+    val disabled = Color.White.copy(alpha = 0.38f)
+    val muted = Color.White.copy(alpha = 0.7f)
+    return OutlinedTextFieldDefaults.colors(
+        focusedTextColor = Color.White,
+        unfocusedTextColor = Color.White,
+        disabledTextColor = disabled,
+        cursorColor = Color.White,
+        focusedBorderColor = Color.White,
+        unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
+        disabledBorderColor = disabled,
+        focusedLabelColor = Color.White,
+        unfocusedLabelColor = muted,
+        disabledLabelColor = disabled,
+        focusedPlaceholderColor = muted,
+        unfocusedPlaceholderColor = muted,
+        disabledPlaceholderColor = disabled,
+        focusedLeadingIconColor = Color.White,
+        unfocusedLeadingIconColor = muted,
+        focusedTrailingIconColor = Color.White,
+        unfocusedTrailingIconColor = muted,
+        focusedSupportingTextColor = muted,
+        unfocusedSupportingTextColor = muted,
+        focusedPrefixColor = muted,
+        unfocusedPrefixColor = muted,
+        focusedSuffixColor = muted,
+        unfocusedSuffixColor = muted
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OwnOutlinedTextField(
     value: String,
@@ -284,7 +323,7 @@ fun OwnOutlinedTextField(
     minLines: Int = 1,
     interactionSource: MutableInteractionSource? = null,
     shape: Shape = OutlinedTextFieldDefaults.shape,
-    colors: TextFieldColors = OutlinedTextFieldDefaults.colors(),
+    colors: TextFieldColors? = null,
     imePanEnabled: Boolean = true,
 ) {
     val focusManager = LocalFocusManager.current
@@ -298,7 +337,8 @@ fun OwnOutlinedTextField(
                 onValueChange(string)
             }
         },
-        modifier = if (imePanEnabled) modifier.imePanAnchor() else modifier,
+        modifier = (if (imePanEnabled) modifier.imePanAnchor() else modifier)
+            .then(if (liquidGlassBackdrop() != null) Modifier.liquidGlassPressAnimation(enabled) else Modifier),
         enabled = enabled,
         readOnly = readOnly,
         textStyle = textStyle,
@@ -345,7 +385,7 @@ fun OwnOutlinedTextField(
         minLines = minLines,
         interactionSource = interactionSource,
         shape = shape,
-        colors = colors,
+        colors = colors ?: glassOutlinedTextFieldColors(),
     )
 }
 

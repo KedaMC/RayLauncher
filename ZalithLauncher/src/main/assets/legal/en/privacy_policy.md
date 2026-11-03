@@ -11,7 +11,7 @@ This Privacy Policy explains how information is stored, processed, and transmitt
 
 ZL2 is designed primarily to operate on your device. The current version does not include a ZalithTeam-operated user-account system, advertising SDK, or behavioral analytics SDK. Core local features do not require you to register with us.
 
-ZL2 is nevertheless a networked launcher. Authentication, searches, downloads, updates, multiplayer connectivity, optional log uploads, and external web pages require communication with third-party providers. Those providers can receive information such as your IP address and request metadata even when no information is sent to a ZalithTeam server.
+ZL2 is nevertheless a networked launcher. Authentication, searches, downloads, updates, optional log uploads, and external web pages require communication with third-party providers. Those providers can receive information such as your IP address and request metadata even when no information is sent to a ZalithTeam server.
 
 Before first launching or using ZL2, you must read in full and expressly agree to both this Policy and the ZL2 User Agreement. If you decline or do not agree to either document, the launcher will not allow you to enter or continue using ZL2 or any of its features.
 
@@ -38,7 +38,7 @@ Microsoft device-code authorization is handled through Microsoft services. ZL2 d
 
 ### 2.3 Diagnostics and logs
 
-ZL2 and the launched game can generate local launcher logs, native logs, crash reports, game logs, and Terracotta connection logs. These may contain:
+ZL2 and the launched game can generate local launcher logs, native logs, crash reports, and game logs. These may contain:
 
 - app and game versions, Android version, device model, CPU architecture, graphics and runtime information;
 - timestamps, errors, stack traces, performance or connection details;
@@ -102,18 +102,7 @@ If the first attempted service fails, ZL2 may retry with another listed service.
 
 Before uploading, review and remove sensitive information where possible. The upload service's own access, retention, and deletion rules apply. We may be unable to delete a log from a third-party service on your behalf.
 
-### 3.6 Terracotta/EasyTier multiplayer
-
-When you use multiplayer connectivity, ZL2 retrieves a node list from `terracotta.glavo.site` unless you configure a custom node. To host or join a room, Terracotta/EasyTier, selected or custom nodes, relays, and other participants may process:
-
-- room or invitation codes and player names;
-- machine or peer identifiers, IP addresses, ports, connection status, and routing metadata;
-- node addresses and diagnostic logs; and
-- network packets needed to establish and maintain the multiplayer connection.
-
-The data path depends on the nodes and participants involved. Do not use this feature for unlawful activity or assume that it provides anonymity. Stop the connection when it is no longer needed.
-
-### 3.7 Web pages, cookies, and external links
+### 3.6 Web pages, cookies, and external links
 
 ZL2 can display project pages or third-party content in an embedded WebView or open them in another app. The embedded WebView enables JavaScript and DOM storage and allows cookies, including third-party cookies, while the page is in use. Visited sites may therefore store identifiers and collect browsing and device information under their own policies.
 
@@ -121,7 +110,7 @@ When you leave ZL2's embedded WebView screen, ZL2 destroys the WebView, clears i
 
 ZL2 does not add its own advertising or tracking cookies to these pages.
 
-### 3.8 DNS fallback
+### 3.7 DNS fallback
 
 ZL2 first uses the operating system's DNS resolver. If system DNS resolution fails, it may send the hostname being resolved through DNS over HTTPS to Cloudflare, Google Public DNS, or AliDNS. Successful fallback results are cached in memory for up to 10 minutes. These DNS providers receive the queried hostname and standard network metadata under their own policies.
 
@@ -131,11 +120,10 @@ Permissions are used for the following purposes:
 
 | Permission or feature | Purpose |
 |---|---|
-| Internet and network-state access | Authentication, searches, downloads, updates, multiplayer, web pages, and connectivity checks |
+| Internet and network-state access | Authentication, searches, downloads, updates, web pages, and connectivity checks |
 | External/shared storage, including all-files access on supported Android versions | Manage game directories, saves, mods, runtimes, imported/exported files, and other user-selected content |
 | Microphone | Calculate real-time volume for the optional microphone test; not used by ZL2 to upload voice recordings |
-| Notifications and foreground services | Show task, game, runtime, and multiplayer status and keep requested background work running |
-| VPN service | Establish the Terracotta/EasyTier multiplayer tunnel after Android authorization |
+| Notifications and foreground services | Show task, game, and runtime status and keep requested background work running |
 | Wake lock | Keep relevant game or background tasks running when required |
 | Vibration and motion sensors | Provide game-control feedback and optional motion-based controls |
 
@@ -147,7 +135,7 @@ ZL2 uses information locally and through the requested providers to:
 
 - authenticate accounts and maintain signed-in sessions;
 - install, configure, launch, and manage Minecraft and related content;
-- provide search, download, update, file-management, control, and multiplayer features;
+- provide search, download, update, file-management, and control features;
 - display status, diagnose errors, and maintain local logs;
 - remember preferences and selected sources; and
 - provide the specific sharing or upload action you request.
@@ -162,13 +150,13 @@ Information leaves your device in the circumstances described in Section 3, prin
 
 We may disclose information in our possession where required by applicable law, a valid legal process, or to protect the rights, safety, and security of users, contributors, and the public.
 
-Information already disclosed to a third-party provider, uploaded-log recipient, multiplayer participant, or external website is governed by that recipient's practices, not solely by this Policy.
+Information already disclosed to a third-party provider, uploaded-log recipient, or external website is governed by that recipient's practices, not solely by this Policy.
 
 ## 7. Retention and Deletion
 
 Local information is generally retained until you delete it, remove the relevant account, clear the app's data, or uninstall ZL2, subject to the following:
 
-- Launcher logs are retained for **7 days by default**, with an available setting from **1 to 14 days**, and older logs are cleaned during logger initialization. Other game, native, crash, or Terracotta logs may follow separate lifecycle rules.
+- Launcher logs are retained for **7 days by default**, with an available setting from **1 to 14 days**, and older logs are cleaned during logger initialization. Other game, native, or crash logs may follow separate lifecycle rules.
 - Cached files may remain until replaced, cleared, or removed by Android or by you.
 - Files in shared or external storage, exported content, and separately installed game files may remain after uninstallation.
 - Removing an account from ZL2 deletes its local database entry and associated local skin file; it does not revoke or erase data held by the account provider. Revoke sessions through that provider where necessary.
@@ -191,14 +179,14 @@ Within ZL2 or Android, you can:
 
 - view and remove locally saved accounts;
 - change download sources, custom authentication servers, and feature settings;
-- revoke microphone, storage, notification, or VPN permissions, subject to Android version and device controls;
+- revoke microphone, storage, or notification permissions, subject to Android version and device controls;
 - choose whether to upload, export, or share logs and other files;
 - clear app data, delete local files, or uninstall ZL2; and
 - disable or manage system backup through your device or backup-provider settings.
 
 Depending on your jurisdiction, you may also have rights to access, correct, delete, restrict, object to, or obtain a copy of personal information, and to withdraw consent. Because ZL2 stores most information locally and does not maintain a general user-account database, you can exercise many of these choices directly on your device.
 
-For information held by ZalithTeam, contact us using the details below. For information held by Microsoft, a custom authentication server, a content platform, a log-upload service, a multiplayer node, or another provider, direct your request to that provider. We may need enough information to verify a request, but do not send us your password or authentication tokens.
+For information held by ZalithTeam, contact us using the details below. For information held by Microsoft, a custom authentication server, a content platform, a log-upload service, or another provider, direct your request to that provider. We may need enough information to verify a request, but do not send us your password or authentication tokens.
 
 ## 10. Children and Minors
 
@@ -210,7 +198,7 @@ If you believe a child has provided personal information directly to us inapprop
 
 ## 11. International Processing
 
-ZL2 can contact providers and multiplayer participants in different countries or regions. Your IP address, account requests, downloads, uploaded logs, and multiplayer data may therefore be processed outside your place of residence. Privacy protections and government-access rules may differ between jurisdictions.
+ZL2 can contact providers in different countries or regions. Your IP address, account requests, downloads, and uploaded logs may therefore be processed outside your place of residence. Privacy protections and government-access rules may differ between jurisdictions.
 
 Where ZalithTeam is responsible for a transfer that requires additional safeguards under applicable law, we will take reasonably appropriate steps. Third-party providers remain responsible for their own transfer mechanisms and legal obligations.
 

@@ -18,6 +18,7 @@
 
 package com.movtery.zalithlauncher.viewmodel
 
+import com.movtery.zalithlauncher.ui.components.effectiveBackgroundBlurNow
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
@@ -47,7 +48,9 @@ private const val TAG = "BackgroundGlassBlur"
 /**
  * 背景玻璃模糊管线
  */
-class BackgroundGlassBlur(private val backgroundFile: File) {
+class BackgroundGlassBlur(private val fileProvider: () -> File) {
+    private val backgroundFile: File get() = fileProvider()
+
     var glassLayer by mutableStateOf<GraphicsLayer?>(null)
         private set
 
@@ -175,7 +178,7 @@ class BackgroundGlassBlur(private val backgroundFile: File) {
     }
 
     private fun frameRadius(scale: Float): Float =
-        (AllSettings.backgroundBlur.state * GlobalContext.resources.displayMetrics.density * scale)
+        (effectiveBackgroundBlurNow() * GlobalContext.resources.displayMetrics.density * scale)
             .coerceIn(0.5f, 25f)
 
     private fun downscaleFactor(radiusPx: Float, maxDim: Float): Float {

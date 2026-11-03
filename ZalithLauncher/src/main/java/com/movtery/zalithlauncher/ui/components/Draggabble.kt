@@ -25,7 +25,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -60,6 +60,8 @@ fun FloatingBall(
     color: Color = Color.Black.copy(alpha = 0.25f),
     contentColor: Color = Color.White.copy(alpha = 0.95f),
     shape: Shape = MaterialTheme.shapes.medium,
+    glass: Boolean = false,
+    glassColor: Color = color,
     content: @Composable () -> Unit
 ) {
     var ballSize by remember { mutableStateOf(IntSize.Zero) }
@@ -98,8 +100,7 @@ fun FloatingBall(
         val parentWidth by rememberUpdatedState(constraints.maxWidth)
         val parentHeight by rememberUpdatedState(constraints.maxHeight)
 
-        Surface(
-            modifier = Modifier
+        val ballModifier = Modifier
                 .onSizeChanged { size ->
                     ballSize = size
                     if (isInitialized || currentPosition != Offset.Zero) return@onSizeChanged
@@ -176,12 +177,28 @@ fun FloatingBall(
                             currentOnClick()
                         }
                     }
-                }.then(modifier),
-            color = color,
-            contentColor = contentColor,
-            shape = shape
-        ) {
-            content()
+                }.then(modifier)
+
+        val glassBackdrop = if (glass) liquidGlassBackdrop() else null
+        if (glassBackdrop != null) {
+            LiquidGlassSurface(
+                backdrop = glassBackdrop,
+                shape = shape,
+                modifier = ballModifier,
+                containerColor = glassColor,
+                contentColor = contentColor
+            ) {
+                content()
+            }
+        } else {
+            Surface(
+                modifier = ballModifier,
+                color = color,
+                contentColor = contentColor,
+                shape = shape
+            ) {
+                content()
+            }
         }
     }
 }

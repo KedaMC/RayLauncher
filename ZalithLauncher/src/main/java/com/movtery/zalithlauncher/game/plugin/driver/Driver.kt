@@ -29,6 +29,10 @@ class Driver(
     val summary: String? = null,
     val path: String,
     val isLauncher: Boolean,
+    /** 驱动库文件名；null 表示使用默认的 libvulkan_freedreno.so */
+    val driverLib: String? = null,
+    /** GPU 家族门控：adreno（默认）、mali 或 any */
+    val driverGpu: String = DEFAULT_GPU,
 ): ApkPlugin(
     packageName = id,
     appName = appName,
@@ -36,4 +40,15 @@ class Driver(
 ), Plugin {
     override fun getIdentifier(): String = id
     override fun getNativeLibPath(): String = path
+
+    companion object {
+        const val DEFAULT_GPU = "adreno"
+        private val VALID_GPU = setOf("adreno", "mali", "any")
+
+        /** 规范化 meta-data 中的 driver_gpu，非法值回落到默认 */
+        fun normalizeGpu(raw: String?): String {
+            val value = raw?.trim()?.lowercase()
+            return if (value != null && value in VALID_GPU) value else DEFAULT_GPU
+        }
+    }
 }

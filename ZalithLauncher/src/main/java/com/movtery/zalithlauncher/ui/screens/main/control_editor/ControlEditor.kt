@@ -27,7 +27,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -42,7 +42,6 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.movtery.guide.guideNode
 import com.movtery.layer_controller.ControlEditorLayer
 import com.movtery.layer_controller.data.ButtonSize
 import com.movtery.layer_controller.data.CenterPosition
@@ -60,7 +59,13 @@ import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.setting.enums.isLauncherInDarkTheme
 import com.movtery.zalithlauncher.ui.components.MenuState
 import com.movtery.zalithlauncher.ui.components.rememberBoxSize
-import com.movtery.zalithlauncher.ui.guide.GuideKeys
+import com.movtery.zalithlauncher.ui.screens.main.control_editor.edit_joystick.EditJoystickStyleDialog
+import com.movtery.zalithlauncher.ui.screens.main.control_editor.edit_joystick.JoystickStyleListDialog
+import com.movtery.zalithlauncher.ui.screens.main.control_editor.edit_layer.EditControlLayerDialog
+import com.movtery.zalithlauncher.ui.screens.main.control_editor.edit_layer.EditSwitchLayersVisibilityDialog
+import com.movtery.zalithlauncher.ui.screens.main.control_editor.edit_style.EditButtonStyleDialog
+import com.movtery.zalithlauncher.ui.screens.main.control_editor.edit_style.StyleListDialog
+import com.movtery.zalithlauncher.ui.screens.main.control_editor.edit_translatable.EditTranslatableTextDialog
 import com.movtery.zalithlauncher.ui.screens.main.control_editor.edit_widget.EditWidgetDialog
 import com.movtery.zalithlauncher.ui.screens.main.control_editor.style_cabinet.OpenCabinetSource
 import com.movtery.zalithlauncher.viewmodel.EditorViewModel
@@ -251,10 +256,6 @@ fun BoxWithConstraintsScope.ControlEditor(
     )
 
     MenuBox(
-        modifier = Modifier.guideNode(
-            key = GuideKeys.Editor.Step.MenuBall,
-            holeRadius = 12.dp
-        ),
         position = viewModel.editorBallPosition,
         onPositionChanged = { viewModel.editorBallPosition = it },
         opened = viewModel.editorMenu == MenuState.SHOW

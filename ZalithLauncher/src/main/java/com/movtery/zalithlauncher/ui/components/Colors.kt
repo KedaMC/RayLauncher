@@ -41,7 +41,7 @@ fun Color.desaturate(factor: Float): Color {
 @Composable
 fun influencedByBackgroundColor(
     color: Color,
-    influencedAlpha: Float = AllSettings.launcherBackgroundOpacity.state.toFloat() / 100f,
+    influencedAlpha: Float = effectiveBackgroundOpacity().toFloat() / 100f,
     enabled: Boolean = true
 ): Color {
     return influencedByBackground(

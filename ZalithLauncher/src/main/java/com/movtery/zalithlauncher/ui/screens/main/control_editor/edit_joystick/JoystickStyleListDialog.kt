@@ -37,14 +37,14 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FilledTonalButton
+import com.movtery.zalithlauncher.ui.components.Button
+import com.movtery.zalithlauncher.ui.components.FilledTonalButton
+import com.movtery.zalithlauncher.ui.components.DropdownMenu
+import com.movtery.zalithlauncher.ui.components.DropdownMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import com.movtery.zalithlauncher.ui.components.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.nonInteractiveScrollbar
 import androidx.compose.runtime.Composable
@@ -57,7 +57,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
+import com.movtery.zalithlauncher.ui.components.GlassDialog as Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.movtery.layer_controller.observable.ObservableJoystickStyle
 import com.movtery.zalithlauncher.R

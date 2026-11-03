@@ -66,19 +66,21 @@ Java_com_movtery_zalithlauncher_utils_device_VulkanChecker_nativeSetLogCallback(
 
 #define LOAD_VK_FUNC(name) PFN_##name p##name = (PFN_##name)dlsym(vulkan_handle, #name)
 
-void *loadTurnipVulkan(const char *driver_path, const char *native_dir, const char *cache_dir);
+void *loadCustomVulkan(const char *driver_lib, const char *driver_gpu, const char *native_dir, const char *cache_dir);
 
 JNIEXPORT jobject JNICALL
 Java_com_movtery_zalithlauncher_utils_device_VulkanChecker_nativeCheckVulkan(
         JNIEnv *env,
         jclass clazz,
         jstring jDriverPath,
+        jstring jDriverGpu,
         jstring jNativeDir,
         jstring jCacheDir
 ) {
     (void) clazz;
 
     const char *driverPath = jDriverPath ? (*env)->GetStringUTFChars(env, jDriverPath, NULL) : NULL;
+    const char *driverGpu  = jDriverGpu  ? (*env)->GetStringUTFChars(env, jDriverGpu, NULL) : NULL;
     const char *nativeDir  = jNativeDir  ? (*env)->GetStringUTFChars(env, jNativeDir, NULL) : NULL;
     const char *cacheDir   = jCacheDir   ? (*env)->GetStringUTFChars(env, jCacheDir, NULL) : NULL;
 
@@ -86,7 +88,7 @@ Java_com_movtery_zalithlauncher_utils_device_VulkanChecker_nativeCheckVulkan(
     int customDriver = 0;
     if (nativeDir && cacheDir) {
 #ifdef ADRENO_POSSIBLE
-        vulkan_handle = loadTurnipVulkan(driverPath, nativeDir, cacheDir);
+        vulkan_handle = loadCustomVulkan(driverPath, driverGpu, nativeDir, cacheDir);
         customDriver = vulkan_handle != NULL;
 #endif
     }
@@ -95,6 +97,7 @@ Java_com_movtery_zalithlauncher_utils_device_VulkanChecker_nativeCheckVulkan(
     }
 
     if (driverPath) (*env)->ReleaseStringUTFChars(env, jDriverPath, driverPath);
+    if (driverGpu)  (*env)->ReleaseStringUTFChars(env, jDriverGpu, driverGpu);
     if (nativeDir)  (*env)->ReleaseStringUTFChars(env, jNativeDir, nativeDir);
     if (cacheDir)   (*env)->ReleaseStringUTFChars(env, jCacheDir, cacheDir);
 

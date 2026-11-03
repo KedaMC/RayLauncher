@@ -18,6 +18,8 @@
 
 package com.movtery.zalithlauncher.ui.screens.content.elements
 
+import android.annotation.SuppressLint
+import com.movtery.zalithlauncher.ui.components.glassRadioColors
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -57,22 +59,25 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import com.movtery.zalithlauncher.ui.components.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FilledTonalButton
+import com.movtery.zalithlauncher.ui.components.DropdownMenu
+import com.movtery.zalithlauncher.ui.components.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import com.movtery.zalithlauncher.ui.components.FilledTonalButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import com.movtery.zalithlauncher.ui.components.IconButton
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Surface
+import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -106,12 +111,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.viewinterop.AndroidView
+import com.movtery.zalithlauncher.ui.components.GlassDialog as Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.graphics.createBitmap
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.movtery.petlib.ArmModel
-import com.movtery.petlib.PetAnimation
 import com.movtery.zalithlauncher.BuildKeys
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.game.account.Account
@@ -129,7 +133,6 @@ import com.movtery.zalithlauncher.game.account.isSkinChangeAllowed
 import com.movtery.zalithlauncher.game.account.wardrobe.EmptyCape
 import com.movtery.zalithlauncher.game.account.wardrobe.SkinModelType
 import com.movtery.zalithlauncher.game.account.wardrobe.capeLocalRes
-import com.movtery.zalithlauncher.game.account.wardrobe.toArmModel
 import com.movtery.zalithlauncher.game.account.yggdrasil.PlayerProfile
 import com.movtery.zalithlauncher.game.account.yggdrasil.findUsing
 import com.movtery.zalithlauncher.game.account.yggdrasil.getFile
@@ -143,7 +146,6 @@ import com.movtery.zalithlauncher.ui.components.IconTextButton
 import com.movtery.zalithlauncher.ui.components.ImePanContainer
 import com.movtery.zalithlauncher.ui.components.MarqueeText
 import com.movtery.zalithlauncher.ui.components.OwnOutlinedTextField
-import com.movtery.zalithlauncher.ui.components.PetModelView
 import com.movtery.zalithlauncher.ui.components.PositionButton
 import com.movtery.zalithlauncher.ui.components.PositionFilledTonalButton
 import com.movtery.zalithlauncher.ui.components.RadioCard
@@ -169,6 +171,9 @@ import java.nio.file.Files
 import java.util.regex.Pattern
 import kotlin.math.roundToInt
 
+import androidx.compose.runtime.DisposableEffect
+import com.movtery.zalithlauncher.ui.components.ModelAnimation
+import com.movtery.zalithlauncher.ui.components.PlayerSkin
 private const val TAG = "AccountElements"
 
 /** 账号登录菜单操作状态 */
@@ -337,6 +342,7 @@ fun AccountItem(
                 .padding(all = 8.dp)
         ) {
             RadioButton(
+                colors = glassRadioColors(),
                 selected = selected,
                 onClick = {
                     if (selected || !enabled) return@RadioButton
@@ -1401,6 +1407,7 @@ sealed interface ChangeCape {
     ) : ChangeCape
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ChangeSkinDialog(
     account: Account,
@@ -1418,6 +1425,12 @@ fun ChangeSkinDialog(
     onFetchCapes: () -> Unit
 ) {
     var showCapeSelector by remember { mutableStateOf(false) }
+
+    //offline accounts: cape collection dialog and a key that reloads the preview after changes
+    var showLocalCapeDialog by remember { mutableStateOf(false) }
+    var localCapeKey by remember { mutableIntStateOf(0) }
+    //offline cape changes are saved immediately, remember it so Confirm can close the dialog
+    var localCapeChanged by remember { mutableStateOf(false) }
 
     var isFetchingCapes by remember { mutableStateOf(false) }
 
@@ -1438,58 +1451,48 @@ fun ChangeSkinDialog(
         }
     }
 
-    // 加载披风
-    val previewCape by produceState<ByteArray?>(null, currentCapeToLoad, availableCapes) {
-        if (!account.isMicrosoftAccount()) return@produceState
-
-        value = withContext(Dispatchers.IO) {
-            if (currentCapeToLoad != EmptyCape) {
-                // 列表已加载完成才会走到这里
-                runCatching {
-                    currentCapeToLoad
-                        .getFile(PathManager.DIR_ACCOUNT_CAPE)
-                        .inputStream()
-                        .use { it.readBytes() }
-                }.getOrNull()
-            } else if (availableCapes == null && account.getCapeFile().exists()) {
-                // 列表就绪前若本地有缓存披风则优先显示，列表加载完或切换时更新 ↑
-                runCatching {
-                    account.getCapeFile()
-                        .inputStream()
-                        .use { it.readBytes() }
-                }.getOrNull()
-            } else {
-                null
-            }
-        }
-    }
-
     val skinPicker =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
             uri?.let(onSkinPicked)
         }
 
-    // 皮肤状态变化时重载预览皮肤
-    val previewSkin by produceState<ByteArray?>(null, skinState) {
-        value = withContext(Dispatchers.IO) {
-            when (skinState) {
-                ChangeSkin.None -> account.getSkinFile()
-                    .takeIf { it.exists() }
-                    ?.inputStream()
-                    ?.use { it.readBytes() }
-                is ChangeSkin.ChangeSkinData -> runCatching {
-                    skinState.cacheFile
-                        .inputStream()
-                        .use { it.readBytes() }
-                }.getOrNull()
-                ChangeSkin.ResetSkin -> null
-            }
+    val context = LocalContext.current
+    val playerSkin = remember { PlayerSkin(context) }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            playerSkin.destroy()
         }
     }
-    val previewArm = when (skinState) {
-        ChangeSkin.None -> account.skinModelType.toArmModel()
-        is ChangeSkin.ChangeSkinData -> skinState.data.getModelType().toArmModel()
-        ChangeSkin.ResetSkin -> ArmModel.Classic
+
+    /**
+     * 初始化账号设置的皮肤
+     */
+    fun loadSkin() {
+        if (account.hasSkinFile) {
+            runCatching {
+                account.getSkinFile().inputStream().use { stream ->
+                    playerSkin.loadSkin(stream, account.skinModelType)
+                }
+            }.onFailure {
+                playerSkin.loadSkin(
+                    skinId = account.uniqueUUID,
+                    model = account.skinModelType
+                )
+            }
+        } else {
+            playerSkin.loadSkin(
+                skinId = null,
+                model = account.skinModelType
+            )
+        }
+    }
+
+    /**
+     * 重置皮肤预览
+     */
+    fun resetSkin() {
+        playerSkin.resetSkin()
     }
 
     Dialog(
@@ -1526,23 +1529,98 @@ fun ChangeSkinDialog(
                         modifier = Modifier.weight(1f),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Box(
+                        Surface(
                             modifier = Modifier
                                 .fillMaxHeight()
-                                .weight(1f)
-                                .clip(MaterialTheme.shapes.large)
-                                .background(itemColor(false)),
+                                .weight(1f),
+                            shape = MaterialTheme.shapes.large,
+                            color = itemColor(false)
+                        ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            PetModelView(
-                                modifier = Modifier.fillMaxSize(),
-                                skin = previewSkin,
-                                cape = previewCape,
-                                arm = previewArm,
-                                animation = PetAnimation.Walking,
-                                animationSpeed = 0.8f,
-                                gazeEnabled = false
+                            var pageFinished by remember { mutableStateOf(false) }
+
+                            if (!pageFinished) {
+                                //加载皮肤预览中
+                                LoadingIndicator()
+                            }
+
+                            AndroidView(
+                                factory = { context ->
+                                    playerSkin.loadWebView(
+                                        context = context,
+                                        onPageFinished = {
+                                            pageFinished = true
+                                            playerSkin.startAnim(ModelAnimation.Walking, 0.8f)
+                                            playerSkin.setAzimuthAndPitch(0, 10, 50)
+                                        }
+                                    )
+                                },
+                                modifier = Modifier.fillMaxSize()
                             )
+
+                            // 页面加载完成后立即展示皮肤预览，无需等待披风列表完成网络加载
+                            LaunchedEffect(pageFinished, skinState) {
+                                if (!pageFinished) return@LaunchedEffect
+                                when (skinState) {
+                                    ChangeSkin.None -> loadSkin()
+                                    is ChangeSkin.ChangeSkinData -> {
+                                        runCatching {
+                                            skinState.cacheFile.inputStream().use { stream ->
+                                                playerSkin.loadSkin(stream, skinState.data.getModelType())
+                                            }
+                                        }.onFailure {
+                                            playerSkin.loadSkin(
+                                                skinId = null,
+                                                skinState.data.getModelType()
+                                            )
+                                        }
+                                    }
+
+                                    is ChangeSkin.ResetSkin -> resetSkin()
+                                }
+                            }
+
+                            // 独立加载披风：列表就绪前若本地有缓存披风则优先显示，列表加载完或切换时更新
+                            LaunchedEffect(pageFinished, currentCapeToLoad, availableCapes) {
+                                if (!pageFinished) return@LaunchedEffect
+                                if (account.isMicrosoftAccount()) {
+                                    if (currentCapeToLoad != EmptyCape) {
+                                        playerSkin.loadCape(currentCapeToLoad)
+                                    } else if (availableCapes == null && account.getCapeFile().exists()) {
+                                        runCatching {
+                                            account.getCapeFile().inputStream().use { stream ->
+                                                playerSkin.loadCape(stream)
+                                            }
+                                        }.onFailure {
+                                            playerSkin.loadCape(EmptyCape)
+                                        }
+                                    } else {
+                                        playerSkin.loadCape(EmptyCape)
+                                    }
+                                }
+                            }
+
+                            //离线账号：预览本地披风合集中正在使用的披风
+                            //skinState 作为 key：重置皮肤预览会同时清除披风预览，需要重新加载
+                            LaunchedEffect(pageFinished, localCapeKey, skinState) {
+                                if (!pageFinished || !account.isLocalAccount()) return@LaunchedEffect
+                                val capeFile = account.getCapeFile()
+                                if (capeFile.exists()) {
+                                    runCatching {
+                                        capeFile.inputStream().use { stream ->
+                                            playerSkin.loadCape(stream)
+                                        }
+                                    }.onFailure {
+                                        playerSkin.loadCape(EmptyCape)
+                                    }
+                                } else {
+                                    playerSkin.loadCape(EmptyCape)
+                                }
+                            }
+                        }
                         }
 
                         Column(
@@ -1573,7 +1651,7 @@ fun ChangeSkinDialog(
                                             }
                                         },
                                         onClick = {
-                                            skinPicker.launch(arrayOf("image/png"))
+                                            skinPicker.launch(arrayOf("image/*"))
                                         },
                                         enabled = !isImportingSkin
                                     )
@@ -1656,6 +1734,24 @@ fun ChangeSkinDialog(
                                 )
                             }
 
+                            //离线账号：管理本地披风合集
+                            if (account.isLocalAccount()) {
+                                InfoLayoutTextItem(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    title = stringResource(R.string.account_change_cape),
+                                    icon = {
+                                        Icon(
+                                            modifier = Modifier.size(22.dp),
+                                            painter = painterResource(R.drawable.ic_styler),
+                                            contentDescription = null
+                                        )
+                                    },
+                                    onClick = {
+                                        showLocalCapeDialog = true
+                                    }
+                                )
+                            }
+
                             //离线账号重置皮肤
                             if (account.isLocalAccount() && account.hasSkinFile && skinState != ChangeSkin.ResetSkin) {
                                 InfoLayoutTextItem(
@@ -1689,7 +1785,7 @@ fun ChangeSkinDialog(
 
                         Button(
                             modifier = Modifier.weight(1f),
-                            enabled = skinState != ChangeSkin.None || capeState != ChangeCape.None,
+                            enabled = skinState != ChangeSkin.None || capeState != ChangeCape.None || localCapeChanged,
                             onClick = {
                                 when (skinState) {
                                     is ChangeSkin.ChangeSkinData -> {
@@ -1716,6 +1812,18 @@ fun ChangeSkinDialog(
                 }
             }
         }
+    }
+
+    if (showLocalCapeDialog) {
+        LocalCapeDialog(
+            accountUUID = account.uniqueUUID,
+            onDismiss = { showLocalCapeDialog = false },
+            onCapeChanged = {
+                localCapeKey++
+                localCapeChanged = true
+                AccountsManager.refreshWardrobe()
+            }
+        )
     }
 
     if (showCapeSelector) {
@@ -1826,6 +1934,7 @@ fun CapeListItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         RadioButton(
+            colors = glassRadioColors(),
             selected = selected,
             onClick = onClick
         )

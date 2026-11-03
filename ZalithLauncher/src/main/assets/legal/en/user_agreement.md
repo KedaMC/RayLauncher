@@ -19,7 +19,7 @@ Our Privacy Policy explains how information is handled when you use ZL2. It form
 
 ## 2. About ZL2
 
-ZL2 is a free, open-source launcher for running Minecraft: Java Edition on supported Android devices. Its features may include account authentication, game and runtime downloads, version and file management, control layouts, resource discovery and downloads, log management, and multiplayer connectivity.
+ZL2 is a free, open-source launcher for running Minecraft: Java Edition on supported Android devices. Its features may include account authentication, game and runtime downloads, version and file management, control layouts, resource discovery and downloads, and log management.
 
 ZL2 is an unofficial launcher. It is not affiliated with, endorsed by, or sponsored by Mojang Studios, Microsoft, NetEase, or any of their affiliates. ZL2 does not grant you a license to Minecraft or an official game account.
 
@@ -65,15 +65,7 @@ We do not own or control all such content or services. Availability, integrity, 
 
 A mirror or download source is a technical access option, not our endorsement of the content delivered through it. Do not use ZL2 to obtain or distribute content without the necessary rights.
 
-## 6. Multiplayer Connectivity and VPN
-
-ZL2 includes Terracotta/EasyTier-based multiplayer functionality. When you use it, room codes, player names, device or machine identifiers, connection metadata, and network traffic necessary for the connection may be processed by multiplayer nodes, relay services, and other participants.
-
-Android may ask you to authorize a local VPN interface for this feature. This interface is intended to establish multiplayer connectivity; it is not an anonymity service, a general privacy VPN, or a guarantee that communications are secure.
-
-You must only join or host rooms you are authorized to access. You are responsible for your conduct toward other participants and for complying with applicable laws, game rules, server rules, and node-operator terms. Stop the multiplayer connection and revoke the VPN authorization through Android settings if you no longer want to use it.
-
-## 7. Acceptable Use
+## 6. Acceptable Use
 
 You may not use ZL2 to:
 
@@ -81,13 +73,13 @@ You may not use ZL2 to:
 - infringe intellectual-property, privacy, or other rights;
 - distribute malware, deceptive content, or files designed to damage devices, accounts, data, or networks;
 - gain unauthorized access to accounts, systems, rooms, servers, or networks, or circumvent their security controls;
-- interfere with, overload, scrape abusively, or disrupt ZL2 infrastructure, third-party services, mirrors, or multiplayer nodes;
+- interfere with, overload, scrape abusively, or disrupt ZL2 infrastructure, third-party services, or mirrors;
 - impersonate ZalithTeam or falsely present a modified build or third-party website as an official ZL2 product; or
 - facilitate cheating, harassment, fraud, or other conduct prohibited by the relevant game, server, or platform rules.
 
 These restrictions do not prohibit security research, interoperability work, modification, or redistribution that is lawful and permitted by the applicable open-source licenses.
 
-## 8. Your Files and Shared Content
+## 7. Your Files and Shared Content
 
 You retain your rights in saves, layouts, configurations, logs, and other content that you create or import. Except for the local processing and user-requested transmissions needed to provide ZL2's features, you do not grant us ownership of that content.
 
@@ -95,13 +87,13 @@ When you export a file, copy a room code, use the system sharing function, uploa
 
 Anyone who receives an uploaded-log link, room invitation, exported file, or shared account information may be able to access or redistribute it. We cannot control their actions.
 
-## 9. Privacy
+## 8. Privacy
 
-The ZL2 Privacy Policy describes local storage, account data, permissions, diagnostics, network requests, multiplayer data, and third-party services. By using ZL2, you acknowledge the practices described there.
+The ZL2 Privacy Policy describes local storage, account data, permissions, diagnostics, network requests, and third-party services. By using ZL2, you acknowledge the practices described there.
 
 ZL2 does not require a ZalithTeam account for its core launcher functions. However, network-connected features necessarily involve the relevant third-party providers, and some information is stored on your device.
 
-## 10. Updates and Modified Versions
+## 9. Updates and Modified Versions
 
 Update checks may retrieve release information from the official project information service or a fallback source. You are responsible for reviewing an update's source and architecture before installation.
 
@@ -109,20 +101,19 @@ Only builds distributed through channels identified by ZalithTeam are official b
 
 Features, providers, mirrors, and supported game versions may change, become unavailable, or be removed without prior notice.
 
-## 11. Disclaimers
+## 10. Disclaimers
 
 To the maximum extent permitted by applicable law, ZL2 is provided **AS IS** and **AS AVAILABLE**, without warranties of any kind, whether express, implied, or statutory, including warranties of merchantability, fitness for a particular purpose, title, non-infringement, availability, accuracy, or error-free operation.
 
 We do not warrant that:
 
 - ZL2 will support every device, Android version, game version, mod, runtime, renderer, or server;
-- downloads or third-party content will always be available, authentic, compatible, or free of harmful components;
-- multiplayer connections will be uninterrupted or confidential; or
+- downloads or third-party content will always be available, authentic, compatible, or free of harmful components; or
 - using ZL2 will prevent data loss, account restrictions, or service interruptions.
 
 You are responsible for backing up your data and assessing the suitability and safety of the content and services you choose to use.
 
-## 12. Limitation of Liability
+## 11. Limitation of Liability
 
 To the maximum extent permitted by applicable law, ZalithTeam and ZL2's contributors will not be liable for indirect, incidental, special, consequential, exemplary, or punitive damages, or for loss of data, profits, goodwill, accounts, or service availability, arising from or related to your use of ZL2 or third-party content and services.
 
@@ -130,9 +121,9 @@ Nothing in this Agreement excludes or limits liability that cannot lawfully be e
 
 The warranty disclaimer and liability provisions in the applicable open-source licenses also remain in effect.
 
-## 13. Suspension and Termination
+## 12. Suspension and Termination
 
-You may stop using ZL2 at any time. You may also remove accounts from the app, revoke Android permissions or VPN authorization, delete local files, and uninstall the app.
+You may stop using ZL2 at any time. You may also remove accounts from the app, revoke Android permissions, delete local files, and uninstall the app.
 
 We may suspend or discontinue a project-operated service or feature where reasonably necessary for security, legal compliance, maintenance, or project development. As ZL2 is open-source software that primarily operates on your device, termination of this Agreement does not disable rights you lawfully hold under an open-source license.
 
@@ -140,19 +131,19 @@ Provisions that by their nature should survive termination, including intellectu
 
 Deleting an account from ZL2 does not delete it from Microsoft, Mojang, or a third-party authentication provider. Uninstalling ZL2 may not delete game directories, exported files, shared logs, or other data stored outside the app's private storage.
 
-## 14. Trademarks and Notices
+## 13. Trademarks and Notices
 
 **Minecraft** and related marks belong to their respective owners, including Microsoft/Mojang Studios; **我的世界** and related marks may also belong to NetEase in the relevant territory. Their use to describe compatibility does not imply affiliation or endorsement.
 
 The ZalithLauncher2 name, ZL2 identifier, logos, and project notices may not be used to falsely suggest that a modified version, website, service, or distribution channel is official.
 
-## 15. Changes to This Agreement
+## 14. Changes to This Agreement
 
 We may revise this Agreement to reflect changes in ZL2, third-party services, or legal requirements. The revised version will include an updated date and version number and will be made available with ZL2 or through an official project channel.
 
 After any change to this Agreement or the Privacy Policy, the next time you open the app, the launcher will again display the full updated content of both documents. You must expressly agree to both updated documents again; if you decline or do not agree to either one, the launcher will not allow you to use ZL2. For material changes, we will also provide reasonable notice through an appropriate project or in-app channel where practicable.
 
-## 16. Governing Law and Disputes
+## 15. Governing Law and Disputes
 
 This Agreement is governed by the laws of the People's Republic of China, without regard to conflict-of-law principles, except where mandatory law in your jurisdiction provides otherwise. Nothing in this section deprives you of mandatory consumer protections available in your place of residence.
 
@@ -162,7 +153,7 @@ If any provision is held unenforceable, the remaining provisions remain effectiv
 
 This Agreement is available in English and Simplified Chinese. Both versions are intended to have the same meaning; if they differ, the Simplified Chinese version prevails to the extent permitted by applicable law.
 
-## 17. Contact
+## 16. Contact
 
 For questions about this Agreement, contact ZalithTeam through:
 

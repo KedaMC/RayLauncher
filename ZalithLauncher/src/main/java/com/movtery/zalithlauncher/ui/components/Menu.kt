@@ -55,7 +55,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SliderColors
 import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.Surface
+
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -179,6 +179,13 @@ fun MenuSubscreen(
     }
 }
 
+/**
+ * Panel tint shared by the dual menu panels and the in-game floating toolbar, so the game menu
+ * looks the same as the control layout editor menu (themed tint over the glass).
+ */
+@Composable
+internal fun menuPanelColor(): Color = backgroundColor()
+
 @Composable
 fun DualMenuSubscreen(
     state: MenuState,
@@ -237,7 +244,7 @@ fun DualMenuSubscreen(
                     influencedByBackground = false,
                     modifier = Modifier.fillMaxSize(),
                     colors = CardDefaults.cardColors(
-                        containerColor = backgroundColor(),
+                        containerColor = menuPanelColor(),
                         contentColor = onBackgroundColor()
                     ),
                     content = {
@@ -274,7 +281,7 @@ fun DualMenuSubscreen(
                     influencedByBackground = false,
                     modifier = Modifier.fillMaxSize(),
                     colors = CardDefaults.cardColors(
-                        containerColor = backgroundColor(),
+                        containerColor = menuPanelColor(),
                         contentColor = onBackgroundColor()
                     ),
                     content = {
@@ -539,6 +546,7 @@ private fun MenuListItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         RadioButton(
+            colors = glassRadioColors(),
             selected = selected,
             onClick = onClick
         )
@@ -564,7 +572,7 @@ fun MenuSliderLayout(
     onValueChangeFinished: (Int) -> Unit = {},
     suffix: String? = null,
     influencedByBackground: Boolean = false,
-    colors: SliderColors = SliderDefaults.colors(),
+    colors: SliderColors = glassSliderColors(),
     shape: Shape = MaterialTheme.shapes.large,
     color: Color = itemColor(influencedByBackground),
     contentColor: Color = onItemColor(),
@@ -644,7 +652,7 @@ fun MenuSliderLayout(
     suffix: String? = null,
     decimalFormat: String = "#0.00",
     influencedByBackground: Boolean = false,
-    colors: SliderColors = SliderDefaults.colors(),
+    colors: SliderColors = glassSliderColors(),
     shape: Shape = MaterialTheme.shapes.large,
     color: Color = itemColor(influencedByBackground),
     contentColor: Color = onItemColor(),
@@ -722,7 +730,7 @@ fun MenuButtonLayout(
     shape: Shape = MaterialTheme.shapes.large,
     color: Color = itemColor(influencedByBackground),
     contentColor: Color = onItemColor(),
-    blur: Int = AllSettings.backgroundBlur.state,
+    blur: Int = effectiveBackgroundBlur(),
     onClick: () -> Unit = {},
     horizontalArrangement: Arrangement.Horizontal = Arrangement.Start,
     verticalAlignment: Alignment.Vertical = Alignment.Top,

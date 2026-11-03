@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,12 @@
 package com.movtery.zalithlauncher.ui.screens.content.settings
 
 import android.os.Build
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
+import com.movtery.zalithlauncher.ui.screens.content.home.overlay.OverlayCardManager
+import com.movtery.zalithlauncher.setting.enums.GlassTier
+import com.movtery.zalithlauncher.ui.components.launcherGlassOn
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -29,11 +35,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -41,13 +50,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.Button
-import androidx.compose.material3.FilledTonalButton
+import com.movtery.zalithlauncher.ui.components.Button
+import com.movtery.zalithlauncher.ui.components.FilledTonalButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import com.movtery.zalithlauncher.ui.components.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.nonInteractiveScrollbar
 import androidx.compose.runtime.Composable
@@ -63,8 +72,9 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
+import com.movtery.zalithlauncher.ui.components.GlassDialog as Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.materialkolor.PaletteStyle
 import com.movtery.colorpicker.ColorPickerController
@@ -84,20 +94,22 @@ import com.movtery.zalithlauncher.setting.enums.applyLanguage
 import com.movtery.zalithlauncher.setting.unit.floatRange
 import com.movtery.zalithlauncher.ui.androidText
 import com.movtery.zalithlauncher.ui.base.BaseScreen
-import com.movtery.zalithlauncher.ui.components.AnimatedColumn
+import com.movtery.zalithlauncher.ui.components.GlassLazyColumn
+import com.movtery.zalithlauncher.ui.components.animated
+import com.movtery.zalithlauncher.ui.components.lazyScrollWithBar
 import com.movtery.zalithlauncher.ui.components.IconTextButton
 import com.movtery.zalithlauncher.ui.components.MarqueeText
 import com.movtery.zalithlauncher.ui.components.RadioCard
 import com.movtery.zalithlauncher.ui.components.SimpleAlertDialog
 import com.movtery.zalithlauncher.ui.components.SimpleEditDialog
 import com.movtery.zalithlauncher.ui.components.TitleAndSummary
-import com.movtery.zalithlauncher.ui.components.animated
 import com.movtery.zalithlauncher.ui.components.fadeEdge
 import com.movtery.zalithlauncher.ui.components.rememberDialogMaxHeight
 import com.movtery.zalithlauncher.ui.components.toColorOrNull
 import com.movtery.zalithlauncher.ui.components.toHex
 import com.movtery.zalithlauncher.ui.components.verticalScrollWithBar
 import com.movtery.zalithlauncher.ui.screens.NestedNavKey
+import com.movtery.zalithlauncher.ui.systemLocaleStringResource
 import com.movtery.zalithlauncher.ui.screens.NormalNavKey
 import com.movtery.zalithlauncher.ui.screens.TitledNavKey
 import com.movtery.zalithlauncher.ui.screens.content.elements.DisabledAlpha
@@ -108,7 +120,6 @@ import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.ListSettin
 import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.SettingsCard
 import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.SettingsCardColumn
 import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.SwitchSettingsCard
-import com.movtery.zalithlauncher.ui.systemLocaleStringResource
 import com.movtery.zalithlauncher.ui.theme.ColorThemeType
 import com.movtery.zalithlauncher.ui.theme.cardColor
 import com.movtery.zalithlauncher.ui.theme.onCardColor
@@ -143,14 +154,20 @@ fun LauncherSettingsScreen(
         Triple(key, mainScreenKey, false),
         Triple(NormalNavKey.Settings.Launcher, settingsScreenKey, false)
     ) { isVisible ->
-        AnimatedColumn(
+        //Lazy list: every card is a glass surface, so only the groups near the viewport may be composed.
+        //Composable reads (CompositionLocal) must happen here, the list content below is not composable.
+        val listState = rememberLazyListState()
+        val backgroundViewModel = LocalBackgroundViewModel.current
+
+        GlassLazyColumn(
             modifier = Modifier
-                .fillMaxWidth()
-                .verticalScrollWithBar(state = rememberScrollState())
-                .padding(all = 12.dp),
-            isVisible = isVisible
+                .fillMaxSize()
+                .lazyScrollWithBar(listState),
+            state = listState,
+            isVisible = isVisible,
+            contentPadding = PaddingValues(all = 12.dp)
         ) {
-            AnimatedItem { ctx ->
+            animatedItem { ctx ->
                 SettingsCardColumn(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -225,17 +242,48 @@ fun LauncherSettingsScreen(
 
                     SwitchSettingsCard(
                         modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Bottom,
+                        position = CardPosition.Middle,
                         unit = AllSettings.launcherFullScreen,
                         title = stringResource(R.string.settings_launcher_full_screen_title),
                         summary = stringResource(R.string.settings_launcher_full_screen_summary)
+                    )
+
+                    SwitchSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Middle,
+                        unit = AllSettings.launcherLiquidGlass,
+                        title = stringResource(R.string.settings_launcher_liquid_glass_title),
+                        summary = stringResource(R.string.settings_launcher_liquid_glass_summary)
+                    )
+
+                    ListSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Middle,
+                        unit = AllSettings.launcherGlassTier,
+                        items = glassTierChoices,
+                        title = stringResource(R.string.settings_launcher_glass_tier_title),
+                        summary = stringResource(R.string.settings_launcher_glass_tier_summary),
+                        getItemText = { stringResource(it.textRes) },
+                        enabled = AllSettings.launcherLiquidGlass.state
+                    )
+
+                    ListSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Bottom,
+                        unit = AllSettings.gameGlassTier,
+                        items = glassTierChoices,
+                        title = stringResource(R.string.settings_game_glass_tier_title),
+                        summary = stringResource(R.string.settings_game_glass_tier_summary),
+                        getItemText = { stringResource(it.textRes) }
                     )
                 }
             }
 
             //启动器背景设置板块
-            LocalBackgroundViewModel.current?.let { backgroundViewModel ->
-                AnimatedItem { ctx ->
+            if (backgroundViewModel != null) {
+                animatedItem { ctx ->
+                    //Liquid Glass manages background opacity/blur itself, see effectiveBackgroundOpacity()
+                    val liquidGlassOn = launcherGlassOn()
                     SettingsCardColumn(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -257,10 +305,11 @@ fun LauncherSettingsScreen(
                             position = CardPosition.Middle,
                             unit = AllSettings.launcherBackgroundOpacity,
                             title = stringResource(R.string.settings_launcher_background_opacity_title),
-                            summary = stringResource(R.string.settings_launcher_background_opacity_summary),
+                            summary = if (liquidGlassOn) stringResource(R.string.settings_launcher_background_liquid_glass_managed)
+                            else stringResource(R.string.settings_launcher_background_opacity_summary),
                             valueRange = AllSettings.launcherBackgroundOpacity.floatRange,
                             suffix = "%",
-                            enabled = backgroundViewModel.isValid,
+                            enabled = backgroundViewModel.isValid && !liquidGlassOn,
                             fineTuningControl = true
                         )
 
@@ -281,10 +330,11 @@ fun LauncherSettingsScreen(
                             position = CardPosition.Bottom,
                             unit = AllSettings.backgroundBlur,
                             title = stringResource(R.string.settings_title_blur),
-                            summary = stringResource(R.string.settings_launcher_background_blur_summary),
+                            summary = if (liquidGlassOn) stringResource(R.string.settings_launcher_background_liquid_glass_managed)
+                            else stringResource(R.string.settings_launcher_background_blur_summary),
                             valueRange = AllSettings.backgroundBlur.floatRange,
                             suffix = "Dp",
-                            enabled = backgroundViewModel.isValid,
+                            enabled = backgroundViewModel.isValid && !liquidGlassOn,
                             fineTuningControl = true,
                             appendContent = {
                                 val unit = AllSettings.backgroundBlurType
@@ -302,7 +352,7 @@ fun LauncherSettingsScreen(
                                     onClick = {
                                         unit.save(state.switch())
                                     },
-                                    enabled = backgroundViewModel.isValid,
+                                    enabled = backgroundViewModel.isValid && !liquidGlassOn,
                                 ) {
                                     Crossfade(
                                         targetState = state
@@ -323,8 +373,18 @@ fun LauncherSettingsScreen(
                 }
             }
 
+            //Decoration overlay (image/video from the gallery above the UI)
+            animatedItem { ctx ->
+                OverlaySettings(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animated(ctx),
+                    submitError = submitError
+                )
+            }
+
             //动画设置板块
-            AnimatedItem { ctx ->
+            animatedItem { ctx ->
                 SettingsCardColumn(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -351,7 +411,7 @@ fun LauncherSettingsScreen(
                 }
             }
 
-            AnimatedItem { ctx ->
+            animatedItem { ctx ->
                 SettingsCardColumn(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -696,6 +756,68 @@ private fun CustomThemeDialog(
                     editHex = false
                 }
             }
+        )
+    }
+}
+
+/** Glass tiers the user can choose in settings; [GlassTier.OFF] is the Liquid Glass switch itself. */
+private val glassTierChoices = listOf(GlassTier.LITE, GlassTier.FULL)
+
+@Composable
+private fun OverlaySettings(
+    submitError: (ErrorViewModel.ThrowableMessage) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val cards by OverlayCardManager.cards.collectAsStateWithLifecycle()
+
+    val importErrorText = stringResource(R.string.error_import_image)
+    val gifUnsupportedText = stringResource(R.string.settings_launcher_overlay_gif_unsupported)
+    val importingText = stringResource(R.string.settings_launcher_overlay_importing)
+    val filePicker = rememberLauncherForActivityResult(
+        contract = MediaPickerContract(
+            allowImages = true,
+            allowVideos = true,
+            allowMultiple = false
+        )
+    ) { result ->
+        if (result != null) {
+            TaskSystem.submitTask(
+                Task.runTask(
+                    dispatcher = Dispatchers.IO,
+                    task = { task ->
+                        task.updateMessage(androidText(importingText))
+                        OverlayCardManager.addFromUri(context, result[0], gifUnsupportedText)
+                    },
+                    onError = { th ->
+                        submitError(
+                            ErrorViewModel.ThrowableMessage(
+                                title = androidText(importErrorText),
+                                message = androidText(th.getMessageOrToString())
+                            )
+                        )
+                    }
+                )
+            )
+        }
+    }
+
+    SettingsCardColumn(modifier = modifier) {
+        SettingsCard(
+            modifier = Modifier.fillMaxWidth(),
+            position = CardPosition.Top,
+            title = stringResource(R.string.settings_launcher_overlay_import),
+            summary = stringResource(R.string.settings_launcher_overlay_import_summary),
+            onClick = { filePicker.launch(Unit) }
+        )
+
+        SettingsCard(
+            modifier = Modifier.fillMaxWidth(),
+            position = CardPosition.Bottom,
+            title = stringResource(R.string.settings_launcher_overlay_remove_all),
+            summary = if (cards.isEmpty()) stringResource(R.string.settings_launcher_overlay_none) else null,
+            enabled = cards.isNotEmpty(),
+            onClick = { OverlayCardManager.removeAll() }
         )
     }
 }

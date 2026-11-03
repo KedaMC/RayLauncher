@@ -29,6 +29,7 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -37,9 +38,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.movtery.guide.GuideHost
-import com.movtery.petlib.PetGazeRouter
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.context.COPY_LABEL_LINK
 import com.movtery.zalithlauncher.coroutine.Task
@@ -62,11 +60,10 @@ import com.movtery.zalithlauncher.ui.androidText
 import com.movtery.zalithlauncher.ui.base.BaseAppCompatActivity
 import com.movtery.zalithlauncher.ui.base.ObserveFullScreenSetting
 import com.movtery.zalithlauncher.ui.buildAppendedText
+import com.movtery.zalithlauncher.ui.components.GlobalDialogHost
+import com.movtery.zalithlauncher.ui.components.GlobalDialogs
 import com.movtery.zalithlauncher.ui.components.SimpleAlertDialog
-import com.movtery.zalithlauncher.ui.guide.GuideKeys
-import com.movtery.zalithlauncher.ui.guide.GuideProgress
-import com.movtery.zalithlauncher.ui.guide.NextTipLabel
-import com.movtery.zalithlauncher.ui.guide.rememberAppGuides
+import com.movtery.zalithlauncher.ui.components.glassPageCapture
 import com.movtery.zalithlauncher.ui.screens.NestedNavKey
 import com.movtery.zalithlauncher.ui.screens.NormalNavKey
 import com.movtery.zalithlauncher.ui.screens.content.elements.Background
@@ -81,7 +78,6 @@ import com.movtery.zalithlauncher.ui.screens.main.crashlogs.ShareLinkOperation
 import com.movtery.zalithlauncher.ui.theme.ZalithLauncherTheme
 import com.movtery.zalithlauncher.ui.theme.festivals.FestivalEffects
 import com.movtery.zalithlauncher.ui.theme.festivals.FestivalTapObserver
-import com.movtery.zalithlauncher.ui.theme.showThemed
 import com.movtery.zalithlauncher.ui.toAndroidString
 import com.movtery.zalithlauncher.ui.vulkan_checker.VCOperation
 import com.movtery.zalithlauncher.ui.vulkan_checker.VulkanChecker
@@ -128,13 +124,7 @@ class MainActivity : BaseAppCompatActivity() {
 
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
         FestivalTapObserver.observe(event)
-        PetGazeRouter.onTouchEvent(event)
         return super.dispatchTouchEvent(event)
-    }
-
-    override fun dispatchGenericMotionEvent(event: MotionEvent): Boolean {
-        PetGazeRouter.onGenericMotionEvent(event)
-        return super.dispatchGenericMotionEvent(event)
     }
 
     /**
@@ -224,17 +214,10 @@ class MainActivity : BaseAppCompatActivity() {
         //初始化通知管理（创建渠道）
         NotificationManager.initManager(this)
 
-        //检查更新
-        if (!isImporting && launcherUpgradeViewModel.operation == LauncherUpgradeOperation.None) {
-            lifecycleScope.launch {
-                launcherUpgradeViewModel.checkOnAppStart()
-            }
-        }
-
         //拉取当月赞助者数据
         lifecycleScope.launch {
             sponsorsViewModel.loadOnStart(
-                showLastMonth = GuideProgress.isPlayed(GuideKeys.Main) && !isImporting
+                showLastMonth = !isImporting
             )
         }
 
@@ -324,9 +307,6 @@ class MainActivity : BaseAppCompatActivity() {
             }
         }
 
-        val finishedGame = AllSettings.finishedGame
-        val showSponsorship = AllSettings.showSponsorship
-
         val festivals = getTodayFestivals(
             containsChinese = isChinese(this@MainActivity)
         )
@@ -338,31 +318,32 @@ class MainActivity : BaseAppCompatActivity() {
             ) {
                 ObserveFullScreenSetting(AllSettings.launcherFullScreen.state)
 
-                val guides = rememberAppGuides(eventViewModel)
-                GuideHost(
-                    guides.mainScreen,
-                    nextTip = { NextTipLabel(it) }
-                ) {
-                    Background(
-                        modifier = Modifier.fillMaxSize(),
-                        viewModel = backgroundViewModel
-                    )
+                    //Liquid Glass: dialogs blur this whole page (wallpaper + screen UI), recorded only while one is open
+                    Box(modifier = Modifier.fillMaxSize().glassPageCapture()) {
+                        Background(
+                            modifier = Modifier.fillMaxSize(),
+                            viewModel = backgroundViewModel
+                        )
 
-                    MainScreen(
-                        screenBackStackModel = screenBackStackModel,
-                        eventViewModel = eventViewModel,
-                        modpackImportViewModel = modpackImportViewModel,
-                        modifyVersionViewModel = modifyVersionViewModel,
-                        submitError = {
-                            errorViewModel.showError(it)
-                        }
-                    )
+                        MainScreen(
+                            screenBackStackModel = screenBackStackModel,
+                            eventViewModel = eventViewModel,
+                            modpackImportViewModel = modpackImportViewModel,
+                            modifyVersionViewModel = modifyVersionViewModel,
+                            submitError = {
+                                errorViewModel.showError(it)
+                            }
+                        )
 
-                    //节日彩蛋效果层
-                    FestivalEffects(
-                        modifier = Modifier.fillMaxSize(),
-                        festivals = festivals
-                    )
+                        //节日彩蛋效果层
+                        FestivalEffects(
+                            modifier = Modifier.fillMaxSize(),
+                            festivals = festivals
+                        )
+                    }
+
+                    //Message dialogs requested from non-Compose code (errors, permissions, links)
+                    GlobalDialogHost()
 
                     //启动游戏操作流程
                     LaunchGameOperation(
@@ -411,26 +392,6 @@ class MainActivity : BaseAppCompatActivity() {
                             }
                         )
                     }
-                }
-
-                //显示赞助支持的小弹窗
-                if (!isImporting && finishedGame.state >= 100 && showSponsorship.state) {
-                    SimpleAlertDialog(
-                        title = stringResource(R.string.about_sponsor),
-                        text = stringResource(R.string.game_saponsorship_finished_game, finishedGame.state),
-                        dismissText = stringResource(R.string.generic_close),
-                        onDismiss = {
-                            showSponsorship.save(false)
-                        },
-                        onConfirm = {
-                            showSponsorship.save(false)
-                            eventViewModel.sendEvent(
-                                EventViewModel.Event.OpenLink(URL_SUPPORT)
-                            )
-                        }
-                    )
-                }
-
                 ModpackImportOperation(
                     operation = modpackImportViewModel.importOperation,
                     changeOperation = { modpackImportViewModel.importOperation = it },
@@ -654,22 +615,15 @@ class MainActivity : BaseAppCompatActivity() {
         }
 
         withContext(Dispatchers.Main) {
-            val builder = MaterialAlertDialogBuilder(this@MainActivity)
-                .setTitle(R.string.plugin_download_title)
-                .setMessage(R.string.plugin_download_summary)
-                .setPositiveButton("Github") { dialog, _ ->
-                    openLinkInternal(link.github)
-                    dialog.dismiss()
+            GlobalDialogs.show(
+                context = this@MainActivity,
+                title = getString(R.string.plugin_download_title),
+                message = getString(R.string.plugin_download_summary),
+                positive = GlobalDialogs.Action("Github") { openLinkInternal(link.github) },
+                negative = cloudDrive?.link?.let { driveLink ->
+                    GlobalDialogs.Action(getString(R.string.upgrade_cloud_drive)) { openLinkInternal(driveLink) }
                 }
-
-            cloudDrive?.link?.let { link ->
-                builder.setNegativeButton(R.string.upgrade_cloud_drive) { dialog, _ ->
-                    openLinkInternal(link)
-                    dialog.dismiss()
-                }
-            }
-
-            builder.showThemed()
+            )
         }
     }
 
@@ -699,6 +653,7 @@ class MainActivity : BaseAppCompatActivity() {
                             return@forEach
                         }
                         ControlManager.importControl(
+                            context = this@MainActivity,
                             inputStream = inputStream,
                             onSerializationError = {
                                 showError(

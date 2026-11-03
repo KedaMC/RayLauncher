@@ -171,12 +171,17 @@ class OfflineYggdrasilServer(
         val skinBytes = skinFile.takeIf { it.exists() }?.readBytes()
         val skinHash = skinBytes?.let { DigestUtils.digestToString("SHA-256", it) }
 
+        val capeBytes = account.getCapeFile().takeIf { it.exists() }?.readBytes()
+        val capeHash = capeBytes?.let { DigestUtils.digestToString("SHA-256", it) }
+
         val character = Character(
             uuid = account.profileId.replace("-", ""),
             name = account.username,
             skin = LoadedSkin(
                 skinHash = skinHash,
                 skinBytes = skinBytes,
+                capeHash = capeHash,
+                capeBytes = capeBytes,
                 model = account.skinModelType
             )
         )
@@ -184,7 +189,7 @@ class OfflineYggdrasilServer(
         charactersByUuid[character.uuid.lowercase()] = character
         charactersByName[character.name.lowercase()] = character
 
-        Logger.info(TAG, "Added character ${character.name} (${character.uuid}), skin hash = ${character.skin?.skinHash}")
+        Logger.info(TAG, "Added character ${character.name} (${character.uuid}), skin hash = ${character.skin?.skinHash}, cape hash = ${character.skin?.capeHash}")
     }
 
 

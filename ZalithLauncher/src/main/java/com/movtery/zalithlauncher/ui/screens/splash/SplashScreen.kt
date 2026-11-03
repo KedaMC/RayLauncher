@@ -23,11 +23,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -35,6 +41,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.entryProvider
 import com.movtery.zalithlauncher.R
+import com.movtery.zalithlauncher.ui.theme.onBackgroundColor
+import com.movtery.zalithlauncher.BuildKeys
+import androidx.compose.ui.graphics.Color
 import com.movtery.zalithlauncher.components.InstallableItem
 import com.movtery.zalithlauncher.legal.AvailableAgreement
 import com.movtery.zalithlauncher.ui.base.BaseScreen
@@ -62,14 +71,47 @@ fun SplashScreen(
     screenViewModel: SplashBackStackViewModel
 ) {
     NavStateHost(rootKey = screenViewModel.splashScreen) {
-        NavigationUI(
-            modifier = Modifier.fillMaxSize(),
-            startAllTask = startAllTask,
-            onWelcomeFinished = onWelcomeFinished,
-            availableAgreement = availableAgreement,
-            unpackItems = unpackItems,
-            screenViewModel = screenViewModel
-        )
+        Column(modifier = Modifier.fillMaxSize()) {
+            TopBar(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(40.dp),
+                contentColor = onBackgroundColor()
+            )
+
+            NavigationUI(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                startAllTask = startAllTask,
+                onWelcomeFinished = onWelcomeFinished,
+                availableAgreement = availableAgreement,
+                unpackItems = unpackItems,
+                screenViewModel = screenViewModel
+            )
+        }
+    }
+}
+
+@Composable
+private fun TopBar(
+    modifier: Modifier = Modifier,
+    contentColor: Color,
+) {
+    CompositionLocalProvider(
+        LocalContentColor provides contentColor
+    ) {
+        Column(
+            modifier = modifier,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(text = BuildKeys.LAUNCHER_NAME)
+            //Lite: GPLv3 要求醒目标注这是修改版
+            Text(
+                text = stringResource(R.string.launcher_unofficial_notice),
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
     }
 }
 

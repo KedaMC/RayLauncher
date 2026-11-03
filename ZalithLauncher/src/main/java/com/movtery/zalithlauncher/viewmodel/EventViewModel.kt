@@ -26,7 +26,6 @@ import androidx.lifecycle.viewModelScope
 import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.ui.AndroidStringText
 import com.movtery.zalithlauncher.ui.control.input.TextInputMode
-import com.movtery.zalithlauncher.ui.guide.GuideKeys
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
@@ -65,14 +64,6 @@ class EventViewModel : ViewModel() {
             data object OnBack : Game
             /** [com.movtery.zalithlauncher.game.launch.handler.AbstractHandler.onResume] */
             data object OnResume: Game
-        }
-        sealed interface Terracotta : Event {
-            /** 申请 VPN 权限 */
-            data object RequestVPN : Terracotta
-            /** 更新 VPN 状态文本 */
-            data class VPNUpdateState(val stringRes: Int): Terracotta
-            /** 关停 VPN */
-            data object StopVPN : Terracotta
         }
         /** 启动游戏相关的事件 */
         sealed interface Launch : Event {
@@ -127,13 +118,6 @@ class EventViewModel : ViewModel() {
             val rootPath: String,
             val currentPath: String? = null,
         ) : Event
-
-        sealed interface Guide : Event {
-            /** 启动一组引导 */
-            data class StartGuide(val group: GuideKeys.Keys) : Guide
-            /** 仅启动一组引导一次 */
-            data class StartGuideOnce(val group: GuideKeys.Keys) : Guide
-        }
     }
 }
 

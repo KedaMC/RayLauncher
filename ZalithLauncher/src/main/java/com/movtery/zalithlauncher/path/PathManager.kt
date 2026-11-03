@@ -56,14 +56,12 @@ class PathManager {
         lateinit var DIR_NATIVE_LOGS: File
         lateinit var DIR_IMAGE_CACHE: File
         lateinit var DIR_CONTROL_LAYOUTS: File
-        lateinit var DIR_TERRACOTTA: File
         lateinit var DIR_STYLES: File
 
         lateinit var FILE_CRASH_REPORT: File
         lateinit var FILE_SETTINGS: File
         lateinit var FILE_MINECRAFT_VERSIONS: File
         lateinit var FILE_LAUNCHER_BACKGROUND: File
-        lateinit var FILE_TERRACOTTA_LOG: File
         lateinit var FILE_SPONSORS_CACHE: File
 
         fun refreshPaths(context: Context) {
@@ -101,14 +99,12 @@ class PathManager {
             DIR_NATIVE_LOGS = File(DIR_LAUNCHER_LOGS, "native")
             DIR_IMAGE_CACHE = File(DIR_CACHE, "images")
             DIR_CONTROL_LAYOUTS = File(DIR_FILES_EXTERNAL, "control_layouts")
-            DIR_TERRACOTTA = File(DIR_FILES_PRIVATE, "net.burningtnt.terracotta")
             DIR_STYLES = File(DIR_FILES_PRIVATE, "special_styles")
 
             FILE_CRASH_REPORT = File(DIR_LAUNCHER_LOGS, "launcher_crash.log")
             FILE_SETTINGS = File(DIR_FILES_PRIVATE, "settings.json")
             FILE_MINECRAFT_VERSIONS = File(DIR_GAME, "minecraft_versions.json")
             FILE_LAUNCHER_BACKGROUND = File(DIR_BACKGROUND, "background01.file")
-            FILE_TERRACOTTA_LOG = File(DIR_FILES_EXTERNAL, "terracotta.log")
             FILE_SPONSORS_CACHE = File(DIR_CACHE, "monthly_sponsors.json")
 
             createDirs()
@@ -122,7 +118,7 @@ class PathManager {
                 DIR_CACHE_GAME_DOWNLOADER, DIR_CACHE_MODPACK_DOWNLOADER, DIR_CACHE_MODPACK_EXPORTER,
                 DIR_CACHE_SAVE_EXPORTER, DIR_CACHE_MOD_UPDATER, DIR_CACHE_APP_ICON, DIR_CACHE_HOME_PAGE,
                 DIR_LAUNCHER_LOGS, DIR_NATIVE_LOGS, DIR_IMAGE_CACHE, DIR_CONTROL_LAYOUTS,
-                DIR_TERRACOTTA, DIR_STYLES
+                DIR_STYLES
             ).forEach { dir ->
                 if (!dir.exists() && !dir.mkdirs()) {
                     Logger.warning(TAG, "Failed to create directory: ${dir.absolutePath}")

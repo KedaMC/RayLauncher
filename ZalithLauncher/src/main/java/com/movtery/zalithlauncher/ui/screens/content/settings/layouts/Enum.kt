@@ -19,6 +19,7 @@
 package com.movtery.zalithlauncher.ui.screens.content.settings.layouts
 
 import androidx.compose.animation.animateContentSize
+import com.movtery.zalithlauncher.ui.components.glassRadioColors
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -88,6 +89,7 @@ fun <E: Enum<E>> EnumSettingsCard(
                     Row {
                         val radioText = getRadioText(enum)
                         RadioButton(
+                            colors = glassRadioColors(),
                             enabled = getRadioEnable(enum),
                             selected = value == enum,
                             onClick = {

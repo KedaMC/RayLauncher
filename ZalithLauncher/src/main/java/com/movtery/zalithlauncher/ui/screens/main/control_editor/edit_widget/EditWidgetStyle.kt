@@ -19,6 +19,7 @@
 package com.movtery.zalithlauncher.ui.screens.main.control_editor.edit_widget
 
 import androidx.compose.foundation.layout.Box
+import com.movtery.zalithlauncher.ui.components.glassRadioColors
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -155,6 +156,7 @@ private fun ChoseStyleItem(
                 textAlign = TextAlign.Center
             )
             RadioButton(
+                colors = glassRadioColors(),
                 selected = selected,
                 onClick = {
                     onSelectedChange(!selected)

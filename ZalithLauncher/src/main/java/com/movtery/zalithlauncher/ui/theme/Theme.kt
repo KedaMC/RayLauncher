@@ -42,8 +42,15 @@ import com.movtery.zalithlauncher.setting.enums.isLauncherInDarkTheme
 import com.movtery.zalithlauncher.ui.theme.components.activeMaskView
 import com.movtery.zalithlauncher.utils.festival.Festival
 import com.movtery.zalithlauncher.utils.festival.LocalFestivals
+import com.movtery.zalithlauncher.game.version.installed.VersionsManager
+import com.movtery.zalithlauncher.ui.components.GlassPageCapture
+import com.movtery.zalithlauncher.ui.components.launcherGlassOn
+import com.movtery.zalithlauncher.ui.components.LocalLiquidGlassBackdrop
+import com.movtery.zalithlauncher.ui.components.LocalLiquidGlassInGame
+import com.movtery.zalithlauncher.ui.components.LocalLiquidGlassPage
 import com.movtery.zalithlauncher.viewmodel.BackgroundViewModel
 import com.movtery.zalithlauncher.viewmodel.LocalBackgroundViewModel
+import com.styropyr0.prismal.sources.rememberPrismalGlassLayer
 
 private val embermireLight = lightColorScheme(
     primary = primaryLight.embermire,
@@ -606,6 +613,8 @@ fun ZalithLauncherTheme(
     dynamicColor: Boolean = true,
     backgroundViewModel: BackgroundViewModel? = null,
     festivals: List<Festival> = emptyList(),
+    //In game there is no launcher background; provide a glass layer anyway (see GameGlassBackdrop)
+    forceGlassLayer: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorTheme = AllSettings.launcherColorTheme.state
@@ -615,13 +624,37 @@ fun ZalithLauncherTheme(
 
     val context = LocalContext.current
 
-    val targetColorScheme = remember(darkTheme, dynamicColor, colorTheme, customColor, customPaletteStyle) {
+    //Per-profile theme: the selected version may bring its own accent color (launcher only, not in game)
+    val profileAccent = if (forceGlassLayer) null else ProfileTheme.accent
+
+    //Liquid Glass：仅在设置开启且存在有效背景媒体时提供可采样的背景图层
+    val glassLayer = rememberPrismalGlassLayer()
+    //forceGlassLayer is only set by the game activity: there the in-game switch applies as well
+    val glassEnabled = if (forceGlassLayer) {
+        AllSettings.launcherLiquidGlass.state && AllSettings.gameLiquidGlass.state
+    } else {
+        launcherGlassOn()
+    }
+    val activeGlassLayer = glassLayer.takeIf {
+        glassEnabled && (backgroundViewModel?.isValid == true || forceGlassLayer)
+    }
+
+    //Glass is tinted dark and carries white content in both themes. While it is on, a light theme uses
+    //the dark palette so text, tints and surfaces match dark mode instead of turning black or white.
+    val paletteDark = darkTheme || glassEnabled
+
+    val targetColorScheme = remember(paletteDark, dynamicColor, colorTheme, customColor, customPaletteStyle, profileAccent) {
         when {
-            dynamicColor && colorTheme == ColorThemeType.DYNAMIC && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-                if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            profileAccent != null -> {
+                val accent = Color(profileAccent)
+                if (paletteDark) customDark(accent, customPaletteStyle) else customLight(accent, customPaletteStyle)
             }
 
-            darkTheme -> when (colorTheme) {
+            dynamicColor && colorTheme == ColorThemeType.DYNAMIC && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+                if (paletteDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            }
+
+            paletteDark -> when (colorTheme) {
                 ColorThemeType.EMBERMIRE -> embermireDark
                 ColorThemeType.VELVET_ROSE -> velvetRoseDark
                 ColorThemeType.MISTWAVE -> mistwaveDark
@@ -653,14 +686,14 @@ fun ZalithLauncherTheme(
         }
     }
 
-    var currentDarkTheme by remember { mutableStateOf(darkTheme) }
+    var currentDarkTheme by remember { mutableStateOf(paletteDark) }
     var currentDisplayScheme by remember { mutableStateOf(targetColorScheme) }
 
-    LaunchedEffect(darkTheme, targetColorScheme) {
-        if (darkTheme != currentDarkTheme) {
+    LaunchedEffect(paletteDark, targetColorScheme) {
+        if (paletteDark != currentDarkTheme) {
             context.activeMaskView(
                 maskComplete = {
-                    currentDarkTheme = darkTheme
+                    currentDarkTheme = paletteDark
                     currentDisplayScheme = targetColorScheme
                 },
                 maskAnimFinish = {
@@ -668,14 +701,34 @@ fun ZalithLauncherTheme(
                 }
             )
         } else {
-            currentDarkTheme = darkTheme
+            currentDarkTheme = paletteDark
             currentDisplayScheme = targetColorScheme
         }
     }
 
+    if (!forceGlassLayer) {
+        //Follow the selected version so its theme (accent, glass tier, wallpaper) is applied
+        LaunchedEffect(Unit) {
+            VersionsManager.currentVersion.collect { ProfileTheme.selectVersion(it) }
+        }
+        val profileWallpaper = remember(ProfileTheme.stamp) { ProfileTheme.wallpaperFile }
+        LaunchedEffect(backgroundViewModel, profileWallpaper) {
+            backgroundViewModel?.setProfileWallpaper(profileWallpaper)
+        }
+    }
+
+
+    //Second layer that records the whole page (wallpaper + UI) while a dialog is open
+    val pageLayer = rememberPrismalGlassLayer()
+    val pageCapture = remember(pageLayer) { GlassPageCapture(pageLayer) }
+    val activePageCapture = pageCapture.takeIf { activeGlassLayer != null }
+
     CompositionLocalProvider(
         LocalBackgroundViewModel provides backgroundViewModel,
-        LocalFestivals provides festivals
+        LocalFestivals provides festivals,
+        LocalLiquidGlassBackdrop provides activeGlassLayer,
+        LocalLiquidGlassInGame provides forceGlassLayer,
+        LocalLiquidGlassPage provides activePageCapture
     ) {
         MaterialExpressiveTheme(
             colorScheme = currentDisplayScheme,

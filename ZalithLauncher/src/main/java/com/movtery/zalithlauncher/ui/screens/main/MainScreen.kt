@@ -18,6 +18,9 @@
 
 package com.movtery.zalithlauncher.ui.screens.main
 
+import com.movtery.zalithlauncher.ui.components.effectiveBackgroundOpacity
+import com.movtery.zalithlauncher.ui.components.launcherGlassOn
+import com.movtery.zalithlauncher.ui.components.glassTint
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -36,6 +39,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -45,12 +49,18 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import com.movtery.zalithlauncher.ui.components.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.RichTooltip
+import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipAnchorPosition
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -85,8 +95,9 @@ import com.movtery.zalithlauncher.ui.AndroidStringText
 import com.movtery.zalithlauncher.ui.androidText
 import com.movtery.zalithlauncher.ui.components.BackgroundCard
 import com.movtery.zalithlauncher.ui.components.CardTitleLayout
+import com.movtery.zalithlauncher.ui.components.LiquidGlassSurface
+import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
 import com.movtery.zalithlauncher.ui.components.TextRailItem
-import com.movtery.zalithlauncher.ui.guide.sendStartGuideOnce
 import com.movtery.zalithlauncher.ui.screens.BackStackNavKey
 import com.movtery.zalithlauncher.ui.screens.NavStateHost
 import com.movtery.zalithlauncher.ui.screens.NestedNavDisplay
@@ -99,7 +110,6 @@ import com.movtery.zalithlauncher.ui.screens.content.FileSelectorScreen
 import com.movtery.zalithlauncher.ui.screens.content.LauncherScreen
 import com.movtery.zalithlauncher.ui.screens.content.LicenseScreen
 import com.movtery.zalithlauncher.ui.screens.content.LogViewScreen
-import com.movtery.zalithlauncher.ui.screens.content.MultiplayerScreen
 import com.movtery.zalithlauncher.ui.screens.content.SettingsScreen
 import com.movtery.zalithlauncher.ui.screens.content.VersionExportScreen
 import com.movtery.zalithlauncher.ui.screens.content.VersionSettingsScreen
@@ -160,10 +170,12 @@ fun MainScreen(
     val inLauncherScreen = mainScreenKey == null || mainScreenKey is NormalNavKey.LauncherMain
 
     val isBackgroundValid = LocalBackgroundViewModel.current?.isValid == true
-    val launcherBackgroundOpacity = AllSettings.launcherBackgroundOpacity.state.toFloat() / 100f
+    val launcherBackgroundOpacity = effectiveBackgroundOpacity().toFloat() / 100f
 
+    //With Liquid Glass on, a light theme veil over the wallpaper would wash it out to white
     val backgroundColor = if (isBackgroundValid) {
-        backgroundColor().copy(alpha = launcherBackgroundOpacity)
+        val base = if (launcherGlassOn()) glassTint(backgroundColor()) else backgroundColor()
+        base.copy(alpha = launcherBackgroundOpacity)
     } else backgroundColor()
 
     Surface(
@@ -175,45 +187,43 @@ fun MainScreen(
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            TopBar(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(40.dp),
-                mainScreenKey = mainScreenKey,
-                inLauncherScreen = inLauncherScreen,
-                taskRunning = taskRunning,
-                isTasksExpanded = isTaskMenuExpanded,
-                contentColor = onBackgroundColor(),
-                onScreenBack = {
-                    screenBackStackModel.mainScreen.backStack.removeFirstOrNull()
-                },
-                toMainScreen = toMainScreen,
-                toSettingsScreen = {
-                    screenBackStackModel.mainScreen.removeAndNavigateTo(
-                        removes = screenBackStackModel.clearBeforeNavKeys,
-                        screenKey = screenBackStackModel.settingsScreen
-                    )
-                },
-                toDownloadScreen = {
-                    screenBackStackModel.navigateToDownload()
-                },
-                toMultiplayerScreen = {
-                    screenBackStackModel.mainScreen.removeAndNavigateTo(
-                        removes = screenBackStackModel.clearBeforeNavKeys,
-                        screenKey = NormalNavKey.Multiplayer
-                    )
-                },
-                openFileManager = {
-                    eventViewModel.sendEvent(
-                        EventViewModel.Event.OpenFileManager(
-                            rootPath = PathManager.DIR_FILES_EXTERNAL.absolutePath
+                    .height(40.dp)
+            ) {
+                TopBar(
+                    modifier = Modifier.fillMaxSize(),
+                    mainScreenKey = mainScreenKey,
+                    inLauncherScreen = inLauncherScreen,
+                    taskRunning = taskRunning,
+                    isTasksExpanded = isTaskMenuExpanded,
+                    contentColor = onBackgroundColor(),
+                    onScreenBack = {
+                        screenBackStackModel.mainScreen.backStack.removeFirstOrNull()
+                    },
+                    toMainScreen = toMainScreen,
+                    toSettingsScreen = {
+                        screenBackStackModel.mainScreen.removeAndNavigateTo(
+                            removes = screenBackStackModel.clearBeforeNavKeys,
+                            screenKey = screenBackStackModel.settingsScreen
                         )
-                    )
-                },
-                changeExpandedState = {
-                    changeTasksExpandedState()
-                },
-            )
+                    },
+                    toDownloadScreen = {
+                        screenBackStackModel.navigateToDownload()
+                    },
+                    openFileManager = {
+                        eventViewModel.sendEvent(
+                            EventViewModel.Event.OpenFileManager(
+                                rootPath = PathManager.DIR_FILES_EXTERNAL.absolutePath
+                            )
+                        )
+                    },
+                    changeExpandedState = {
+                        changeTasksExpandedState()
+                    },
+                )
+            }
 
             Box(
                 modifier = Modifier
@@ -259,21 +269,41 @@ private fun <E: TitledNavKey> TopBar(
     toMainScreen: () -> Unit,
     toSettingsScreen: () -> Unit,
     toDownloadScreen: () -> Unit,
-    toMultiplayerScreen: () -> Unit,
     openFileManager: () -> Unit,
     changeExpandedState: () -> Unit,
 ) {
     val festivals = LocalFestivals.current
 
-    val inMultiplayerScreen = mainScreenKey is NormalNavKey.Multiplayer
     val inDownloadScreen = mainScreenKey is NestedNavKey.Download
     val inSettingsScreen = mainScreenKey is NestedNavKey.Settings
 
     CompositionLocalProvider(
-        LocalContentColor provides contentColor
+        LocalContentColor provides if (launcherGlassOn()) Color.White else contentColor
     ) {
         ConstraintLayout(modifier = modifier) {
-            val (backCenter, title, endButtons) = createRefs()
+            val (backCenter, title, endButtons, headerGlass) = createRefs()
+
+            val headerGlassBackdrop = liquidGlassBackdrop()
+            // Inner pages share one continuous glass header. The launcher home keeps
+            // its title and action group as separate surfaces.
+            if (headerGlassBackdrop != null && !inLauncherScreen) {
+                LiquidGlassSurface(
+                    backdrop = headerGlassBackdrop,
+                    shape = MaterialTheme.shapes.large,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight()
+                        .constrainAs(headerGlass) {
+                            start.linkTo(parent.start)
+                            end.linkTo(parent.end)
+                            top.linkTo(parent.top)
+                            bottom.linkTo(parent.bottom)
+                        },
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = Color.White,
+                    blurRadius = 12.dp
+                ) {}
+            }
 
             val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
@@ -292,37 +322,41 @@ private fun <E: TitledNavKey> TopBar(
                     Row(modifier = Modifier.fillMaxHeight()) {
                         Spacer(Modifier.width(12.dp))
 
-                        IconButton(
-                            modifier = Modifier.fillMaxHeight(),
-                            onClick = {
-                                if (!inLauncherScreen) {
-                                    //不在主屏幕时才允许返回
-                                    backDispatcher?.onBackPressed() ?: run {
-                                        onScreenBack()
+                        ToolbarTooltip(label = stringResource(R.string.generic_back)) {
+                            IconButton(
+                                modifier = Modifier.fillMaxHeight(),
+                                onClick = {
+                                    if (!inLauncherScreen) {
+                                        //不在主屏幕时才允许返回
+                                        backDispatcher?.onBackPressed() ?: run {
+                                            onScreenBack()
+                                        }
                                     }
                                 }
+                            ) {
+                                Icon(
+                                    modifier = Modifier.size(24.dp),
+                                    painter = painterResource(R.drawable.ic_arrow_back),
+                                    contentDescription = stringResource(R.string.generic_back)
+                                )
                             }
-                        ) {
-                            Icon(
-                                modifier = Modifier.size(24.dp),
-                                painter = painterResource(R.drawable.ic_arrow_back),
-                                contentDescription = stringResource(R.string.generic_back)
-                            )
                         }
 
-                        IconButton(
-                            modifier = Modifier.fillMaxHeight(),
-                            onClick = {
-                                if (!inLauncherScreen) {
-                                    //不在主屏幕时才允许回到主页面
-                                    toMainScreen()
+                        ToolbarTooltip(label = stringResource(R.string.generic_main_menu)) {
+                            IconButton(
+                                modifier = Modifier.fillMaxHeight(),
+                                onClick = {
+                                    if (!inLauncherScreen) {
+                                        //不在主屏幕时才允许回到主页面
+                                        toMainScreen()
+                                    }
                                 }
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_home_filled),
+                                    contentDescription = stringResource(R.string.generic_main_menu)
+                                )
                             }
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_home_filled),
-                                contentDescription = stringResource(R.string.generic_main_menu)
-                            )
                         }
                     }
                 }
@@ -333,42 +367,56 @@ private fun <E: TitledNavKey> TopBar(
             Crossfade(
                 modifier = Modifier.constrainAs(title) {
                     centerVerticallyTo(parent)
-                    start.linkTo(backCenter.end, margin = 16.dp)
+                    start.linkTo(backCenter.end, margin = if (inLauncherScreen) 12.dp else 16.dp)
+                    if (!inLauncherScreen) {
+                        end.linkTo(endButtons.start, margin = 8.dp)
+                    }
                 },
                 targetState = parentRes to childRes
             ) { (parent, child) ->
                 val style = MaterialTheme.typography.titleMedium
                 val softWarp = false
                 val maxLines = 1
+                val titleBackdrop = if (inLauncherScreen) liquidGlassBackdrop() else null
 
-                if (parent == null) {
-                    if (festivals.isEmpty()) {
-                        Text(
-                            text = BuildKeys.LAUNCHER_IDENTIFIER,
+                @Composable
+                fun TitleContent() {
+                    if (parent == null) {
+                        if (festivals.isEmpty()) {
+                            Text(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                text = BuildKeys.LAUNCHER_IDENTIFIER,
+                                style = style,
+                                softWrap = softWarp,
+                                maxLines = maxLines
+                            )
+                        } else {
+                            FestivalTitleText(festivals = festivals, style = style, maxLines = maxLines)
+                        }
+                    } else {
+                        val titleText = if (child != null) androidText(parent, androidText(" - "), child) else parent
+                        AndroidStringText(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                            text = titleText,
                             style = style,
                             softWrap = softWarp,
                             maxLines = maxLines
                         )
-                    } else {
-                        FestivalTitleText(
-                            festivals = festivals,
-                            style = style,
-                            maxLines = maxLines
-                        )
+                    }
+                }
+
+                if (titleBackdrop != null) {
+                    LiquidGlassSurface(
+                        backdrop = titleBackdrop,
+                        shape = MaterialTheme.shapes.large,
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        contentColor = Color.White,
+                        blurRadius = 10.dp
+                    ) {
+                        TitleContent()
                     }
                 } else {
-                    val titleText = if (child != null) {
-                        androidText(parent, androidText(" - "), child)
-                    } else {
-                        parent
-                    }
-
-                    AndroidStringText(
-                        text = titleText,
-                        style = style,
-                        softWrap = softWarp,
-                        maxLines = maxLines
-                    )
+                    TitleContent()
                 }
             }
 
@@ -391,62 +439,101 @@ private fun <E: TitledNavKey> TopBar(
                         targetOffsetY = { -50 }
                     ) + fadeOut()
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .clip(shape = MaterialTheme.shapes.large)
-                            .clickable { changeExpandedState() }
-                            .padding(all = 8.dp)
-                            .width(120.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        LinearProgressIndicator(modifier = Modifier.weight(1f))
-                        Icon(
-                            modifier = Modifier.size(22.dp),
-                            painter = painterResource(R.drawable.ic_assignment_filled),
-                            contentDescription = stringResource(R.string.main_task_menu)
-                        )
+                    ToolbarTooltip(label = stringResource(R.string.main_task_menu)) {
+                        Row(
+                            modifier = Modifier
+                                .clip(shape = MaterialTheme.shapes.large)
+                                .clickable { changeExpandedState() }
+                                .padding(all = 8.dp)
+                                .width(120.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            LinearProgressIndicator(modifier = Modifier.weight(1f))
+                            Icon(
+                                modifier = Modifier.size(22.dp),
+                                painter = painterResource(R.drawable.ic_assignment_filled),
+                                contentDescription = stringResource(R.string.main_task_menu)
+                            )
+                        }
                     }
                 }
 
-                IconButton(
-                    onClick = openFileManager
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_folder_filled),
-                        contentDescription = null
-                    )
+                val toolbarGlassBackdrop = liquidGlassBackdrop()
+                val toolbarActions: @Composable () -> Unit = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        ToolbarTooltip(label = "File manager") {
+                            IconButton(onClick = openFileManager) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_folder_filled),
+                                    contentDescription = "File manager"
+                                )
+                            }
+                        }
+
+                        ToolbarTooltip(label = stringResource(R.string.generic_download)) {
+                            TopBarRailItem(
+                                selected = inDownloadScreen,
+                                painter = painterResource(R.drawable.ic_download_2_filled),
+                                text = stringResource(R.string.generic_download),
+                                onClick = {
+                                    if (!inDownloadScreen) toDownloadScreen()
+                                },
+                            )
+                        }
+
+                        ToolbarTooltip(label = stringResource(R.string.generic_setting)) {
+                            TopBarRailItem(
+                                selected = inSettingsScreen,
+                                painter = painterResource(R.drawable.ic_settings_filled),
+                                text = stringResource(R.string.generic_setting),
+                                onClick = {
+                                    if (!inSettingsScreen) toSettingsScreen()
+                                },
+                            )
+                        }
+                    }
                 }
-
-                TopBarRailItem(
-                    selected = inMultiplayerScreen,
-                    painter = painterResource(R.drawable.ic_group_filled),
-                    text = stringResource(R.string.terracotta),
-                    onClick = {
-                        if (!inMultiplayerScreen) toMultiplayerScreen()
-                    },
-                )
-
-                TopBarRailItem(
-                    selected = inDownloadScreen,
-                    painter = painterResource(R.drawable.ic_download_2_filled),
-                    text = stringResource(R.string.generic_download),
-                    onClick = {
-                        if (!inDownloadScreen) toDownloadScreen()
-                    },
-                )
-
-                TopBarRailItem(
-                    selected = inSettingsScreen,
-                    painter = painterResource(R.drawable.ic_settings_filled),
-                    text = stringResource(R.string.generic_setting),
-                    onClick = {
-                        if (!inSettingsScreen) toSettingsScreen()
-                    },
-                )
+                if (toolbarGlassBackdrop != null && inLauncherScreen) {
+                    LiquidGlassSurface(
+                        backdrop = toolbarGlassBackdrop,
+                        shape = MaterialTheme.shapes.large,
+                        modifier = Modifier.height(40.dp),
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        contentColor = LocalContentColor.current,
+                        blurRadius = 12.dp
+                    ) {
+                        toolbarActions()
+                    }
+                } else {
+                    toolbarActions()
+                }
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ToolbarTooltip(
+    label: String,
+    content: @Composable () -> Unit
+) {
+    TooltipBox(
+        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+            positioning = TooltipAnchorPosition.Below
+        ),
+        tooltip = {
+            RichTooltip(shadowElevation = 3.dp) {
+                Text(text = label)
+            }
+        },
+        state = rememberTooltipState(),
+        content = content
+    )
 }
 
 @Composable
@@ -463,12 +550,12 @@ private fun TopBarRailItem(
         onClick = onClick,
         text = {
             AnimatedVisibility(visible = selected) {
-                Row {
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = text,
-                        style = textStyle
-                    )
+                    Text(text = text, style = textStyle)
                 }
             }
         },
@@ -550,9 +637,6 @@ private fun NavigationUI(
                         },
                         onOpenLink = {
                             eventViewModel.sendEvent(EventViewModel.Event.OpenLink(it))
-                        },
-                        startGuideOnce = { keys ->
-                            eventViewModel.sendStartGuideOnce(keys)
                         }
                     )
                 }
@@ -646,12 +730,6 @@ private fun NavigationUI(
                         assetInfoScreenKey = key.currentKey,
                         eventViewModel = eventViewModel,
                         submitError = submitError,
-                    )
-                }
-                entry<NormalNavKey.Multiplayer> {
-                    MultiplayerScreen(
-                        backScreenViewModel = screenBackStackModel,
-                        eventViewModel = eventViewModel
                     )
                 }
                 entry<NormalNavKey.LogView> { key ->

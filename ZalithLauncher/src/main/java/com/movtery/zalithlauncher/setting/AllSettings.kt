@@ -34,6 +34,7 @@ import com.movtery.zalithlauncher.setting.enums.BackgroundBlur
 import com.movtery.zalithlauncher.setting.enums.DarkMode
 import com.movtery.zalithlauncher.setting.enums.FpsDisplayMode
 import com.movtery.zalithlauncher.setting.enums.GamepadInputMode
+import com.movtery.zalithlauncher.setting.enums.GlassTier
 import com.movtery.zalithlauncher.setting.enums.GestureActionType
 import com.movtery.zalithlauncher.setting.enums.MirrorSourceType
 import com.movtery.zalithlauncher.setting.enums.MouseControlMode
@@ -100,19 +101,9 @@ object AllSettings : SettingsRegistry() {
     val gameFullScreen = boolSetting("gameFullScreen", true)
 
     /**
-     * 持续性能模式
-     */
-    val sustainedPerformance = boolSetting("sustainedPerformance", false)
-
-    /**
      * 游戏运行时请求系统切换到同分辨率最高刷新率档位（关闭则回落系统自适应刷新）
      */
     val requestMaxRefreshRate = boolSetting("requestMaxRefreshRate", true)
-
-    /**
-     * 使用系统的 Vulkan 驱动
-     */
-    val zinkPreferSystemDriver = boolSetting("zinkPreferSystemDriver", false)
 
     /**
      * Zink 垂直同步
@@ -341,41 +332,6 @@ object AllSettings : SettingsRegistry() {
      */
     val gestureLongPressDelay = intSetting("gestureLongPressDelay", 300, 100..1000)
 
-    /**
-     * 陀螺仪控制
-     */
-    val gyroscopeControl = boolSetting("gyroscopeControl", false)
-
-    /**
-     * 陀螺仪控制灵敏度
-     */
-    val gyroscopeSensitivity = intSetting("gyroscopeSensitivity", 100, 25..300)
-
-    /**
-     * 陀螺仪采样率
-     */
-    val gyroscopeSampleRate = intSetting("gyroscopeSampleRate", 16, 5..50)
-
-    /**
-     * 陀螺仪数值平滑
-     */
-    val gyroscopeSmoothing = boolSetting("gyroscopeSmoothing", true)
-
-    /**
-     * 陀螺仪平滑处理的窗口大小
-     */
-    val gyroscopeSmoothingWindow = intSetting("gyroscopeSmoothingWindow", 4, 2..10)
-
-    /**
-     * 反转 X 轴
-     */
-    val gyroscopeInvertX = boolSetting("gyroscopeInvertX", false)
-
-    /**
-     * 反转 Y 轴
-     */
-    val gyroscopeInvertY = boolSetting("gyroscopeInvertY", false)
-
     //Launcher
     /**
      * 颜色主题色
@@ -416,6 +372,29 @@ object AllSettings : SettingsRegistry() {
      * 持续型节日彩蛋效果
      */
     val launcherFestivalEffects = boolSetting("launcherFestivalEffects", true)
+
+    /**
+     * Liquid Glass 效果（PrismalAGSL），默认关闭
+     */
+    val launcherLiquidGlass = boolSetting("launcherLiquidGlass", false)
+
+    /**
+     * In-game Liquid Glass switch (game menu panels). Only takes effect while [launcherLiquidGlass]
+     * is on, and never changes how the launcher UI itself looks.
+     */
+    val gameLiquidGlass = boolSetting("gameLiquidGlass", true)
+
+    /**
+     * Glass quality used while [launcherLiquidGlass] is on in the launcher (LITE or FULL).
+     * A per-profile theme can override it.
+     */
+    val launcherGlassTier = enumSetting("launcherGlassTier", GlassTier.FULL)
+
+    /**
+     * Glass quality of the in-game menu panels (LITE or FULL), independent from the launcher tier.
+     * Glass in game is switched on/off with [gameLiquidGlass].
+     */
+    val gameGlassTier = enumSetting("gameGlassTier", GlassTier.FULL)
 
     /**
      * 启用页面切换动画
@@ -583,26 +562,6 @@ object AllSettings : SettingsRegistry() {
     val editorWidgetSnapMode = enumSetting("editorWidgetSnapMode", SnapMode.FullScreen)
 
     /**
-     * 是否启用陶瓦联机
-     */
-    val enableTerracotta = boolSetting("enableTerracotta", false)
-
-    /**
-     * 是否使用自定义 EasyTier 服务器节点
-     */
-    val enableTerracottaNodes = boolSetting("enableTerracottaNodes", false)
-
-    /**
-     * 陶瓦联机：自定义 EasyTier 服务器节点
-     */
-    val terracottaNodes = stringSetting("terracottaNodes", "")
-
-    /**
-     * 陶瓦联机公告版本号
-     */
-    val terracottaNoticeVer = intSetting("terracottaNoticeVer", -1)
-
-    /**
      * 上次检查更新的时间戳
      */
     val lastUpgradeCheck = longSetting("lastUpgradeCheck", 0L)
@@ -625,20 +584,20 @@ object AllSettings : SettingsRegistry() {
     /**
      * 搜索模组的初始搜索平台
      */
-    val searchModPlatform = enumSetting("searchModPlatform", Platform.CURSEFORGE)
+    val searchModPlatform = enumSetting("searchModPlatform", Platform.MODRINTH)
 
     /**
      * 搜索整合包的初始搜索平台
      */
-    val searchModpackPlatform = enumSetting("searchModpackPlatform", Platform.CURSEFORGE)
+    val searchModpackPlatform = enumSetting("searchModpackPlatform", Platform.MODRINTH)
 
     /**
      * 搜索资源包的初始搜索平台
      */
-    val searchResourcePackPlatform = enumSetting("searchResourcePackPlatform", Platform.CURSEFORGE)
+    val searchResourcePackPlatform = enumSetting("searchResourcePackPlatform", Platform.MODRINTH)
 
     /**
      * 搜索光影的初始搜索平台
      */
-    val searchShadersPlatform = enumSetting("searchShadersPlatform", Platform.CURSEFORGE)
+    val searchShadersPlatform = enumSetting("searchShadersPlatform", Platform.MODRINTH)
 }

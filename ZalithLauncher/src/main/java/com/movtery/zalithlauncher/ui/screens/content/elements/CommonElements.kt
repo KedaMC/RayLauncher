@@ -45,14 +45,17 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
+import com.movtery.zalithlauncher.ui.components.Button
+import com.movtery.zalithlauncher.ui.components.DropdownMenu
+import com.movtery.zalithlauncher.ui.components.DropdownMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import com.movtery.zalithlauncher.ui.components.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import androidx.compose.material3.ProgressIndicatorDefaults
+import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -72,7 +75,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
+import com.movtery.zalithlauncher.ui.components.GlassDialog as Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.movtery.zalithlauncher.R
@@ -85,14 +88,18 @@ import com.movtery.zalithlauncher.coroutine.TaskStage
 import com.movtery.zalithlauncher.coroutine.TitledTask
 import com.movtery.zalithlauncher.ui.AndroidStringText
 import com.movtery.zalithlauncher.ui.androidText
+import com.movtery.zalithlauncher.ui.components.BackgroundCard
 import com.movtery.zalithlauncher.ui.components.IconTextButton
 import com.movtery.zalithlauncher.ui.components.MarqueeText
 import com.movtery.zalithlauncher.ui.components.TaskLogCard
 import com.movtery.zalithlauncher.ui.components.fadeEdge
 import com.movtery.zalithlauncher.ui.components.rememberDialogMaxHeight
 import com.movtery.zalithlauncher.ui.screens.TitledNavKey
+import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
 import com.movtery.zalithlauncher.ui.theme.cardColor
+import com.movtery.zalithlauncher.ui.theme.itemColor
 import com.movtery.zalithlauncher.ui.theme.onCardColor
+import com.movtery.zalithlauncher.ui.theme.onItemColor
 import com.movtery.zalithlauncher.utils.file.checkExtensionOrThrow
 import com.movtery.zalithlauncher.utils.file.formatFileSize
 import com.movtery.zalithlauncher.utils.platform.bytesToMB
@@ -444,6 +451,13 @@ private fun TaskFlowListColumn(
             style = MaterialTheme.typography.titleMedium
         )
 
+        //With Liquid Glass the rows use the item tint, like everything else in dialogs (and the
+        //Cancel button below them), so they all read as one family of glass
+        val rowColors = if (liquidGlassBackdrop() != null) {
+            CardDefaults.cardColors(containerColor = itemColor(), contentColor = onItemColor())
+        } else {
+            CardDefaults.cardColors(containerColor = cardColor(), contentColor = onCardColor())
+        }
         val scrollState = rememberLazyListState()
         LazyColumn(
             modifier = Modifier
@@ -452,14 +466,19 @@ private fun TaskFlowListColumn(
             state = scrollState
         ) {
             items(tasks, key = { it.task.id }) { task ->
-                InstallingTaskItem(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 6.dp),
-                    title = task.title,
-                    runningIcon = task.runningIcon,
-                    task = task.task
-                )
+                BackgroundCard(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+                    shape = MaterialTheme.shapes.large,
+                    colors = rowColors,
+                    liquidGlass = true
+                ) {
+                    InstallingTaskItem(
+                        modifier = Modifier.fillMaxWidth().padding(all = 8.dp),
+                        title = task.title,
+                        runningIcon = task.runningIcon,
+                        task = task.task
+                    )
+                }
             }
         }
     }
@@ -478,7 +497,14 @@ private fun InstallingTaskItem(
     val taskMessage by task.message.collectAsStateWithLifecycle()
     val rateBytesPerSec by task.rateBytesPerSec.collectAsStateWithLifecycle()
 
+    //White progress on glass, like the sliders
+    val glass = liquidGlassBackdrop() != null
+    val progressColor = if (glass) Color.White else ProgressIndicatorDefaults.linearColor
+    val progressTrackColor = if (glass) Color.White.copy(alpha = 0.28f) else ProgressIndicatorDefaults.linearTrackColor
+
     Row(
+        //Keep the icon away from the rounded left edge of the glass box
+        modifier = Modifier.padding(start = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -523,7 +549,9 @@ private fun InstallingTaskItem(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         LinearProgressIndicator(
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            color = progressColor,
+                            trackColor = progressTrackColor
                         )
                         RateBytesPerSecText()
                     }
@@ -539,7 +567,9 @@ private fun InstallingTaskItem(
                             progress = { taskProgress },
                             modifier = Modifier
                                 .weight(1f)
-                                .align(Alignment.CenterVertically)
+                                .align(Alignment.CenterVertically),
+                            color = progressColor,
+                            trackColor = progressTrackColor
                         )
                         RateBytesPerSecText()
                         Text(
@@ -599,6 +629,13 @@ fun MemoryPreview(
             if (availableMemory > 0) preview.toFloat() / availableMemory else 0f
         } else 0f
     }
+
+    //Liquid Glass: flat white bar (no glass effect) to match the white slider
+    val glass = liquidGlassBackdrop() != null && preview != null
+    val mainColor = if (glass) Color.White.copy(alpha = 0.92f) else mainColor
+    val backgroundColor = if (glass) Color.White.copy(alpha = 0.28f) else backgroundColor
+    val textColorOnMemory = if (glass) Color.Black.copy(alpha = 0.8f) else textColorOnMemory
+    val textColorOnBackground = if (glass) Color.White else textColorOnBackground
 
     //内存进度条直观展示
     Box(

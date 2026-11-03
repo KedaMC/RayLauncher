@@ -59,3 +59,5 @@
 
 # SoraEditor language-textmate
 -keep class org.jcodings.** { *; }
+# Prismal: assets are bound manually via reflection in VMActivity (:game process)
+-keep class com.styropyr0.prismal.internal.PrismalAgslAssets { *; }

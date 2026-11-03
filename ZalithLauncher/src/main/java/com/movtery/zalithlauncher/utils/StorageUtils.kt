@@ -31,9 +31,8 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.movtery.zalithlauncher.ui.components.GlobalDialogs
 import com.movtery.zalithlauncher.R
-import com.movtery.zalithlauncher.ui.theme.showThemed
 import com.movtery.zalithlauncher.utils.logging.Logger
 import java.io.File
 
@@ -167,13 +166,14 @@ private fun showPermissionRequestDialog(
     message: String,
     requestPermissions: RequestPermissions
 ) {
-    MaterialAlertDialogBuilder(context)
-        .setTitle(title)
-        .setMessage(message)
-        .setPositiveButton(R.string.generic_authorization) { _, _ -> requestPermissions.onRequest() }
-        .setNegativeButton(R.string.generic_ignore) { _, _ -> requestPermissions.onCancel() }
-        .setCancelable(false)
-        .showThemed()
+    GlobalDialogs.show(
+        context = context,
+        title = context.getString(title),
+        message = message,
+        positive = GlobalDialogs.Action(context.getString(R.string.generic_authorization)) { requestPermissions.onRequest() },
+        negative = GlobalDialogs.Action(context.getString(R.string.generic_ignore)) { requestPermissions.onCancel() },
+        cancelable = false
+    )
 }
 
 private interface RequestPermissions {

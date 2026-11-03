@@ -18,6 +18,7 @@
 
 package com.movtery.zalithlauncher.ui.screens.content.download.assets.elements
 
+import com.movtery.zalithlauncher.ui.components.effectiveBackgroundBlur
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandVertically
@@ -42,7 +43,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -54,6 +55,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.foundation.layout.RowScope
+import com.movtery.zalithlauncher.ui.components.GlassItemSurface
+import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
@@ -228,7 +232,7 @@ fun AssetsVersionItemLayout(
     influencedByBackground: Boolean = true,
     color: Color = cardColor(influencedByBackground),
     contentColor: Color = onCardColor(),
-    blur: Int = AllSettings.backgroundBlur.state,
+    blur: Int = effectiveBackgroundBlur(),
     installedChecker: ((PlatformVersion) -> InstalledMod?)? = null,
     onItemClicked: (PlatformVersion) -> Unit = {}
 ) {
@@ -269,7 +273,11 @@ fun AssetsVersionItemLayout(
                                 .padding(vertical = 4.dp),
                             contentPadding = PaddingValues(horizontal = 4.dp)
                         ) {
-                            items(infoMap.versions) { version ->
+                            items(
+                items = infoMap.versions,
+                key = { it.platformId() },
+                contentType = { "version" }
+            ) { version ->
                                 AssetsVersionListItem(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -366,20 +374,8 @@ private fun AssetsVersionListItem(
     installed: InstalledMod? = null,
     onClick: () -> Unit = {}
 ) {
-    Row(
-        modifier = modifier
-            .clip(shape = MaterialTheme.shapes.medium)
-            .background(
-                color = if (installed != null) {
-                    MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f)
-                } else {
-                    Color.Transparent
-                },
-                shape = MaterialTheme.shapes.medium
-            )
-            .clickable(onClick = onClick),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+    val glassItem = liquidGlassBackdrop() != null
+    val itemContent: @Composable RowScope.() -> Unit = {
         //直观的版本状态
         val releaseType = remember { version.platformReleaseType() }
         val displayName = remember { version.platformDisplayName() }
@@ -467,6 +463,43 @@ private fun AssetsVersionListItem(
                 }
             }
         }
+    }
+
+    if (glassItem) {
+        // Each version choice is its own Liquid Glass box (same recipe as the mod list entries)
+        GlassItemSurface(
+            modifier = modifier,
+            shape = MaterialTheme.shapes.large,
+            color = if (installed != null) {
+                MaterialTheme.colorScheme.tertiary.copy(alpha = 0.6f)
+            } else {
+                cardColor()
+            },
+            contentColor = onCardColor(),
+            onClick = onClick
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                content = itemContent
+            )
+        }
+    } else {
+        Row(
+            modifier = modifier
+                .clip(shape = MaterialTheme.shapes.medium)
+                .background(
+                    color = if (installed != null) {
+                        MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f)
+                    } else {
+                        Color.Transparent
+                    },
+                    shape = MaterialTheme.shapes.medium
+                )
+                .clickable(onClick = onClick),
+            verticalAlignment = Alignment.CenterVertically,
+            content = itemContent
+        )
     }
 }
 

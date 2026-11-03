@@ -74,12 +74,14 @@ object VulkanChecker {
      */
     fun checkCapabilities(
         driverPath: String?,
+        driverGpu: String?,
         nativeDir: String?,
         cacheDir: String?
     ): VulkanCapabilities? {
         return try {
             nativeCheckVulkan(
                 driverPath = driverPath,
+                driverGpu = driverGpu,
                 nativeDir = nativeDir,
                 cacheDir = cacheDir,
             )?.also { caps ->
@@ -122,6 +124,7 @@ object VulkanChecker {
     @JvmStatic
     private external fun nativeCheckVulkan(
         driverPath: String?,
+        driverGpu: String?,
         nativeDir: String?,
         cacheDir: String?
     ): VulkanCapabilities?

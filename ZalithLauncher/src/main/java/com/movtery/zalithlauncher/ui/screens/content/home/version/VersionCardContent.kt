@@ -34,7 +34,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Button
+import com.movtery.zalithlauncher.ui.components.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -65,6 +65,10 @@ import com.movtery.cardgrid.model.CardState
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.ui.components.LittleTextLabel
+import com.movtery.zalithlauncher.ui.components.ScalingActionButton
+import com.movtery.zalithlauncher.ui.components.LiquidGlassSurface
+import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
+import com.movtery.zalithlauncher.ui.components.liquidGlassPressAnimation
 import com.movtery.zalithlauncher.ui.screens.content.elements.VersionIconImage
 import com.movtery.zalithlauncher.ui.screens.content.home.CardIconShape
 
@@ -100,18 +104,34 @@ fun CardState.VersionCardContent(cardId: String) {
     val showDetails = sizeClass.height >= CardSizeClass.MEDIUM
     val iconSize = iconSizeFor(sizeClass)
 
+    val glassBackdrop = liquidGlassBackdrop()
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .liquidGlassPressAnimation(enabled = glassBackdrop != null)
             .homeCardTap {
                 if (currentInteraction == CardInteraction.Idle) {
                     currentVersion?.let(onOpenSettings)
                 }
             }
-            .padding(12.dp)
     ) {
-        when {
-            sizeClass.width >= CardSizeClass.MEDIUM &&
+        if (glassBackdrop != null) {
+            LiquidGlassSurface(
+                backdrop = glassBackdrop,
+                shape = MaterialTheme.shapes.large,
+                modifier = Modifier.fillMaxSize(),
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                blurRadius = 10.dp
+            ) {}
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp)
+        ) {
+            when {
+                sizeClass.width >= CardSizeClass.MEDIUM &&
                     sizeClass.height >= CardSizeClass.LARGE -> TallContent(
                 card = card,
                 version = version,
@@ -146,6 +166,7 @@ fun CardState.VersionCardContent(cardId: String) {
                 textButton = sizeClass.width >= CardSizeClass.LARGE,
                 spacing = if (sizeClass.width <= CardSizeClass.SMALL) 6.dp else 12.dp
             )
+            }
         }
     }
 }
@@ -423,7 +444,7 @@ private fun CardTexts(
 @Composable
 private fun TextLaunchButton(version: Version, modifier: Modifier = Modifier) {
     val onLaunch = LocalHomeCardLauncher.current
-    Button(onClick = { onLaunch(version) }, modifier = modifier) {
+    ScalingActionButton(onClick = { onLaunch(version) }, modifier = modifier) {
         Icon(
             modifier = Modifier.size(16.dp),
             painter = painterResource(R.drawable.ic_play_arrow_filled),
@@ -440,7 +461,7 @@ private fun TextLaunchButton(version: Version, modifier: Modifier = Modifier) {
 @Composable
 private fun CompactLaunchButton(version: Version, modifier: Modifier = Modifier) {
     val onLaunch = LocalHomeCardLauncher.current
-    Button(
+    ScalingActionButton(
         onClick = { onLaunch(version) },
         modifier = modifier,
         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
@@ -462,7 +483,7 @@ private fun CompactLaunchButton(version: Version, modifier: Modifier = Modifier)
 @Composable
 private fun IconLaunchButton(version: Version, modifier: Modifier = Modifier) {
     val onLaunch = LocalHomeCardLauncher.current
-    Button(
+    ScalingActionButton(
         onClick = { onLaunch(version) },
         modifier = modifier,
         shape = CircleShape,

@@ -48,7 +48,7 @@ struct PotatoBridge potatoBridge;
 // MC 最近一次请求的交换间隔；-1 表示尚未请求
 static int lastSwapInterval = -1;
 
-void* loadTurnipVulkan(const char* driver_path, const char* native_dir, const char* cache_dir);
+void* loadCustomVulkan(const char* driver_lib, const char* driver_gpu, const char* native_dir, const char* cache_dir);
 void calculateFPS();
 
 extern void updateMonitorSize(int width, int height);
@@ -119,10 +119,13 @@ void load_vulkan() {
         const char* native_dir = getenv("DRIVER_PATH");
         const char* cache_dir = getenv("TMPDIR");
 
-        void* result = loadTurnipVulkan(NULL, native_dir, cache_dir);
+        const char* driver_lib = getenv("DRIVER_LIB");
+        const char* driver_gpu = getenv("DRIVER_GPU");
+
+        void* result = loadCustomVulkan(driver_lib, driver_gpu, native_dir, cache_dir);
         if (result != NULL)
         {
-            printf("AdrenoSupp: Loaded Turnip, loader address: %p\n", result);
+            printf("CustomDriver: Loaded %s, loader address: %p\n", (driver_lib && *driver_lib) ? driver_lib : "default driver", result);
             set_vulkan_ptr(result);
             return;
         }

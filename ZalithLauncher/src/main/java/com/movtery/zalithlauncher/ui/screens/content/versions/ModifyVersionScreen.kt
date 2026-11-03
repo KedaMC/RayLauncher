@@ -18,6 +18,7 @@
 
 package com.movtery.zalithlauncher.ui.screens.content.versions
 
+import com.movtery.zalithlauncher.ui.components.effectiveBackgroundBlur
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
@@ -32,10 +33,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Button
+import com.movtery.zalithlauncher.ui.components.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.nonInteractiveScrollbar
 import androidx.compose.runtime.Composable
@@ -820,7 +821,7 @@ private fun ModifyTipItem(
     ) {
         Row(
             modifier = Modifier
-                .backgroundGlass(AllSettings.backgroundBlur.state, color)
+                .backgroundGlass(effectiveBackgroundBlur(), color)
                 .padding(horizontal = 16.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {

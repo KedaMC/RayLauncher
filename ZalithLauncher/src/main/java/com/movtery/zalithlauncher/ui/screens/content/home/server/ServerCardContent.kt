@@ -44,17 +44,17 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Button
+import com.movtery.zalithlauncher.ui.components.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FilterChip
+import com.movtery.zalithlauncher.ui.components.FilledTonalButton
+import com.movtery.zalithlauncher.ui.components.CheckChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PlainTooltip
-import androidx.compose.material3.Surface
+import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
@@ -80,7 +80,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
+import com.movtery.zalithlauncher.ui.components.GlassDialog as Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImagePainter
@@ -727,7 +727,7 @@ private fun ServerCardSettingsDialog(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
-                            FilterChip(
+                            CheckChip(
                                 enabled = quickLaunch,
                                 selected = mode == ServerCardVersionMode.CURRENT,
                                 onClick = { mode = ServerCardVersionMode.CURRENT },
@@ -735,7 +735,7 @@ private fun ServerCardSettingsDialog(
                                     Text(text = stringResource(R.string.home_server_card_version_current))
                                 }
                             )
-                            FilterChip(
+                            CheckChip(
                                 enabled = quickLaunch,
                                 selected = mode == ServerCardVersionMode.SPECIFIC,
                                 onClick = { mode = ServerCardVersionMode.SPECIFIC },

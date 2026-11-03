@@ -45,7 +45,8 @@ enum class NotificationChannelData(
     TASK_SERVICE_CHANNEL("task.service", { it.getString(R.string.notification_task_service_name) }, null, IMPORTANCE_LOW),
 
     /**
-     * 陶瓦联机 VPN 状态显示服务
+     * Screen recorder foreground service (holds the MediaProjection token for game audio)
      */
-    TERRACOTTA_VPN_CHANNEL("terracotta_vpn_channel", { "Terracotta VPN" }, { it.getString(R.string.terracotta_terracotta) }, IMPORTANCE_LOW, false)
+    RECORDING_SERVICE_CHANNEL("recording.service", { it.getString(R.string.recorder_notification_channel_name) }, null, IMPORTANCE_LOW),
+
 }

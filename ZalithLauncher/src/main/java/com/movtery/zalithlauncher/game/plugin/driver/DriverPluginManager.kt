@@ -68,6 +68,9 @@ object DriverPluginManager: ApkPluginManager() {
             val metaData = info.metaData ?: return
             if (metaData.getBoolean("fclPlugin", false)) {
                 val driver = metaData.getString("driver") ?: return
+                //FCL 1.3.4.1 起的可选声明：驱动库文件名与 GPU 家族（panvk 使用 libvulkan_panfrost.so + mali）
+                val driverLib = metaData.getString("driver_lib")?.takeIf { it.isNotBlank() }
+                val driverGpu = Driver.normalizeGpu(metaData.getString("driver_gpu"))
                 val nativeLibraryDir = info.nativeLibraryDir
 
                 val packageManager = context.packageManager
@@ -82,7 +85,9 @@ object DriverPluginManager: ApkPluginManager() {
                     name = driver,
                     summary = context.getString(R.string.settings_renderer_from_plugins, appName),
                     path = nativeLibraryDir,
-                    isLauncher = false
+                    isLauncher = false,
+                    driverLib = driverLib,
+                    driverGpu = driverGpu
                 )
 
                 driverList.add(plugin)

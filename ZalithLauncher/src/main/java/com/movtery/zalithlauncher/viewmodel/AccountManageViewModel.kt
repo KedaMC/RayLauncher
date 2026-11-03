@@ -46,6 +46,7 @@ import com.movtery.zalithlauncher.game.account.wardrobe.SkinType
 import com.movtery.zalithlauncher.game.account.wardrobe.capeLocalRes
 import com.movtery.zalithlauncher.game.account.wardrobe.getLocalUUIDWithSkinModel
 import com.movtery.zalithlauncher.game.account.wardrobe.isSlimModel
+import com.movtery.zalithlauncher.game.account.wardrobe.normalizeSkinToPng
 import com.movtery.zalithlauncher.game.account.wardrobe.isValid
 import com.movtery.zalithlauncher.game.account.wardrobe.validateSkinFile
 import com.movtery.zalithlauncher.game.account.yggdrasil.PlayerProfile
@@ -389,7 +390,8 @@ class AccountManageViewModel @AssistedInject constructor(
 
             runCatching {
                 context.copyLocalFile(intent.uri, cacheFile)
-                validateSkinFile(cacheFile)
+                //any image format is accepted, but it is always stored as PNG
+                if (normalizeSkinToPng(cacheFile)) validateSkinFile(cacheFile) else SkinType.Invalid
             }.onSuccess { skinType ->
                 val data = when (skinType) {
                     SkinType.DualLayer -> {

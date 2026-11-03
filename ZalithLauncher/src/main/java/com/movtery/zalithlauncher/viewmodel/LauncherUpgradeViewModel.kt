@@ -19,6 +19,7 @@
 package com.movtery.zalithlauncher.viewmodel
 
 import androidx.compose.foundation.clickable
+import com.movtery.zalithlauncher.ui.components.glassRadioColors
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -339,6 +340,7 @@ private fun CloudDriveLayout(
         verticalAlignment = Alignment.CenterVertically
     ) {
         RadioButton(
+            colors = glassRadioColors(),
             selected = selected,
             onClick = onClick,
             enabled = enabled

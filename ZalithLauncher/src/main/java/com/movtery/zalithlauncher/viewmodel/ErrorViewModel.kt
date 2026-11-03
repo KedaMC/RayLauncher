@@ -21,10 +21,9 @@ package com.movtery.zalithlauncher.viewmodel
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.ui.AndroidStringText
-import com.movtery.zalithlauncher.ui.theme.showThemed
+import com.movtery.zalithlauncher.ui.components.GlobalDialogs
 import com.movtery.zalithlauncher.ui.toAndroidString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -51,13 +50,13 @@ class ErrorViewModel : ViewModel() {
     ) {
         withContext(Dispatchers.Main) {
             //展示一个一次性的错误信息对话框
-            MaterialAlertDialogBuilder(context)
-                .setTitle(tm.title.toAndroidString(context))
-                .setMessage(tm.message.toAndroidString(context))
-                .setPositiveButton(R.string.generic_confirm) { dialog, _ ->
-                    dialog.dismiss()
-                }.setCancelable(false)
-                .showThemed()
+            GlobalDialogs.show(
+                context = context,
+                title = tm.title.toAndroidString(context),
+                message = tm.message.toAndroidString(context),
+                positive = GlobalDialogs.Action(context.getString(R.string.generic_confirm)),
+                cancelable = false
+            )
         }
     }
 

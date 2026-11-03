@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,16 +19,20 @@
 package com.movtery.zalithlauncher.ui.screens.content.versions
 
 import androidx.compose.foundation.layout.Arrangement
+import com.movtery.zalithlauncher.ui.components.launcherGlassOn
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import com.movtery.zalithlauncher.ui.components.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,9 +42,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.movtery.zalithlauncher.R
@@ -51,15 +57,16 @@ import com.movtery.zalithlauncher.coroutine.TaskSystem
 import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.game.version.installed.VersionFolders
 import com.movtery.zalithlauncher.game.version.installed.VersionsManager
+import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.ui.androidText
 import com.movtery.zalithlauncher.ui.base.BaseScreen
-import com.movtery.zalithlauncher.ui.components.AnimatedColumn
+import com.movtery.zalithlauncher.ui.components.GlassLazyColumn
+import com.movtery.zalithlauncher.ui.components.animated
 import com.movtery.zalithlauncher.ui.components.IconTextButton
 import com.movtery.zalithlauncher.ui.components.SimpleAlertDialog
 import com.movtery.zalithlauncher.ui.components.SimpleEditDialog
 import com.movtery.zalithlauncher.ui.components.SimpleTaskDialog
-import com.movtery.zalithlauncher.ui.components.animated
-import com.movtery.zalithlauncher.ui.components.verticalScrollWithBar
+import com.movtery.zalithlauncher.ui.components.lazyScrollWithBar
 import com.movtery.zalithlauncher.ui.screens.NestedNavKey
 import com.movtery.zalithlauncher.ui.screens.NormalNavKey
 import com.movtery.zalithlauncher.ui.screens.TitledNavKey
@@ -129,14 +136,16 @@ fun VersionOverViewScreen(
             }
         )
 
-        AnimatedColumn(
+        val listState = rememberLazyListState()
+        GlassLazyColumn(
             modifier = Modifier
-                .fillMaxWidth()
-                .verticalScrollWithBar(state = rememberScrollState())
-                .padding(all = 12.dp),
-            isVisible = isVisible
+                .fillMaxSize()
+                .lazyScrollWithBar(listState),
+            state = listState,
+            isVisible = isVisible,
+            contentPadding = PaddingValues(all = 12.dp)
         ) {
-            AnimatedItem { ctx ->
+            animatedItem(key = "info") { ctx ->
                 VersionInfoLayout(
                     modifier = Modifier.animated(ctx),
                     version = version,
@@ -153,7 +162,7 @@ fun VersionOverViewScreen(
                 )
             }
 
-            AnimatedItem { ctx ->
+            animatedItem(key = "management") { ctx ->
                 VersionManagementLayout(
                     modifier = Modifier.animated(ctx),
                     version = version,
@@ -169,7 +178,7 @@ fun VersionOverViewScreen(
                 )
             }
 
-            AnimatedItem { ctx ->
+            animatedItem(key = "quick_actions") { ctx ->
                 VersionQuickActions(
                     modifier = Modifier.animated(ctx),
                     accessFolder = { path ->
@@ -310,6 +319,7 @@ private fun VersionInfoLayout(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun VersionManagementLayout(
     modifier: Modifier = Modifier,
@@ -344,9 +354,15 @@ private fun VersionManagementLayout(
                 style = MaterialTheme.typography.labelLarge
             )
 
-            FlowRow {
+            FlowRow(
+                modifier = Modifier.padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 OutlinedButton(
-                    modifier = Modifier.padding(end = 12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                    ),
                     onClick = onEditSummary
                 ) {
                     Text(
@@ -354,7 +370,9 @@ private fun VersionManagementLayout(
                     )
                 }
                 OutlinedButton(
-                    modifier = Modifier.padding(end = 12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                    ),
                     onClick = onRename
                 ) {
                     Text(
@@ -362,7 +380,9 @@ private fun VersionManagementLayout(
                     )
                 }
                 OutlinedButton(
-                    modifier = Modifier.padding(end = 12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                    ),
                     onClick = onExport
                 ) {
                     Text(
@@ -370,7 +390,9 @@ private fun VersionManagementLayout(
                     )
                 }
                 OutlinedButton(
-                    modifier = Modifier.padding(end = 12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                    ),
                     enabled = logExists,
                     onClick = {
                         onShareLog(logFile)
@@ -395,6 +417,7 @@ private fun VersionManagementLayout(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun VersionQuickActions(
     modifier: Modifier = Modifier,
@@ -417,9 +440,15 @@ private fun VersionQuickActions(
                 style = MaterialTheme.typography.labelLarge
             )
 
-            FlowRow {
+            FlowRow(
+                modifier = Modifier.padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 OutlinedButton(
-                    modifier = Modifier.padding(end = 12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                    ),
                     onClick = { accessFolder("") }
                 ) {
                     Text(
@@ -427,7 +456,9 @@ private fun VersionQuickActions(
                     )
                 }
                 OutlinedButton(
-                    modifier = Modifier.padding(end = 12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                    ),
                     onClick = { accessFolder(VersionFolders.SAVES.folderName) }
                 ) {
                     Text(
@@ -435,7 +466,9 @@ private fun VersionQuickActions(
                     )
                 }
                 OutlinedButton(
-                    modifier = Modifier.padding(end = 12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                    ),
                     onClick = { accessFolder(VersionFolders.RESOURCE_PACK.folderName) }
                 ) {
                     Text(
@@ -443,7 +476,9 @@ private fun VersionQuickActions(
                     )
                 }
                 OutlinedButton(
-                    modifier = Modifier.padding(end = 12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                    ),
                     onClick = { accessFolder(VersionFolders.SHADERS.folderName) }
                 ) {
                     Text(
@@ -451,7 +486,9 @@ private fun VersionQuickActions(
                     )
                 }
                 OutlinedButton(
-                    modifier = Modifier.padding(end = 12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                    ),
                     onClick = { accessFolder(VersionFolders.MOD.folderName) }
                 ) {
                     Text(
@@ -459,7 +496,9 @@ private fun VersionQuickActions(
                     )
                 }
                 OutlinedButton(
-                    modifier = Modifier.padding(end = 12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                    ),
                     onClick = { accessFolder("screenshots") }
                 ) {
                     Text(
@@ -467,7 +506,9 @@ private fun VersionQuickActions(
                     )
                 }
                 OutlinedButton(
-                    modifier = Modifier.padding(end = 12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                    ),
                     onClick = { accessFolder("logs") }
                 ) {
                     Text(
@@ -475,7 +516,9 @@ private fun VersionQuickActions(
                     )
                 }
                 OutlinedButton(
-                    modifier = Modifier.padding(end = 12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                    ),
                     onClick = { accessFolder("crash-reports") }
                 ) {
                     Text(
