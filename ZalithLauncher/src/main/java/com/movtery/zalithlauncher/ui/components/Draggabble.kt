@@ -61,6 +61,7 @@ fun FloatingBall(
     contentColor: Color = Color.White.copy(alpha = 0.95f),
     shape: Shape = MaterialTheme.shapes.medium,
     glass: Boolean = false,
+    glassColor: Color = color,
     content: @Composable () -> Unit
 ) {
     var ballSize by remember { mutableStateOf(IntSize.Zero) }
@@ -184,7 +185,7 @@ fun FloatingBall(
                 backdrop = glassBackdrop,
                 shape = shape,
                 modifier = ballModifier,
-                containerColor = color,
+                containerColor = glassColor,
                 contentColor = contentColor
             ) {
                 content()

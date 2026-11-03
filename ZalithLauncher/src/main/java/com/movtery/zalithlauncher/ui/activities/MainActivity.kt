@@ -653,6 +653,7 @@ class MainActivity : BaseAppCompatActivity() {
                             return@forEach
                         }
                         ControlManager.importControl(
+                            context = this@MainActivity,
                             inputStream = inputStream,
                             onSerializationError = {
                                 showError(

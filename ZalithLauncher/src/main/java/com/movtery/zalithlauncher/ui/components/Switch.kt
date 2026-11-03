@@ -114,7 +114,7 @@ fun DefaultSwitch(
                     .align(Alignment.Center)
                     .width(52.dp)
                     .height(32.dp)
-                    .flatGlass(RoundedCornerShape(16.dp), itemColor())
+                    .flatGlass(RoundedCornerShape(16.dp), glassTint(itemColor()))
             )
             switchContent()
         }

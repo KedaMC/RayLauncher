@@ -29,7 +29,6 @@ import com.movtery.layer_controller.utils.saveToFile
 import com.movtery.zalithlauncher.context.copyAssetFile
 import com.movtery.zalithlauncher.path.PathManager
 import com.movtery.zalithlauncher.setting.AllSettings
-import com.movtery.zalithlauncher.utils.file.readString
 import com.movtery.zalithlauncher.utils.logging.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -41,6 +40,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerializationException
 import org.apache.commons.io.FileUtils
+import org.json.JSONObject
 import java.io.File
 import java.io.InputStream
 
@@ -208,6 +208,7 @@ object ControlManager {
      * 尝试导入控制布局
      */
     suspend fun importControl(
+        context: Context,
         inputStream: InputStream,
         onSerializationError: (Exception) -> Unit,
         catchedError: (Exception) -> Unit,
@@ -216,8 +217,13 @@ object ControlManager {
         val file = getNewRandomFile()
         try {
             inputStream.use { stream ->
-                val jsonString = stream.readString()
-                val layout = loadLayoutFromString(jsonString)
+                val json = MojoLayoutImporter.readPayload(stream).json
+                val root = JSONObject(json)
+                val layout = if (MojoLayoutImporter.isMojo(root)) {
+                    MojoLayoutImporter.convert(context, root)
+                } else {
+                    loadLayoutFromString(json)
+                }
                 layout.saveToFile(file)
             }
             onFinished()
