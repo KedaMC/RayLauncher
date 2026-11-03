@@ -71,7 +71,7 @@ class GlassLazyScope internal constructor(
         val currentIndex = itemIndex++
         val actualDelay = delay ?: (baseDelay + currentIndex * delayIncrement)
         lazy.item(key = key) {
-            val ctx = rememberAnimatedContext(isVisible = isVisible, delayMillis = actualDelay)
+            val ctx = rememberAnimatedContext(isVisible = this@GlassLazyScope.isVisible, delayMillis = actualDelay)
             content(ctx)
         }
     }
