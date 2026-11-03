@@ -10,6 +10,7 @@ import com.movtery.layer_controller.data.lang.createTranslatable
 import com.movtery.layer_controller.event.ClickEvent
 import com.movtery.layer_controller.layout.ControlLayer
 import com.movtery.layer_controller.layout.ControlLayout
+import com.movtery.zalithlauncher.ui.control.event.LAUNCHER_EVENT_SWITCH_IME
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
@@ -25,6 +26,7 @@ internal object MojoLayoutImporter {
     private const val MAX_JSON_BYTES = 16 * 1024 * 1024
     private const val MAX_MJ_VERSION = 9
     private const val PREFERRED_SCALE = 100f
+    private const val MJ_SPECIAL_KEYBOARD = -1
 
     data class Payload(val json: String)
     private data class Point(val x: Float, val y: Float)
@@ -170,6 +172,12 @@ internal object MojoLayoutImporter {
         val events = mutableListOf<ClickEvent>()
         src.optJSONArray("keycodes").eachInt { code ->
             if (code == 0) return@eachInt // unused MJ key slot
+            if (code == MJ_SPECIAL_KEYBOARD) {
+                // MJ on-screen keyboard button -> launcher "switch input method" event
+                val ime = ClickEvent(ClickEvent.Type.LauncherEvent, LAUNCHER_EVENT_SWITCH_IME)
+                if (ime !in events) events += ime
+                return@eachInt
+            }
             val key = key(code)
             if (key == null) skippedActions++ else events += ClickEvent(ClickEvent.Type.Key, key)
         }
