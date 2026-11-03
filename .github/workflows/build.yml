@@ -10,13 +10,13 @@ on:
         description: "Branch, tag or SHA to build (leave empty to build the branch this workflow is run from)"
         required: false
         type: string
-        default: ""
+        default: "feature/liquid-glass-2.8"
   workflow_call:
     inputs:
       ref:
         required: false
         type: string
-        default: ""
+        default: "feature/liquid-glass-2.8"
     secrets:
       KEY_PASSWORD:
         required: false
@@ -61,7 +61,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.ref || github.ref }}
+          ref: ${{ inputs.ref || 'feature/liquid-glass-2.8' }}
           submodules: recursive
 
       - name: Set up JDK 21
