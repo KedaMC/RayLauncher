@@ -529,6 +529,7 @@ private fun setRendererEnv(
         envMap["force_glsl_extensions_warn"] = "true"
         envMap["allow_higher_compat_version"] = "true"
         envMap["allow_glsl_extension_directive_midshader"] = "true"
+    }
 
     if (!envMap.containsKey("LIBGL_ES")) {
         val glesMajor = getDetectedVersion()
