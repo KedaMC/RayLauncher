@@ -216,7 +216,6 @@ internal object MojoLayoutImporter {
         events += extra
         val style = buttonStyle(
             w, h,
-            src.optDouble("opacity", 1.0).toFloat(),
             src.optInt("bgColor", 0x4D000000),
             src.optInt("strokeColor", -1),
             strokeScaled(src.optDouble("strokeWidth", 0.0).toFloat()),
@@ -251,7 +250,7 @@ internal object MojoLayoutImporter {
         val h = scaled(src.optDouble("height", src.optDouble("width", 100.0)).toFloat()).coerceAtLeast(20f)
         val size = max(w, h)
         val sizePx = size * density
-        val alpha = src.optDouble("opacity", 1.0).toFloat().coerceIn(0f, 1f)
+        val alpha = 1f // opacity follows the in-game controls opacity slider
         val stroke = (strokeScaled(src.optDouble("strokeWidth", 0.0).toFloat()) / size * 100f)
             .roundToInt().coerceIn(0, 50)
         val config = JoystickStyle.StyleConfig(
@@ -268,7 +267,7 @@ internal object MojoLayoutImporter {
             joystickSize = 0.5f
         )
         val key = listOf<Any>(
-            (alpha * 100).roundToInt(), src.optInt("bgColor", 0x4D000000),
+            src.optInt("bgColor", 0x4D000000),
             src.optInt("strokeColor", -1), stroke, config.backgroundShape
         )
         val styleId = joystickStyleCache.getOrPut(key) {
@@ -293,13 +292,15 @@ internal object MojoLayoutImporter {
     }
 
     private fun State.buttonStyle(
-        w: Float, h: Float, opacity: Float,
+        w: Float, h: Float,
         bg: Int, border: Int, borderWidth: Float, radiusPercent: Float
     ): ButtonStyle {
-        val alpha = opacity.coerceIn(0f, 1f)
+        // MJ per-button opacity is intentionally ignored: the in-game "controls opacity"
+        // slider is the single source of truth for control opacity.
+        val alpha = 1f
         val radius = (min(w, h) * radiusPercent.coerceIn(0f, 100f) / 100f).coerceIn(0f, 100f)
         val width = borderWidth.coerceIn(0f, 50f).roundToInt()
-        val key = listOf<Any>((alpha * 100).roundToInt(), bg, border, width, (radius * 10).roundToInt())
+        val key = listOf<Any>(bg, border, width, (radius * 10).roundToInt())
         return styleCache.getOrPut(key) {
             val background = Color(bg)
             val borderColor = Color(border)
