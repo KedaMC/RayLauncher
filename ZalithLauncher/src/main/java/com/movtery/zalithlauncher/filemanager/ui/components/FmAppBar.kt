@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -57,7 +56,6 @@ import com.movtery.zalithlauncher.filemanager.ui.theme.fmTopbarColors
 import com.movtery.zalithlauncher.filemanager.viewmodel.SortConfig
 
 /** 文件管理器顶部应用栏 */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FmAppBar(
     currentPath: String,
@@ -149,7 +147,9 @@ fun FmAppBar(
                 onDismissRequest = {
                     menuExpanded = false
                     sortExpanded = false
-                }
+                },
+                shape = MaterialTheme.shapes.large,
+                shadowElevation = 3.dp
             ) {
                 DropdownMenuItem(
                     text = {
@@ -342,7 +342,9 @@ private fun SortSubmenu(
 
     DropdownMenu(
         expanded = expanded,
-        onDismissRequest = { onExpandedChange(false) }
+        onDismissRequest = { onExpandedChange(false) },
+        shape = MaterialTheme.shapes.large,
+        shadowElevation = 3.dp
     ) {
         SortMenuItem(
             labelRes = R.string.fm_sort_name,

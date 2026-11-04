@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,6 +48,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -79,6 +80,7 @@ import com.movtery.zalithlauncher.game.plugin.natives.NativePluginManager
 import com.movtery.zalithlauncher.game.plugin.renderer.RendererPluginManager
 import com.movtery.zalithlauncher.game.renderer.RendererInterface
 import com.movtery.zalithlauncher.game.renderer.Renderers
+import com.movtery.zalithlauncher.game.renderer.isSfpewConfiguredFor
 import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.game.version.installed.hasVulkanBackend
 import com.movtery.zalithlauncher.game.version.installed.utils.isBiggerVer
@@ -310,9 +312,13 @@ fun LaunchGameOperation(
 
                 // 设备完全支持 Vulkan 时跳过渲染器的版本支持检查
                 if (!version.hasVulkanBackend() || !ensureVulkanSupported(version)) {
-                    val isRendererUnsupported =
-                        (currentRenderer.getMinMCVersion()?.let { mcVer.isLowerVer(it) } ?: false) ||
-                                (currentRenderer.getMaxMCVersion()?.let { mcVer.isBiggerVer(it) } ?: false)
+                    val supportedMin = currentRenderer.getMinMCVersion()?.let { verStr ->
+                        !isSfpewConfiguredFor(currentRenderer, version) && mcVer.isLowerVer(verStr)
+                    } ?: false
+                    val supportedMax = currentRenderer.getMaxMCVersion()?.let { verStr ->
+                        mcVer.isBiggerVer(verStr)
+                    } ?: false
+                    val isRendererUnsupported = supportedMin || supportedMax
 
                     if (isRendererUnsupported) {
                         launchGameViewModel.updateOperation(LaunchGameOperation.UnsupportedRenderer(currentRenderer, version, quickPlay))
@@ -345,32 +351,56 @@ fun LaunchGameOperation(
         }
         is LaunchGameOperation.AccountRelogin -> {
             if (operation.account.isMicrosoftAccount()) {
-                MicrosoftReloginDialog(
-                    onDismissRequest = {
-                        launchGameViewModel.updateOperation(LaunchGameOperation.None)
-                    },
-                    onConfirm = {
-                        launchGameViewModel.updateOperation(LaunchGameOperation.None)
-                        microsoftLogin(
-                            context = activity,
-                            toWeb = navigateToWeb,
-                            backToMain = backToMain,
-                            checkIfInWebScreen = checkIfInWebScreen,
-                            updateOperation = {},
-                            showToast = { text, duration -> eventViewModel.sendToast(text, duration) },
-                            submitError = submitError
-                        ) {
-                            activity.runOnUiThread {
-                                launchGameViewModel.updateOperation(
-                                    LaunchGameOperation.RealLaunch(
-                                        operation.version,
-                                        operation.quickPlay
-                                    )
+                var selectLoginMethod by remember { mutableStateOf(false) }
+
+                val startReloginLogin: (useSystemBrowser: Boolean) -> Unit = { useSystemBrowser ->
+                    launchGameViewModel.updateOperation(LaunchGameOperation.None)
+                    microsoftLogin(
+                        context = activity,
+                        useSystemBrowser = useSystemBrowser,
+                        toWeb = navigateToWeb,
+                        toSystemBrowser = { url ->
+                            eventViewModel.sendEvent(EventViewModel.Event.OpenLink(url))
+                        },
+                        backToMain = backToMain,
+                        checkIfInWebScreen = checkIfInWebScreen,
+                        updateOperation = {},
+                        showToast = { text, duration -> eventViewModel.sendToast(text, duration) },
+                        submitError = submitError
+                    ) {
+                        activity.runOnUiThread {
+                            launchGameViewModel.updateOperation(
+                                LaunchGameOperation.RealLaunch(
+                                    operation.version,
+                                    operation.quickPlay
                                 )
-                            }
+                            )
                         }
                     }
-                )
+                }
+
+                if (selectLoginMethod) {
+                    MicrosoftLoginMethodDialog(
+                        onDismissRequest = {
+                            selectLoginMethod = false
+                        },
+                        onSystemBrowser = {
+                            startReloginLogin(true)
+                        },
+                        onInternalBrowser = {
+                            startReloginLogin(false)
+                        }
+                    )
+                } else {
+                    MicrosoftReloginDialog(
+                        onDismissRequest = {
+                            launchGameViewModel.updateOperation(LaunchGameOperation.None)
+                        },
+                        onConfirm = {
+                            selectLoginMethod = true
+                        }
+                    )
+                }
             } else {
                 OtherAccountReloginDialog(
                     account = operation.account,

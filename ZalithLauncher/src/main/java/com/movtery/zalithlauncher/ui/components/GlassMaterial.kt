@@ -65,7 +65,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
@@ -119,11 +118,10 @@ private fun GlassButtonBody(
     LiquidGlassSurface(
         backdrop = backdrop,
         shape = shape,
-        modifier = modifier
-            .liquidGlassPressAnimation(enabled)
-            .alpha(if (enabled) 1f else 0.5f),
+        modifier = modifier.liquidGlassPressAnimation(enabled),
         containerColor = tint,
-        contentColor = Color.White,
+        //A disabled button keeps its full glass (blur, tint, edge); only its content is dimmed.
+        contentColor = if (enabled) Color.White else Color.White.copy(alpha = 0.5f),
         onClick = if (enabled) onClick else null
     ) {
         ProvideTextStyle(MaterialTheme.typography.labelLarge) {
@@ -412,9 +410,9 @@ fun Surface(
         LiquidGlassSurface(
             backdrop = backdrop,
             shape = shape,
-            modifier = modifier.alpha(if (enabled) 1f else 0.6f),
+            modifier = modifier,
             containerColor = color,
-            contentColor = Color.White,
+            contentColor = if (enabled) Color.White else Color.White.copy(alpha = 0.6f),
             onClick = if (enabled) onClick else null
         ) {
             content()
@@ -485,9 +483,9 @@ fun Card(
         LiquidGlassSurface(
             backdrop = backdrop,
             shape = shape,
-            modifier = modifier.alpha(if (enabled) 1f else 0.6f),
+            modifier = modifier,
             containerColor = colors.containerColor,
-            contentColor = Color.White,
+            contentColor = if (enabled) Color.White else Color.White.copy(alpha = 0.6f),
             onClick = if (enabled) onClick else null
         ) {
             Column(content = content)

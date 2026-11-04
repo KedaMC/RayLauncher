@@ -23,12 +23,18 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
+import androidx.annotation.StringRes
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -56,11 +62,13 @@ import com.movtery.zalithlauncher.coroutine.TaskSystem
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.setting.enums.GestureActionType
 import com.movtery.zalithlauncher.setting.enums.MouseControlMode
+import com.movtery.zalithlauncher.setting.enums.MouseTouchBlockMode
 import com.movtery.zalithlauncher.setting.unit.ParcelableSettingUnit
 import com.movtery.zalithlauncher.setting.unit.floatRange
 import com.movtery.zalithlauncher.ui.androidText
 import com.movtery.zalithlauncher.ui.base.BaseScreen
-import com.movtery.zalithlauncher.ui.components.AnimatedColumn
+import com.movtery.zalithlauncher.ui.components.GlassLazyColumn
+import com.movtery.zalithlauncher.ui.components.animated
 import com.movtery.zalithlauncher.ui.components.IconTextButton
 import com.movtery.zalithlauncher.ui.components.LittleTextLabel
 import com.movtery.zalithlauncher.ui.components.MarqueeText
@@ -68,7 +76,7 @@ import com.movtery.zalithlauncher.ui.components.SimpleAlertDialog
 import com.movtery.zalithlauncher.ui.components.TitleAndSummary
 import com.movtery.zalithlauncher.ui.components.TooltipIconButton
 import com.movtery.zalithlauncher.ui.components.infiniteShimmer
-import com.movtery.zalithlauncher.ui.components.verticalScrollWithBar
+import com.movtery.zalithlauncher.ui.components.lazyScrollWithBar
 import com.movtery.zalithlauncher.ui.control.mouse.CursorHotspot
 import com.movtery.zalithlauncher.ui.control.mouse.MouseHotspotEditorDialog
 import com.movtery.zalithlauncher.ui.control.mouse.MousePointer
@@ -87,7 +95,6 @@ import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.CardPositi
 import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.IntSliderSettingsCard
 import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.ListSettingsCard
 import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.SettingsCard
-import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.SettingsCardColumn
 import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.SwitchSettingsCard
 import com.movtery.zalithlauncher.utils.formatKeyCode
 import com.movtery.zalithlauncher.utils.image.isImageFile
@@ -99,6 +106,30 @@ import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.withContext
 import org.apache.commons.io.FileUtils
 import java.io.File
+
+/** One cursor image card: which pointer file, hotspot and strings it uses. */
+private class PointerCardSpec(
+    val key: String,
+    @StringRes val titleRes: Int,
+    @StringRes val summaryRes: Int,
+    val file: File,
+    val shape: CursorShape,
+    val hotspot: ParcelableSettingUnit<CursorHotspot>
+)
+
+private fun pointerCardSpecs(): List<PointerCardSpec> = listOf(
+    PointerCardSpec("arrow", R.string.settings_control_mouse_pointer_arrow_title, R.string.settings_control_mouse_pointer_arrow_summary, arrowPointerFile, CursorShape.Arrow, AllSettings.arrowMouseHotspot),
+    PointerCardSpec("link", R.string.settings_control_mouse_pointer_link_title, R.string.settings_control_mouse_pointer_link_summary, linkPointerFile, CursorShape.Hand, AllSettings.linkMouseHotspot),
+    PointerCardSpec("ibeam", R.string.settings_control_mouse_pointer_ibeam_title, R.string.settings_control_mouse_pointer_ibeam_summary, iBeamPointerFile, CursorShape.IBeam, AllSettings.iBeamMouseHotspot),
+    PointerCardSpec("crosshair", R.string.settings_control_mouse_pointer_crosshair_title, R.string.settings_control_mouse_pointer_common_summary, crossHairPointerFile, CursorShape.CrossHair, AllSettings.crossHairMouseHotspot),
+    PointerCardSpec("resize_ns", R.string.settings_control_mouse_pointer_resize_ns_title, R.string.settings_control_mouse_pointer_resize_ns_summary, resizeNSPointerFile, CursorShape.ResizeNS, AllSettings.resizeNSMouseHotspot),
+    PointerCardSpec("resize_ew", R.string.settings_control_mouse_pointer_resize_ew_title, R.string.settings_control_mouse_pointer_resize_ew_summary, resizeEWPointerFile, CursorShape.ResizeEW, AllSettings.resizeEWMouseHotspot),
+    PointerCardSpec("resize_all", R.string.settings_control_mouse_pointer_resize_all_title, R.string.settings_control_mouse_pointer_common_summary, resizeAllPointerFile, CursorShape.ResizeAll, AllSettings.resizeAllMouseHotspot),
+    PointerCardSpec("not_allowed", R.string.settings_control_mouse_pointer_not_allowed_title, R.string.settings_control_mouse_pointer_not_allowed_summary, notAllowedPointerFile, CursorShape.NotAllowed, AllSettings.notAllowedMouseHotspot)
+)
+
+/** Gap between two card groups, on top of the 2dp the list already puts between any two cards. */
+private val GroupGap = 8.dp
 
 @Composable
 fun ControlSettingsScreen(
@@ -112,316 +143,240 @@ fun ControlSettingsScreen(
         Triple(key, mainScreenKey, false),
         Triple(NormalNavKey.Settings.Control, settingsScreenKey, false)
     ) { isVisible ->
-        AnimatedColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScrollWithBar(state = rememberScrollState())
-                .padding(all = 12.dp),
-            isVisible = isVisible
-        ) { scope ->
-            AnimatedItem(scope) { yOffset ->
-                SettingsCardColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .offset { IntOffset(x = 0, y = yOffset.roundToPx()) }
-                ) {
-                    SwitchSettingsCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Top,
-                        unit = AllSettings.physicalMouseMode,
-                        title = stringResource(R.string.settings_control_mouse_physical_mouse_mode_title),
-                        summary = stringResource(R.string.settings_control_mouse_physical_mouse_mode_summary),
-                        trailingIcon = {
-                            TooltipIconButton(
-                                modifier = Modifier
-                                    .align(Alignment.CenterVertically)
-                                    .padding(horizontal = 8.dp),
-                                tooltipTitle = stringResource(R.string.generic_warning),
-                                tooltipMessage = stringResource(R.string.settings_control_mouse_physical_mouse_warning)
-                            ) {
-                                Icon(
-                                    painter = painterResource(R.drawable.ic_warning_filled),
-                                    contentDescription = stringResource(R.string.generic_warning),
-                                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
-                                )
-                            }
-                        }
-                    )
+        //Every card is a glass surface, and this page has dozens of them: each card is its own lazy item,
+        //so only the cards near the viewport are composed and blurred while scrolling.
+        val listState = rememberLazyListState()
 
-                    var operation by remember { mutableStateOf<PhysicalKeyOperation>(PhysicalKeyOperation.None) }
-                    SettingsCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Bottom,
-                        onClick = { operation = PhysicalKeyOperation.Bind }
+        GlassLazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .lazyScrollWithBar(listState),
+            state = listState,
+            isVisible = isVisible,
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+            contentPadding = PaddingValues(all = 12.dp)
+        ) {
+            /** A card of a group. The whole group shares [group]'s entrance delay, like the old per-group stagger. */
+            fun card(itemKey: String, group: Int, content: @Composable () -> Unit) {
+                animatedItem(key = itemKey, delay = group * 50) { ctx ->
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .animated(ctx)
                     ) {
-                        PhysicalKeyImeTrigger(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(all = 16.dp),
-                            operation = operation,
-                            changeOperation = { operation = it },
-                            eventViewModel = eventViewModel
-                        )
+                        content()
                     }
                 }
             }
 
-            AnimatedItem(scope) { yOffset ->
-                SettingsCardColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .offset { IntOffset(x = 0, y = yOffset.roundToPx()) }
+            fun groupGap(itemKey: String) {
+                item(key = itemKey, contentType = "gap") { Spacer(modifier = Modifier.height(GroupGap)) }
+            }
+
+            //Group 0: physical mouse / key
+            card("physical_mouse_mode", 0) {
+                SwitchSettingsCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    position = CardPosition.Top,
+                    unit = AllSettings.physicalMouseMode,
+                    title = stringResource(R.string.settings_control_mouse_physical_mouse_mode_title),
+                    summary = stringResource(R.string.settings_control_mouse_physical_mouse_mode_summary),
+                    trailingIcon = {
+                        TooltipIconButton(
+                            modifier = Modifier
+                                .align(Alignment.CenterVertically)
+                                .padding(horizontal = 8.dp),
+                            tooltipTitle = stringResource(R.string.generic_warning),
+                            tooltipMessage = stringResource(R.string.settings_control_mouse_physical_mouse_warning)
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_warning_filled),
+                                contentDescription = stringResource(R.string.generic_warning),
+                                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
+                            )
+                        }
+                    }
+                )
+            }
+            card("physical_key_ime", 0) {
+                var operation by remember { mutableStateOf<PhysicalKeyOperation>(PhysicalKeyOperation.None) }
+                SettingsCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    position = CardPosition.Bottom,
+                    onClick = { operation = PhysicalKeyOperation.Bind }
                 ) {
-                    val mouseSize = AllSettings.mouseSize.state
-
-                    var arrowMouseOperation by remember { mutableStateOf<MousePointerOperation>(MousePointerOperation.None) }
-                    MousePointerCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Top,
-                        title = stringResource(R.string.settings_control_mouse_pointer_arrow_title),
-                        summary = stringResource(R.string.settings_control_mouse_pointer_arrow_summary),
-                        mouseSize = mouseSize,
-                        mousePointerFile = arrowPointerFile,
-                        cursorShape = CursorShape.Arrow,
-                        hotspot = AllSettings.arrowMouseHotspot,
-                        mouseOperation = arrowMouseOperation,
-                        changeOperation = { arrowMouseOperation = it },
-                        submitError = submitError
-                    )
-
-                    var linkMouseOperation by remember { mutableStateOf<MousePointerOperation>(MousePointerOperation.None) }
-                    MousePointerCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Middle,
-                        title = stringResource(R.string.settings_control_mouse_pointer_link_title),
-                        summary = stringResource(R.string.settings_control_mouse_pointer_link_summary),
-                        mouseSize = mouseSize,
-                        mousePointerFile = linkPointerFile,
-                        cursorShape = CursorShape.Hand,
-                        hotspot = AllSettings.linkMouseHotspot,
-                        mouseOperation = linkMouseOperation,
-                        changeOperation = { linkMouseOperation = it },
-                        submitError = submitError
-                    )
-
-                    var ibeamMouseOperation by remember { mutableStateOf<MousePointerOperation>(MousePointerOperation.None) }
-                    MousePointerCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Middle,
-                        title = stringResource(R.string.settings_control_mouse_pointer_ibeam_title),
-                        summary = stringResource(R.string.settings_control_mouse_pointer_ibeam_summary),
-                        mouseSize = mouseSize,
-                        mousePointerFile = iBeamPointerFile,
-                        cursorShape = CursorShape.IBeam,
-                        hotspot = AllSettings.iBeamMouseHotspot,
-                        mouseOperation = ibeamMouseOperation,
-                        changeOperation = { ibeamMouseOperation = it },
-                        submitError = submitError
-                    )
-
-                    var crosshairMouseOperation by remember { mutableStateOf<MousePointerOperation>(MousePointerOperation.None) }
-                    MousePointerCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Middle,
-                        title = stringResource(R.string.settings_control_mouse_pointer_crosshair_title),
-                        summary = stringResource(R.string.settings_control_mouse_pointer_common_summary),
-                        mouseSize = mouseSize,
-                        mousePointerFile = crossHairPointerFile,
-                        cursorShape = CursorShape.CrossHair,
-                        hotspot = AllSettings.crossHairMouseHotspot,
-                        mouseOperation = crosshairMouseOperation,
-                        changeOperation = { crosshairMouseOperation = it },
-                        submitError = submitError
-                    )
-
-                    var resizeNSMouseOperation by remember { mutableStateOf<MousePointerOperation>(MousePointerOperation.None) }
-                    MousePointerCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Middle,
-                        title = stringResource(R.string.settings_control_mouse_pointer_resize_ns_title),
-                        summary = stringResource(R.string.settings_control_mouse_pointer_resize_ns_summary),
-                        mouseSize = mouseSize,
-                        mousePointerFile = resizeNSPointerFile,
-                        cursorShape = CursorShape.ResizeNS,
-                        hotspot = AllSettings.resizeNSMouseHotspot,
-                        mouseOperation = resizeNSMouseOperation,
-                        changeOperation = { resizeNSMouseOperation = it },
-                        submitError = submitError
-                    )
-
-                    var resizeEWMouseOperation by remember { mutableStateOf<MousePointerOperation>(MousePointerOperation.None) }
-                    MousePointerCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Middle,
-                        title = stringResource(R.string.settings_control_mouse_pointer_resize_ew_title),
-                        summary = stringResource(R.string.settings_control_mouse_pointer_resize_ew_summary),
-                        mouseSize = mouseSize,
-                        mousePointerFile = resizeEWPointerFile,
-                        cursorShape = CursorShape.ResizeEW,
-                        hotspot = AllSettings.resizeEWMouseHotspot,
-                        mouseOperation = resizeEWMouseOperation,
-                        changeOperation = { resizeEWMouseOperation = it },
-                        submitError = submitError
-                    )
-
-                    var resizeAllMouseOperation by remember { mutableStateOf<MousePointerOperation>(MousePointerOperation.None) }
-                    MousePointerCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Middle,
-                        title = stringResource(R.string.settings_control_mouse_pointer_resize_all_title),
-                        summary = stringResource(R.string.settings_control_mouse_pointer_common_summary),
-                        mouseSize = mouseSize,
-                        mousePointerFile = resizeAllPointerFile,
-                        cursorShape = CursorShape.ResizeAll,
-                        hotspot = AllSettings.resizeAllMouseHotspot,
-                        mouseOperation = resizeAllMouseOperation,
-                        changeOperation = { resizeAllMouseOperation = it },
-                        submitError = submitError
-                    )
-
-                    var notAllowedMouseOperation by remember { mutableStateOf<MousePointerOperation>(MousePointerOperation.None) }
-                    MousePointerCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Middle,
-                        title = stringResource(R.string.settings_control_mouse_pointer_not_allowed_title),
-                        summary = stringResource(R.string.settings_control_mouse_pointer_not_allowed_summary),
-                        mouseSize = mouseSize,
-                        mousePointerFile = notAllowedPointerFile,
-                        cursorShape = CursorShape.NotAllowed,
-                        hotspot = AllSettings.notAllowedMouseHotspot,
-                        mouseOperation = notAllowedMouseOperation,
-                        changeOperation = { notAllowedMouseOperation = it },
-                        submitError = submitError
-                    )
-
-                    IntSliderSettingsCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Bottom,
-                        unit = AllSettings.mouseSize,
-                        title = stringResource(R.string.settings_control_mouse_size_title),
-                        valueRange = AllSettings.mouseSize.floatRange,
-                        suffix = "Dp",
-                        fineTuningControl = true
+                    PhysicalKeyImeTrigger(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(all = 16.dp),
+                        operation = operation,
+                        changeOperation = { operation = it },
+                        eventViewModel = eventViewModel
                     )
                 }
             }
+            groupGap("gap_0")
 
-            AnimatedItem(scope) { yOffset ->
-                SettingsCardColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .offset { IntOffset(x = 0, y = yOffset.roundToPx()) }
-                ) {
-                    SwitchSettingsCard(
+            //Group 1: cursor images
+            val pointerSpecs = pointerCardSpecs()
+            pointerSpecs.forEachIndexed { index, spec ->
+                card("pointer_${spec.key}", 1) {
+                    var operation by remember { mutableStateOf<MousePointerOperation>(MousePointerOperation.None) }
+                    MousePointerCard(
                         modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Top,
-                        unit = AllSettings.hideMouse,
-                        title = stringResource(R.string.settings_control_mouse_hide_title),
-                        summary = stringResource(R.string.settings_control_mouse_hide_summary),
-                        enabled = AllSettings.mouseControlMode.state == MouseControlMode.CLICK //仅点击模式下可更改设置
-                    )
-
-                    SwitchSettingsCard(
-                        unit = AllSettings.enableMouseClick,
-                        position = CardPosition.Middle,
-                        title = stringResource(R.string.settings_control_mouse_enable_click_title),
-                        summary = stringResource(R.string.settings_control_mouse_enable_click_summary),
-                        enabled = AllSettings.mouseControlMode.state == MouseControlMode.SLIDE //仅滑动模式下可更改设置
-                    )
-
-                    ListSettingsCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Middle,
-                        unit = AllSettings.mouseControlMode,
-                        items = MouseControlMode.entries,
-                        title = stringResource(R.string.settings_control_mouse_control_mode_title),
-                        summary = stringResource(R.string.settings_control_mouse_control_mode_summary),
-                        getItemText = { stringResource(it.nameRes) }
-                    )
-
-                    IntSliderSettingsCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Middle,
-                        unit = AllSettings.cursorSensitivity,
-                        title = stringResource(R.string.settings_control_mouse_sensitivity_title),
-                        summary = stringResource(R.string.settings_control_mouse_sensitivity_summary),
-                        valueRange = AllSettings.cursorSensitivity.floatRange,
-                        suffix = "%",
-                        fineTuningControl = true
-                    )
-
-                    IntSliderSettingsCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Middle,
-                        unit = AllSettings.mouseCaptureSensitivity,
-                        title = stringResource(R.string.settings_control_mouse_capture_sensitivity_title),
-                        summary = stringResource(R.string.settings_control_mouse_capture_sensitivity_summary),
-                        valueRange = AllSettings.mouseCaptureSensitivity.floatRange,
-                        suffix = "%",
-                        fineTuningControl = true
-                    )
-
-                    IntSliderSettingsCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Bottom,
-                        unit = AllSettings.mouseLongPressDelay,
-                        title = stringResource(R.string.settings_control_mouse_long_press_delay_title),
-                        summary = stringResource(R.string.settings_control_mouse_long_press_delay_summary),
-                        valueRange = AllSettings.mouseLongPressDelay.floatRange,
-                        suffix = "ms",
-                        fineTuningControl = true
+                        position = if (index == 0) CardPosition.Top else CardPosition.Middle,
+                        title = stringResource(spec.titleRes),
+                        summary = stringResource(spec.summaryRes),
+                        mouseSize = AllSettings.mouseSize.state,
+                        mousePointerFile = spec.file,
+                        cursorShape = spec.shape,
+                        hotspot = spec.hotspot,
+                        mouseOperation = operation,
+                        changeOperation = { operation = it },
+                        submitError = submitError
                     )
                 }
             }
+            card("pointer_size", 1) {
+                IntSliderSettingsCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    position = CardPosition.Bottom,
+                    unit = AllSettings.mouseSize,
+                    title = stringResource(R.string.settings_control_mouse_size_title),
+                    valueRange = AllSettings.mouseSize.floatRange,
+                    suffix = "Dp",
+                    fineTuningControl = true
+                )
+            }
+            groupGap("gap_1")
 
-            AnimatedItem(scope) { yOffset ->
-                SettingsCardColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .offset { IntOffset(x = 0, y = yOffset.roundToPx()) }
-                ) {
-                    SwitchSettingsCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Top,
-                        unit = AllSettings.gestureControl,
-                        title = stringResource(R.string.settings_control_gesture_control_title),
-                        summary = stringResource(R.string.settings_control_gesture_control_summary)
-                    )
+            //Group 2: mouse control
+            card("mouse_hide", 2) {
+                SwitchSettingsCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    position = CardPosition.Top,
+                    unit = AllSettings.hideMouse,
+                    title = stringResource(R.string.settings_control_mouse_hide_title),
+                    summary = stringResource(R.string.settings_control_mouse_hide_summary),
+                    enabled = AllSettings.mouseControlMode.state == MouseControlMode.CLICK //仅点击模式下可更改设置
+                )
+            }
+            card("mouse_enable_click", 2) {
+                SwitchSettingsCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    unit = AllSettings.enableMouseClick,
+                    position = CardPosition.Middle,
+                    title = stringResource(R.string.settings_control_mouse_enable_click_title),
+                    summary = stringResource(R.string.settings_control_mouse_enable_click_summary),
+                    enabled = AllSettings.mouseControlMode.state == MouseControlMode.SLIDE //仅滑动模式下可更改设置
+                )
+            }
+            card("mouse_control_mode", 2) {
+                ListSettingsCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    position = CardPosition.Middle,
+                    unit = AllSettings.mouseControlMode,
+                    items = MouseControlMode.entries,
+                    title = stringResource(R.string.settings_control_mouse_control_mode_title),
+                    summary = stringResource(R.string.settings_control_mouse_control_mode_summary),
+                    getItemText = { stringResource(it.nameRes) }
+                )
+            }
+            card("mouse_touch_block_mode", 2) {
+                ListSettingsCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    position = CardPosition.Middle,
+                    unit = AllSettings.mouseTouchBlockMode,
+                    items = MouseTouchBlockMode.entries,
+                    title = stringResource(R.string.settings_control_mouse_block_touch_title),
+                    summary = stringResource(R.string.settings_control_mouse_block_touch_summary),
+                    getItemText = { stringResource(it.nameRes) }
+                )
+            }
+            card("mouse_sensitivity", 2) {
+                IntSliderSettingsCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    position = CardPosition.Middle,
+                    unit = AllSettings.cursorSensitivity,
+                    title = stringResource(R.string.settings_control_mouse_sensitivity_title),
+                    summary = stringResource(R.string.settings_control_mouse_sensitivity_summary),
+                    valueRange = AllSettings.cursorSensitivity.floatRange,
+                    suffix = "%",
+                    fineTuningControl = true
+                )
+            }
+            card("mouse_capture_sensitivity", 2) {
+                IntSliderSettingsCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    position = CardPosition.Middle,
+                    unit = AllSettings.mouseCaptureSensitivity,
+                    title = stringResource(R.string.settings_control_mouse_capture_sensitivity_title),
+                    summary = stringResource(R.string.settings_control_mouse_capture_sensitivity_summary),
+                    valueRange = AllSettings.mouseCaptureSensitivity.floatRange,
+                    suffix = "%",
+                    fineTuningControl = true
+                )
+            }
+            card("mouse_long_press_delay", 2) {
+                IntSliderSettingsCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    position = CardPosition.Bottom,
+                    unit = AllSettings.mouseLongPressDelay,
+                    title = stringResource(R.string.settings_control_mouse_long_press_delay_title),
+                    summary = stringResource(R.string.settings_control_mouse_long_press_delay_summary),
+                    valueRange = AllSettings.mouseLongPressDelay.floatRange,
+                    suffix = "ms",
+                    fineTuningControl = true
+                )
+            }
+            groupGap("gap_2")
 
-                    ListSettingsCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Middle,
-                        unit = AllSettings.gestureTapMouseAction,
-                        items = GestureActionType.entries,
-                        title = stringResource(R.string.settings_control_gesture_tap_action_title),
-                        summary = stringResource(R.string.settings_control_gesture_tap_action_summary),
-                        getItemText = { stringResource(it.nameRes) },
-                        enabled = AllSettings.gestureControl.state
-                    )
-
-                    ListSettingsCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Middle,
-                        unit = AllSettings.gestureLongPressMouseAction,
-                        items = GestureActionType.entries,
-                        title = stringResource(R.string.settings_control_gesture_long_press_action_title),
-                        summary = stringResource(R.string.settings_control_gesture_long_press_action_summary),
-                        getItemText = { stringResource(it.nameRes) },
-                        enabled = AllSettings.gestureControl.state
-                    )
-
-                    IntSliderSettingsCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Bottom,
-                        unit = AllSettings.gestureLongPressDelay,
-                        title = stringResource(R.string.settings_control_gesture_long_press_delay_title),
-                        summary = stringResource(R.string.settings_control_mouse_long_press_delay_summary),
-                        valueRange = AllSettings.gestureLongPressDelay.floatRange,
-                        suffix = "ms",
-                        enabled = AllSettings.gestureControl.state,
-                        fineTuningControl = true
-                    )
-                }
+            //Group 3: gestures
+            card("gesture_control", 3) {
+                SwitchSettingsCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    position = CardPosition.Top,
+                    unit = AllSettings.gestureControl,
+                    title = stringResource(R.string.settings_control_gesture_control_title),
+                    summary = stringResource(R.string.settings_control_gesture_control_summary)
+                )
+            }
+            card("gesture_tap_action", 3) {
+                ListSettingsCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    position = CardPosition.Middle,
+                    unit = AllSettings.gestureTapMouseAction,
+                    items = GestureActionType.entries,
+                    title = stringResource(R.string.settings_control_gesture_tap_action_title),
+                    summary = stringResource(R.string.settings_control_gesture_tap_action_summary),
+                    getItemText = { stringResource(it.nameRes) },
+                    enabled = AllSettings.gestureControl.state
+                )
+            }
+            card("gesture_long_press_action", 3) {
+                ListSettingsCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    position = CardPosition.Middle,
+                    unit = AllSettings.gestureLongPressMouseAction,
+                    items = GestureActionType.entries,
+                    title = stringResource(R.string.settings_control_gesture_long_press_action_title),
+                    summary = stringResource(R.string.settings_control_gesture_long_press_action_summary),
+                    getItemText = { stringResource(it.nameRes) },
+                    enabled = AllSettings.gestureControl.state
+                )
+            }
+            card("gesture_long_press_delay", 3) {
+                IntSliderSettingsCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    position = CardPosition.Bottom,
+                    unit = AllSettings.gestureLongPressDelay,
+                    title = stringResource(R.string.settings_control_gesture_long_press_delay_title),
+                    summary = stringResource(R.string.settings_control_mouse_long_press_delay_summary),
+                    valueRange = AllSettings.gestureLongPressDelay.floatRange,
+                    suffix = "ms",
+                    enabled = AllSettings.gestureControl.state,
+                    fineTuningControl = true
+                )
             }
         }
     }

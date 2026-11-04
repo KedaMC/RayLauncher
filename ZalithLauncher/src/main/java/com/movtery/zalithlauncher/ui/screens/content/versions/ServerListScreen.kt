@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,7 +39,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -64,6 +63,7 @@ import androidx.compose.material3.MaterialTheme
 import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.nonInteractiveScrollbar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -86,7 +86,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -121,7 +120,9 @@ import com.movtery.zalithlauncher.ui.components.ShimmerBox
 import com.movtery.zalithlauncher.ui.components.SimpleAlertDialog
 import com.movtery.zalithlauncher.ui.components.SimpleTextInputField
 import com.movtery.zalithlauncher.ui.components.SingleLineTextCheck
+import com.movtery.zalithlauncher.ui.components.animated
 import com.movtery.zalithlauncher.ui.components.fadeEdge
+import com.movtery.zalithlauncher.ui.components.rememberAnimatedContext
 import com.movtery.zalithlauncher.ui.components.rememberDialogMaxHeight
 import com.movtery.zalithlauncher.ui.components.verticalScrollWithBar
 import com.movtery.zalithlauncher.ui.screens.NestedNavKey
@@ -137,7 +138,6 @@ import com.movtery.zalithlauncher.ui.theme.itemColor
 import com.movtery.zalithlauncher.ui.theme.onCardColor
 import com.movtery.zalithlauncher.ui.theme.onItemColor
 import com.movtery.zalithlauncher.utils.animation.getAnimateTween
-import com.movtery.zalithlauncher.utils.animation.swapAnimateDpAsState
 import com.movtery.zalithlauncher.utils.copyText
 import com.movtery.zalithlauncher.utils.logging.Logger
 import com.movtery.zalithlauncher.utils.string.isEmptyOrBlank
@@ -147,6 +147,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -347,8 +348,9 @@ private class ServerListViewModel(
      */
     fun filterServers() {
         searchJob?.cancel()
-        searchJob = viewModelScope.launch {
+        searchJob = viewModelScope.launch(Dispatchers.Default) {
             val servers = filteredServers()
+            if (!isActive) return@launch
             _servers.update { servers }
         }
     }
@@ -509,10 +511,7 @@ fun ServerListScreen(
             version = version
         )
 
-        val yOffset by swapAnimateDpAsState(
-            targetValue = (-40).dp,
-            swapIn = isVisible
-        )
+        val ctx = rememberAnimatedContext(isVisible = isVisible)
 
         ServerDataOperation(
             operation = viewModel.dataOperation,
@@ -539,64 +538,71 @@ fun ServerListScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(all = 12.dp)
-                .offset { IntOffset(x = 0, y = yOffset.roundToPx()) },
+                .animated(ctx),
             paddingValues = PaddingValues()
         ) {
-            when (viewModel.operation) {
-                is ServerListOperation.Loading -> {
-                    Box(
-                        Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        LoadingIndicator()
+            PullToRefreshBox(
+                modifier = Modifier.fillMaxSize(),
+                isRefreshing = false,
+                enabled = viewModel.operation !is ServerListOperation.Loading,
+                onRefresh = viewModel::loadServer,
+            ) {
+                when (viewModel.operation) {
+                    is ServerListOperation.Loading -> {
+                        Box(
+                            Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            LoadingIndicator()
+                        }
                     }
-                }
-                is ServerListOperation.LoadedData -> {
-                    val servers by viewModel.servers.collectAsStateWithLifecycle()
+                    is ServerListOperation.LoadedData -> {
+                        val servers by viewModel.servers.collectAsStateWithLifecycle()
 
-                    Column(
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        ServerListHeader(
-                            searchName = viewModel.searchName,
-                            onSearchNameChange = {
-                                viewModel.searchName = it
-                                viewModel.filterServers()
-                            },
-                            onAddServer = {
-                                viewModel.dataOperation = ServerDataOperation.AddServer
-                            },
-                            refreshServers = {
-                                viewModel.loadServer()
-                            }
-                        )
+                        Column(
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            ServerListHeader(
+                                searchName = viewModel.searchName,
+                                onSearchNameChange = {
+                                    viewModel.searchName = it
+                                    viewModel.filterServers()
+                                },
+                                onAddServer = {
+                                    viewModel.dataOperation = ServerDataOperation.AddServer
+                                },
+                                refreshServers = {
+                                    viewModel.loadServer()
+                                }
+                            )
 
-                        ServerListBody(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f),
-                            servers = servers,
-                            isSavingServer = viewModel.saving,
-                            onLoad = { viewModel.loadServer(it) },
-                            onRefresh = { viewModel.loadServer(it, true) },
-                            onCopy = { viewModel.copy(context, it) },
-                            onPlay = { address ->
-                                onQuickPlay(version, address)
-                            },
-                            onEdit = { data ->
-                                viewModel.dataOperation = ServerDataOperation.EditServer(data)
-                            },
-                            onDelete = { data ->
-                                viewModel.dataOperation = ServerDataOperation.DeleteServer(data)
-                            },
-                            onAddToHome = { server ->
-                                ServerCardManager.addCard(
-                                    name = server.name,
-                                    serverIp = server.originIp,
-                                    icon = server.icon
-                                )
-                            }
-                        )
+                            ServerListBody(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f),
+                                servers = servers,
+                                isSavingServer = viewModel.saving,
+                                onLoad = { viewModel.loadServer(it) },
+                                onRefresh = { viewModel.loadServer(it, true) },
+                                onCopy = { viewModel.copy(context, it) },
+                                onPlay = { address ->
+                                    onQuickPlay(version, address)
+                                },
+                                onEdit = { data ->
+                                    viewModel.dataOperation = ServerDataOperation.EditServer(data)
+                                },
+                                onDelete = { data ->
+                                    viewModel.dataOperation = ServerDataOperation.DeleteServer(data)
+                                },
+                                onAddToHome = { server ->
+                                    ServerCardManager.addCard(
+                                        name = server.name,
+                                        serverIp = server.originIp,
+                                        icon = server.icon
+                                    )
+                                }
+                            )
+                        }
                     }
                 }
             }

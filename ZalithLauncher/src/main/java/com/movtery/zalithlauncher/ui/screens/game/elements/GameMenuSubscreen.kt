@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -71,6 +71,7 @@ import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.setting.enums.FpsDisplayMode
 import com.movtery.zalithlauncher.setting.enums.GestureActionType
 import com.movtery.zalithlauncher.setting.enums.MouseControlMode
+import com.movtery.zalithlauncher.setting.enums.MouseTouchBlockMode
 import com.movtery.zalithlauncher.setting.enums.ResolutionRule
 import com.movtery.zalithlauncher.setting.unit.floatRange
 import com.movtery.zalithlauncher.ui.AndroidStringText
@@ -529,6 +530,17 @@ private fun ControlOverview(
                 contentColor = contentColor,
             )
         }
+        //输入时默认弹出放大镜
+        item {
+            MenuSwitchButton(
+                modifier = Modifier.fillMaxWidth(),
+                text = stringResource(R.string.game_menu_option_ime_magnifier_auto_show),
+                switch = AllSettings.imeMagnifierAutoShow.state,
+                onSwitch = { AllSettings.imeMagnifierAutoShow.save(it) },
+                color = color,
+                contentColor = contentColor,
+            )
+        }
 
         item {
             Spacer(modifier = Modifier.height(8.dp))
@@ -635,6 +647,19 @@ private fun ControlMouse(
                 items = MouseControlMode.entries,
                 currentItem = AllSettings.mouseControlMode.state,
                 onItemChange = { AllSettings.mouseControlMode.save(it) },
+                getItemText = { stringResource(it.nameRes) },
+                color = color,
+                contentColor = contentColor,
+            )
+        }
+        //阻止触摸虚拟鼠标输入
+        item {
+            MenuListLayout(
+                modifier = Modifier.fillMaxWidth(),
+                title = stringResource(R.string.settings_control_mouse_block_touch_title),
+                items = MouseTouchBlockMode.entries,
+                currentItem = AllSettings.mouseTouchBlockMode.state,
+                onItemChange = { AllSettings.mouseTouchBlockMode.save(it) },
                 getItemText = { stringResource(it.nameRes) },
                 color = color,
                 contentColor = contentColor,

@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ package com.movtery.zalithlauncher.ui.screens.main
 
 import com.movtery.zalithlauncher.ui.components.effectiveBackgroundOpacity
 import com.movtery.zalithlauncher.ui.components.launcherGlassOn
+import com.movtery.zalithlauncher.ui.components.glassTint
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -64,7 +65,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -80,7 +83,6 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.entryProvider
-import androidx.navigation3.ui.NavDisplay
 import com.movtery.zalithlauncher.BuildKeys
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.coroutine.Task
@@ -97,6 +99,8 @@ import com.movtery.zalithlauncher.ui.components.LiquidGlassSurface
 import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
 import com.movtery.zalithlauncher.ui.components.TextRailItem
 import com.movtery.zalithlauncher.ui.screens.BackStackNavKey
+import com.movtery.zalithlauncher.ui.screens.NavStateHost
+import com.movtery.zalithlauncher.ui.screens.NestedNavDisplay
 import com.movtery.zalithlauncher.ui.screens.NestedNavKey
 import com.movtery.zalithlauncher.ui.screens.NormalNavKey
 import com.movtery.zalithlauncher.ui.screens.TitledNavKey
@@ -141,15 +145,13 @@ fun MainScreen(
     modifyVersionViewModel: ModifyVersionViewModel,
     submitError: (ErrorViewModel.ThrowableMessage) -> Unit
 ) {
-    val tasks by TaskSystem.tasksFlow.collectAsStateWithLifecycle()
-
     //监控当前是否有任务正在进行
-    LaunchedEffect(tasks) {
-        if (tasks.isEmpty()) {
-            eventViewModel.sendKeepScreen(false)
-        } else {
-            //有任务正在进行，避免熄屏
-            eventViewModel.sendKeepScreen(true)
+    var taskRunning by remember { mutableStateOf(true) }
+    LaunchedEffect(Unit) {
+        TaskSystem.tasksFlow.collect { tasks ->
+            val noTasks = tasks.isEmpty()
+            eventViewModel.sendKeepScreen(!noTasks)
+            taskRunning = noTasks
         }
     }
 
@@ -170,8 +172,10 @@ fun MainScreen(
     val isBackgroundValid = LocalBackgroundViewModel.current?.isValid == true
     val launcherBackgroundOpacity = effectiveBackgroundOpacity().toFloat() / 100f
 
+    //With Liquid Glass on, a light theme veil over the wallpaper would wash it out to white
     val backgroundColor = if (isBackgroundValid) {
-        backgroundColor().copy(alpha = launcherBackgroundOpacity)
+        val base = if (launcherGlassOn()) glassTint(backgroundColor()) else backgroundColor()
+        base.copy(alpha = launcherBackgroundOpacity)
     } else backgroundColor()
 
     Surface(
@@ -192,7 +196,7 @@ fun MainScreen(
                     modifier = Modifier.fillMaxSize(),
                     mainScreenKey = mainScreenKey,
                     inLauncherScreen = inLauncherScreen,
-                    taskRunning = tasks.isEmpty(),
+                    taskRunning = taskRunning,
                     isTasksExpanded = isTaskMenuExpanded,
                     contentColor = onBackgroundColor(),
                     onScreenBack = {
@@ -226,18 +230,19 @@ fun MainScreen(
                     .fillMaxWidth()
                     .weight(1f)
             ) {
-                NavigationUI(
-                    modifier = Modifier.fillMaxSize(),
-                    screenBackStackModel = screenBackStackModel,
-                    toMainScreen = toMainScreen,
-                    eventViewModel = eventViewModel,
-                    modpackImportViewModel = modpackImportViewModel,
-                    modifyVersionViewModel = modifyVersionViewModel,
-                    submitError = submitError
-                )
+                NavStateHost(rootKey = screenBackStackModel.mainScreen) {
+                    NavigationUI(
+                        modifier = Modifier.fillMaxSize(),
+                        screenBackStackModel = screenBackStackModel,
+                        toMainScreen = toMainScreen,
+                        eventViewModel = eventViewModel,
+                        modpackImportViewModel = modpackImportViewModel,
+                        modifyVersionViewModel = modifyVersionViewModel,
+                        submitError = submitError
+                    )
+                }
 
                 TaskMenu(
-                    tasks = tasks,
                     isExpanded = isTaskMenuExpanded,
                     modifier = Modifier
                         .fillMaxHeight()
@@ -600,7 +605,8 @@ private fun NavigationUI(
             )
         }
 
-        NavDisplay(
+        NestedNavDisplay(
+            ownerKey = screenBackStackModel.mainScreen,
             backStack = backStack,
             modifier = modifier,
             onBack = {
@@ -741,11 +747,11 @@ private fun NavigationUI(
 
 @Composable
 private fun TaskMenu(
-    tasks: List<Task>,
     isExpanded: Boolean,
     modifier: Modifier = Modifier,
     changeExpandedState: () -> Unit = {}
 ) {
+    val tasks by TaskSystem.tasksFlow.collectAsStateWithLifecycle()
     val show = isExpanded && tasks.isNotEmpty()
 
     val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
@@ -807,7 +813,7 @@ private fun TaskMenu(
                         .weight(1f),
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                 ) {
-                    items(tasks) { task ->
+                    items(tasks, key = { it.id }) { task ->
                         val taskProgress by task.progress.collectAsStateWithLifecycle()
                         val taskMessage by task.message.collectAsStateWithLifecycle()
                         val rateBytesPerSec by task.rateBytesPerSec.collectAsStateWithLifecycle()

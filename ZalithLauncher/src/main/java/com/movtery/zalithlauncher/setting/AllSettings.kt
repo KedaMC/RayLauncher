@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,6 +38,7 @@ import com.movtery.zalithlauncher.setting.enums.GlassTier
 import com.movtery.zalithlauncher.setting.enums.GestureActionType
 import com.movtery.zalithlauncher.setting.enums.MirrorSourceType
 import com.movtery.zalithlauncher.setting.enums.MouseControlMode
+import com.movtery.zalithlauncher.setting.enums.MouseTouchBlockMode
 import com.movtery.zalithlauncher.setting.enums.ResolutionRule
 import com.movtery.zalithlauncher.ui.control.HotbarRule
 import com.movtery.zalithlauncher.ui.control.gamepad.JoystickMode
@@ -45,7 +46,7 @@ import com.movtery.zalithlauncher.ui.control.mouse.CENTER_HOTSPOT
 import com.movtery.zalithlauncher.ui.control.mouse.CursorHotspot
 import com.movtery.zalithlauncher.ui.control.mouse.LEFT_TOP_HOTSPOT
 import com.movtery.zalithlauncher.ui.theme.ColorThemeType
-import com.movtery.zalithlauncher.utils.animation.TransitionAnimationType
+
 
 object AllSettings : SettingsRegistry() {
     //Renderer
@@ -53,6 +54,16 @@ object AllSettings : SettingsRegistry() {
      * 全局渲染器
      */
     val renderer = stringSetting("renderer", "")
+
+    /**
+     * 为渲染器插件叠加 SFPEW 兼容层
+     */
+    val sfpewPluginLayer = boolSetting("sfpewPluginLayer", false)
+
+    /**
+     * SFPEW 宽松上下文模式
+     */
+    val sfpewRelaxedContext = boolSetting("sfpewRelaxedContext", false)
 
     /**
      * Vulkan 驱动器
@@ -88,11 +99,6 @@ object AllSettings : SettingsRegistry() {
      * 游戏页面全屏化
      */
     val gameFullScreen = boolSetting("gameFullScreen", true)
-
-    /**
-     * 使用 SurfaceView 渲染
-     */
-    val useSurfaceView = boolSetting("useSurfaceView", false)
 
     /**
      * 游戏运行时请求系统切换到同分辨率最高刷新率档位（关闭则回落系统自适应刷新）
@@ -242,6 +248,11 @@ object AllSettings : SettingsRegistry() {
     val mouseControlMode = enumSetting("mouseControlMode", MouseControlMode.SLIDE)
 
     /**
+     * 阻止半屏触摸虚拟鼠标
+     */
+    val mouseTouchBlockMode = enumSetting("mouseTouchBlockMode", MouseTouchBlockMode.NONE)
+
+    /**
      * 鼠标控制长按延迟
      */
     val mouseLongPressDelay = intSetting("mouseLongPressDelay", 300, 100..1000)
@@ -260,6 +271,11 @@ object AllSettings : SettingsRegistry() {
      * SDL 下是否允许自动唤起输入法
      */
     val sdlAutoShowIme = boolSetting("sdlAutoShowIme", true)
+
+    /**
+     * 输入时是否默认弹出游戏画面放大镜
+     */
+    val imeMagnifierAutoShow = boolSetting("imeMagnifierAutoShow", true)
 
     /**
      * 手柄输入模式（映射虚拟按键 / SDL 直通）
@@ -381,19 +397,14 @@ object AllSettings : SettingsRegistry() {
     val gameGlassTier = enumSetting("gameGlassTier", GlassTier.FULL)
 
     /**
-     * 动画倍速
+     * 启用页面切换动画
      */
-    val launcherAnimateSpeed = intSetting("launcherAnimateSpeed", 5, 0..10)
+    val launcherSwapAnimEnabled = boolSetting("launcherSwapAnimEnabled", true)
 
     /**
-     * 动画幅度
+     * 动画速度
      */
-    val launcherAnimateExtent = intSetting("launcherAnimateExtent", 5, 0..10)
-
-    /**
-     * 启动器页面切换动画类型
-     */
-    val launcherSwapAnimateType = enumSetting("launcherSwapAnimateType", TransitionAnimationType.JELLY_BOUNCE)
+    val launcherAnimateSpeedLevel = intSetting("launcherAnimateSpeedLevel", 10, 1..30)
 
     /**
      * 主界面操作菜单的停泊侧
@@ -564,6 +575,11 @@ object AllSettings : SettingsRegistry() {
      * 是否在打开启动器时，根据特定的运行游戏次数，显示赞助支持弹窗
      */
     val showSponsorship = boolSetting("showSponsorship", true)
+
+    /**
+     * 上次已展示结算报告的上月赞助者月份标识
+     */
+    val lastSponsorReportMonth = stringSetting("lastSponsorReportMonth", "")
 
     /**
      * 搜索模组的初始搜索平台

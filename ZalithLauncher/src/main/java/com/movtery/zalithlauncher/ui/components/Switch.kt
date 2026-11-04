@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -107,17 +107,15 @@ fun DefaultSwitch(
         ) {
             // Draw the glass on the actual 52x32dp track, not the larger
             // minimum-touch-target bounds of Material3 Switch.
-            LiquidGlassSurface(
-                backdrop = backdrop,
-                shape = RoundedCornerShape(16.dp),
+            //Flat: the switch draws its own translucent track and border over this, so a blur pass
+            //per switch costs GPU time for almost no visible difference.
+            Box(
                 modifier = Modifier
                     .align(Alignment.Center)
                     .width(52.dp)
-                    .height(32.dp),
-                containerColor = itemColor(),
-                contentColor = Color.White,
-                blurRadius = 8.dp
-            ) {}
+                    .height(32.dp)
+                    .flatGlass(RoundedCornerShape(16.dp), glassTint(itemColor()))
+            )
             switchContent()
         }
     } else if (glassEnabled) {

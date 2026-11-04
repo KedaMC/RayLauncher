@@ -1,22 +1,5 @@
-import java.security.MessageDigest
-
 plugins {
     java
-}
-
-fun writeVersion(file: File, inputs: List<File>) {
-    val digest = MessageDigest.getInstance("SHA-1")
-    inputs.forEach { input ->
-        input.inputStream().use { stream ->
-            val buffer = ByteArray(8192)
-            while (true) {
-                val count = stream.read(buffer)
-                if (count < 0) break
-                digest.update(buffer, 0, count)
-            }
-        }
-    }
-    file.writeText(digest.digest().joinToString("") { "%02x".format(it) })
 }
 
 val lwjglVersion = "3.3.3"
@@ -25,19 +8,6 @@ group = "org.lwjgl.glfw"
 configurations {
     create("lwjglModules") {
         isCanBeResolved = true
-    }
-}
-
-// JSound（javax.sound → OpenAL 桥接）源码由所有 lwjgl 版本共享，修改只需改 shared 一处的代码。
-// 注意：公共代码必须保持 Java 8 兼容，因为 3.3.3 以 Java 8 编译。
-sourceSets {
-    main {
-        java {
-            srcDir("../shared/src/main/java")
-        }
-        resources {
-            srcDir("../shared/src/main/resources")
-        }
     }
 }
 
@@ -57,7 +27,7 @@ dependencies {
 
 tasks.jar {
     // 被排除的模块只经 doLast 复制、不参与合并，需显式声明为输入，
-    // 否则更新这些 jar 后任务会误判 UP-TO-DATE，导致 copy 与 version 不更新
+    // 否则更新这些 jar 后任务会误判 UP-TO-DATE，导致排除模块不复制
     inputs.files(configurations["lwjglModules"])
 
     // Modules to copy over to the components directory instead of patching and merging
@@ -101,11 +71,10 @@ tasks.jar {
         }
     })
 
-    // Makes the jar reproducible so the version file actually is a version file
+    // 让 jar 可复现，保证 manifest.json 的 SHA-1 清单在重新构建时保持稳定
     isPreserveFileTimestamps = false
     isReproducibleFileOrder = true
 
-    val versionFile = File(destinationDirectory.get().asFile, "version")
     doLast {
         val excludedModulesFileList = excludedModules.flatMap { fileName ->
             configurations["lwjglModules"].filter { it.name == fileName }
@@ -115,9 +84,7 @@ tasks.jar {
             from(excludedModulesFileList)
             into(archiveFile.get().asFile.parentFile)
         }
-        writeVersion(versionFile, listOf(archiveFile.get().asFile) + excludedModulesFileList)
     }
-    outputs.file(versionFile)
     outputs.files(excludedModules.map { path -> File(destinationDirectory.get().asFile, path) })
     exclude("net/java/openjdk/cacio/ctc/**")
 }

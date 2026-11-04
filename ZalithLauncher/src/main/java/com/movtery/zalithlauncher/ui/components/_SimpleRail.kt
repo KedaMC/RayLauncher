@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -102,7 +102,7 @@ fun TextRailItem(
                 modifier = Modifier.matchParentSize().alpha(animationProgress),
                 containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = Color.White,
-                blurRadius = 10.dp
+                blurRadius = 8.dp
             ) {}
         } else {
             Canvas(modifier = Modifier.matchParentSize().alpha(animationProgress)) {

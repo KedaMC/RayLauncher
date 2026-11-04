@@ -52,6 +52,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.isSpecified
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
@@ -469,6 +471,36 @@ fun GlassDialog(
 /** 容器色叠加在玻璃上的不透明度，保证文字可读 */
 private const val GLASS_SURFACE_ALPHA = 0.3f
 
+/** Share of the original color kept when a light tint is darkened for glass in light theme. */
+private const val LIGHT_THEME_TINT_KEEP = 0.2f
+
+/** Tints at or below this luminance are already dark and are left alone. */
+private const val LIGHT_TINT_LUMINANCE = 0.35f
+
+/**
+ * Tint to lay over the glass. Light theme surfaces are near white, which washes the blur out into a
+ * white haze (glass content is always white too). In light theme such tints are darkened to the level
+ * of their dark theme counterparts, so glass blurs the same way in both themes. A dark palette (dark
+ * theme, or light theme with glass on), dark tints (e.g. error buttons) and unspecified colors pass
+ * through unchanged.
+ */
+@Composable
+internal fun glassTint(color: Color): Color {
+    if (!color.isSpecified || MaterialTheme.colorScheme.surface.luminance() < 0.5f) return color
+    if (color.luminance() <= LIGHT_TINT_LUMINANCE) return color
+    return lerp(Color.Black, color, LIGHT_THEME_TINT_KEEP).copy(alpha = color.alpha)
+}
+
+/**
+ * Cheap stand-in for [LiquidGlassSurface]: the same tint at the same opacity, but no blur, refraction
+ * or backdrop sampling. Use it for glass that is mostly covered by other content or that belongs to a
+ * disabled control, where the full effect costs GPU time without being noticeable.
+ */
+internal fun Modifier.flatGlass(shape: Shape, containerColor: Color): Modifier =
+    this
+        .clip(shape)
+        .background(containerColor.copy(alpha = GLASS_SURFACE_ALPHA), shape)
+
 /**
  * 当前可用的 Liquid Glass 背景图层；为 null 表示应使用普通样式
  */
@@ -519,7 +551,7 @@ fun LiquidGlassSurface(
         onClick = stableOnClick,
         blurRadius = if (liquidGlassTier() == GlassTier.LITE) blurRadius * LITE_BLUR_FACTOR else blurRadius,
         surfaceColor = if (containerColor.isSpecified) {
-            containerColor.copy(alpha = GLASS_SURFACE_ALPHA)
+            glassTint(containerColor).copy(alpha = GLASS_SURFACE_ALPHA)
         } else {
             Color.Unspecified
         }
@@ -703,6 +735,13 @@ fun GlassItemSurface(
 }
 
 /**
+ * Opacity of the flat surface glass samples in game. The game itself cannot be sampled, so this stands
+ * in for it: low enough that the game stays visible through panels (frosted look, like the control
+ * editor menu) instead of a solid dark box.
+ */
+private const val GAME_GLASS_BACKDROP_ALPHA = 0.2f
+
+/**
  * Backdrop for screens that have no launcher background (the in-game UI). Records a flat dark
  * surface into the shared glass layer, so glass boxes still render blur, edge highlights and the
  * springy press. It is drawn at (almost) zero alpha, so it never visibly covers the game.
@@ -718,7 +757,7 @@ fun GameGlassBackdrop(modifier: Modifier = Modifier) {
         Box(
             modifier = Modifier
                 .matchParentSize()
-                .background(Color(0xFF3A3F47))
+                .background(Color(0xFF3A3F47).copy(alpha = GAME_GLASS_BACKDROP_ALPHA))
         )
     }
 }

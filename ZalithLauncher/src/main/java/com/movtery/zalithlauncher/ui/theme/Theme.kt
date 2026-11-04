@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -627,18 +627,34 @@ fun ZalithLauncherTheme(
     //Per-profile theme: the selected version may bring its own accent color (launcher only, not in game)
     val profileAccent = if (forceGlassLayer) null else ProfileTheme.accent
 
-    val targetColorScheme = remember(darkTheme, dynamicColor, colorTheme, customColor, customPaletteStyle, profileAccent) {
+    //Liquid Glass：仅在设置开启且存在有效背景媒体时提供可采样的背景图层
+    val glassLayer = rememberPrismalGlassLayer()
+    //forceGlassLayer is only set by the game activity: there the in-game switch applies as well
+    val glassEnabled = if (forceGlassLayer) {
+        AllSettings.launcherLiquidGlass.state && AllSettings.gameLiquidGlass.state
+    } else {
+        launcherGlassOn()
+    }
+    val activeGlassLayer = glassLayer.takeIf {
+        glassEnabled && (backgroundViewModel?.isValid == true || forceGlassLayer)
+    }
+
+    //Glass is tinted dark and carries white content in both themes. While it is on, a light theme uses
+    //the dark palette so text, tints and surfaces match dark mode instead of turning black or white.
+    val paletteDark = darkTheme || glassEnabled
+
+    val targetColorScheme = remember(paletteDark, dynamicColor, colorTheme, customColor, customPaletteStyle, profileAccent) {
         when {
             profileAccent != null -> {
                 val accent = Color(profileAccent)
-                if (darkTheme) customDark(accent, customPaletteStyle) else customLight(accent, customPaletteStyle)
+                if (paletteDark) customDark(accent, customPaletteStyle) else customLight(accent, customPaletteStyle)
             }
 
             dynamicColor && colorTheme == ColorThemeType.DYNAMIC && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-                if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+                if (paletteDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
             }
 
-            darkTheme -> when (colorTheme) {
+            paletteDark -> when (colorTheme) {
                 ColorThemeType.EMBERMIRE -> embermireDark
                 ColorThemeType.VELVET_ROSE -> velvetRoseDark
                 ColorThemeType.MISTWAVE -> mistwaveDark
@@ -670,14 +686,14 @@ fun ZalithLauncherTheme(
         }
     }
 
-    var currentDarkTheme by remember { mutableStateOf(darkTheme) }
+    var currentDarkTheme by remember { mutableStateOf(paletteDark) }
     var currentDisplayScheme by remember { mutableStateOf(targetColorScheme) }
 
-    LaunchedEffect(darkTheme, targetColorScheme) {
-        if (darkTheme != currentDarkTheme) {
+    LaunchedEffect(paletteDark, targetColorScheme) {
+        if (paletteDark != currentDarkTheme) {
             context.activeMaskView(
                 maskComplete = {
-                    currentDarkTheme = darkTheme
+                    currentDarkTheme = paletteDark
                     currentDisplayScheme = targetColorScheme
                 },
                 maskAnimFinish = {
@@ -685,7 +701,7 @@ fun ZalithLauncherTheme(
                 }
             )
         } else {
-            currentDarkTheme = darkTheme
+            currentDarkTheme = paletteDark
             currentDisplayScheme = targetColorScheme
         }
     }
@@ -701,17 +717,6 @@ fun ZalithLauncherTheme(
         }
     }
 
-    //Liquid Glass：仅在设置开启且存在有效背景媒体时提供可采样的背景图层
-    val glassLayer = rememberPrismalGlassLayer()
-    //forceGlassLayer is only set by the game activity: there the in-game switch applies as well
-    val glassEnabled = if (forceGlassLayer) {
-        AllSettings.launcherLiquidGlass.state && AllSettings.gameLiquidGlass.state
-    } else {
-        launcherGlassOn()
-    }
-    val activeGlassLayer = glassLayer.takeIf {
-        glassEnabled && (backgroundViewModel?.isValid == true || forceGlassLayer)
-    }
 
     //Second layer that records the whole page (wallpaper + UI) while a dialog is open
     val pageLayer = rememberPrismalGlassLayer()

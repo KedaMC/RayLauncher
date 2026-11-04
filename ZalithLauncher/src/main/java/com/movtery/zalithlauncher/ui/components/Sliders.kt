@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
@@ -46,7 +45,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.layout.Layout
@@ -82,10 +80,11 @@ fun SimpleTextSlider(
     valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
     fineTuningControl: Boolean = false,
     fineTuningStep: Float = 0.5f,
+    valueText: ((Float) -> String)? = null,
     appendContent: @Composable () -> Unit = {}
 ) {
-    val formatter = DecimalFormat(decimalFormat)
-    fun getTextString(value: Float) = "${if (toInt) {
+    val formatter = remember(decimalFormat) { DecimalFormat(decimalFormat) }
+    fun getTextString(value: Float) = valueText?.invoke(value) ?: "${if (toInt) {
         value.toInt()
     } else {
         formatter.format(value)
@@ -109,7 +108,7 @@ fun SimpleTextSlider(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        GlassSliderTrack(modifier = Modifier.weight(1f), enabled = enabled) {
+        GlassSliderTrack(modifier = Modifier.weight(1f)) {
             if (shorter) {
                 IndicatorSlider(
                     value = value,
@@ -136,7 +135,13 @@ fun SimpleTextSlider(
         }
 
         val backdrop = liquidGlassBackdrop()
-        val valueTextColor = if (backdrop != null) Color.White else MaterialTheme.colorScheme.onPrimary
+        //On glass a disabled pill keeps its full glass and only dims its text; the whole-surface alpha
+        //below is for the plain Material pill only.
+        val valueTextColor = when {
+            backdrop == null -> MaterialTheme.colorScheme.onPrimary
+            enabled -> Color.White
+            else -> Color.White.copy(alpha = DisabledAlpha)
+        }
         val valueContent: @Composable () -> Unit = {
             Row(
                 modifier = Modifier.padding(PaddingValues(horizontal = 8.dp, vertical = 4.dp)),
@@ -181,7 +186,7 @@ fun SimpleTextSlider(
         }
 
         val valueModifier = Modifier
-            .alpha(if (enabled) 1f else DisabledAlpha)
+            .then(if (backdrop == null) Modifier.alpha(if (enabled) 1f else DisabledAlpha) else Modifier)
             .padding(start = 12.dp)
             .align(Alignment.CenterVertically)
         if (backdrop != null) {
@@ -205,9 +210,6 @@ fun SimpleTextSlider(
     }
 }
 
-/** Height of the glass capsule behind a slider; matches the visible track, not the 48dp touch area. */
-private val GlassSliderHeight = 24.dp
-
 /**
  * Slider colors that read well on Liquid Glass: white thumb and active track over a faint
  * white inactive track. Falls back to the Material defaults when glass is off.
@@ -229,34 +231,20 @@ fun glassSliderColors(): SliderColors {
     )
 }
 
+/**
+ * Holder of the slider. The slider sits directly on the card's glass: there is no extra box behind its
+ * track any more (the track colors in [glassSliderColors] are enough to read it).
+ */
 @Composable
 private fun GlassSliderTrack(
     modifier: Modifier = Modifier,
-    enabled: Boolean = true,
     content: @Composable BoxScope.() -> Unit
 ) {
-    val backdrop = liquidGlassBackdrop()
-    // Touch handling stays on the whole slider area; only the glass capsule animates.
-    val press = if (backdrop != null && enabled) rememberGlassPress(CircleShape) else null
     Box(
-        modifier = modifier.then(press?.gesture ?: Modifier),
-        contentAlignment = Alignment.Center
-    ) {
-        if (backdrop != null) {
-            LiquidGlassSurface(
-                backdrop = backdrop,
-                shape = CircleShape,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(GlassSliderHeight)
-                    .then(press?.visual ?: Modifier),
-                containerColor = itemColor(),
-                contentColor = Color.White,
-                blurRadius = 8.dp
-            ) {}
-        }
-        content()
-    }
+        modifier = modifier,
+        contentAlignment = Alignment.Center,
+        content = content
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

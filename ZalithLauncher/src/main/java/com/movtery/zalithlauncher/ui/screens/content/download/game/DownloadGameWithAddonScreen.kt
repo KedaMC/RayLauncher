@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -49,7 +48,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
@@ -57,7 +55,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.game.addons.modloader.ModLoader
-import com.movtery.zalithlauncher.game.addons.modloader.cleanroom.CleanroomVersions
 import com.movtery.zalithlauncher.game.addons.modloader.fabriclike.fabric.FabricAPIVersions
 import com.movtery.zalithlauncher.game.addons.modloader.fabriclike.fabric.FabricVersions
 import com.movtery.zalithlauncher.game.addons.modloader.fabriclike.legacyfabric.LegacyFabricAPIVersions
@@ -71,18 +68,21 @@ import com.movtery.zalithlauncher.game.addons.modloader.optifine.OptiFineVersion
 import com.movtery.zalithlauncher.game.addons.modloader.optifine.OptiFineVersions
 import com.movtery.zalithlauncher.game.download.game.GameDownloadInfo
 import com.movtery.zalithlauncher.game.version.installed.VersionsManager.isVersionExists
+import com.movtery.zalithlauncher.game.versioninfo.MinecraftVersion
 import com.movtery.zalithlauncher.ui.base.BaseScreen
 import com.movtery.zalithlauncher.ui.components.AnimatedColumn
 import com.movtery.zalithlauncher.ui.components.SimpleTextInputField
+import com.movtery.zalithlauncher.ui.components.animated
+import com.movtery.zalithlauncher.ui.components.rememberAnimatedContext
 import com.movtery.zalithlauncher.ui.components.verticalScrollWithBar
 import com.movtery.zalithlauncher.ui.screens.NestedNavKey
 import com.movtery.zalithlauncher.ui.screens.NormalNavKey
 import com.movtery.zalithlauncher.ui.screens.TitledNavKey
+import com.movtery.zalithlauncher.ui.screens.content.elements.getGameVersionIconRes
 import com.movtery.zalithlauncher.ui.screens.content.elements.isFilenameInvalid
 import com.movtery.zalithlauncher.ui.theme.cardColor
 import com.movtery.zalithlauncher.ui.theme.onCardColor
 import com.movtery.zalithlauncher.utils.animation.getAnimateTween
-import com.movtery.zalithlauncher.utils.animation.swapAnimateDpAsState
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
@@ -174,12 +174,6 @@ private class AddonsViewModel(
         }
     )
 
-    fun reloadCleanroom() = launchAddonReload(
-        { currentAddon.cleanroomState = it },
-        { CleanroomVersions.fetchLoaderList(gameVersion) },
-        { addonList.cleanroomList = it }
-    )
-
     private fun <T> launchAddonReload(
         updateState: (AddonState) -> Unit,
         fetch: suspend () -> T?,
@@ -207,9 +201,6 @@ private class AddonsViewModel(
         if (loaderSupports.isQuiltSupports) {
             reloadQuilt()
             reloadQuiltAPI()
-        }
-        if (loaderSupports.isCleanroomSupports) {
-            reloadCleanroom()
         }
     }
 
@@ -246,15 +237,12 @@ fun DownloadGameWithAddonScreen(
             Pair(NormalNavKey.DownloadGame.Addons::class.java, downloadGameScreenKey)
         )
     ) { isVisible ->
-        val yOffset by swapAnimateDpAsState(
-            targetValue = (-40).dp,
-            swapIn = isVisible
-        )
+        val animatedCtx = rememberAnimatedContext(isVisible = isVisible)
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .offset { IntOffset(x = 0, y = yOffset.roundToPx()) }
+                .animated(animatedCtx)
         ) {
             ScreenHeader(
                 modifier = Modifier
@@ -263,6 +251,7 @@ fun DownloadGameWithAddonScreen(
                 itemContainerColor = cardColor(),
                 itemContentColor = onCardColor(),
                 gameVersion = key.gameVersion,
+                gameType = key.type,
                 currentAddon = viewModel.currentAddon,
                 refreshIcon = viewModel.refreshIcon,
                 refreshErrorCheck = refreshErrorCheck,
@@ -286,9 +275,7 @@ fun DownloadGameWithAddonScreen(
                             quilt = viewModel.currentAddon.quiltVersion.value
                                 .takeIf { loaderSupports.isQuiltSupports },
                             quiltAPI = viewModel.currentAddon.quiltAPIVersion.value
-                                .takeIf { loaderSupports.isQuiltSupports },
-                            cleanroom = viewModel.currentAddon.cleanroomVersion.value
-                                .takeIf { loaderSupports.isCleanroomSupports }
+                                .takeIf { loaderSupports.isQuiltSupports }
                         )
                     )
                 }
@@ -299,21 +286,21 @@ fun DownloadGameWithAddonScreen(
                     .padding(horizontal = 12.dp)
                     .verticalScrollWithBar(state = rememberScrollState()),
                 isVisible = isVisible
-            ) { scope ->
+            ) {
                 Spacer(Modifier)
 
-                AnimatedItem(scope) { yOffset ->
+                AnimatedItem { ctx ->
                     OptiFineList(
-                        modifier = Modifier.offset { IntOffset(x = 0, y = yOffset.roundToPx()) },
+                        modifier = Modifier.animated(ctx),
                         currentAddon = viewModel.currentAddon,
                         onValueChanged = { viewModel.refreshIcon() },
                         addonList = viewModel.addonList
                     ) { viewModel.reloadOptiFine() }
                 }
 
-                AnimatedItem(scope) { yOffset ->
+                AnimatedItem { ctx ->
                     ForgeList(
-                        modifier = Modifier.offset { IntOffset(x = 0, y = yOffset.roundToPx()) },
+                        modifier = Modifier.animated(ctx),
                         currentAddon = viewModel.currentAddon,
                         onValueChanged = { viewModel.refreshIcon() },
                         addonList = viewModel.addonList
@@ -321,14 +308,9 @@ fun DownloadGameWithAddonScreen(
                 }
 
                 if (loaderSupports.isNeoForgeSupports) {
-                    AnimatedItem(scope) { yOffset ->
+                    AnimatedItem { ctx ->
                         NeoForgeList(
-                            modifier = Modifier.offset {
-                                IntOffset(
-                                    x = 0,
-                                    y = yOffset.roundToPx()
-                                )
-                            },
+                            modifier = Modifier.animated(ctx),
                             currentAddon = viewModel.currentAddon,
                             onValueChanged = { viewModel.refreshIcon() },
                             addonList = viewModel.addonList
@@ -336,28 +318,12 @@ fun DownloadGameWithAddonScreen(
                     }
                 }
 
-                if (loaderSupports.isCleanroomSupports) {
-                    AnimatedItem(scope) { yOffset ->
-                        CleanroomList(
-                            modifier = Modifier.offset {
-                                IntOffset(
-                                    x = 0,
-                                    y = yOffset.roundToPx()
-                                )
-                            },
-                            currentAddon = viewModel.currentAddon,
-                            onValueChanged = { viewModel.refreshIcon() },
-                            addonList = viewModel.addonList
-                        ) { viewModel.reloadCleanroom() }
-                    }
-                }
-
                 if (loaderSupports.isFabricSupports) {
-                    AnimatedItem(scope) { yOffset ->
+                    AnimatedItem { ctx ->
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .offset { IntOffset(x = 0, y = yOffset.roundToPx()) },
+                                .animated(ctx),
                         ) {
                             val isFabricAPIWarning =
                                 viewModel.currentAddon.fabricVersion.value != null &&
@@ -395,14 +361,9 @@ fun DownloadGameWithAddonScreen(
                         }
                     }
 
-                    AnimatedItem(scope) { yOffset ->
+                    AnimatedItem { ctx ->
                         FabricAPIList(
-                            modifier = Modifier.offset {
-                                IntOffset(
-                                    x = 0,
-                                    y = yOffset.roundToPx()
-                                )
-                            },
+                            modifier = Modifier.animated(ctx),
                             currentAddon = viewModel.currentAddon,
                             onValueChanged = { viewModel.refreshIcon() },
                             addonList = viewModel.addonList
@@ -411,11 +372,11 @@ fun DownloadGameWithAddonScreen(
                 }
 
                 if (loaderSupports.isLegacyFabricSupports) {
-                    AnimatedItem(scope) { yOffset ->
+                    AnimatedItem { ctx ->
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .offset { IntOffset(x = 0, y = yOffset.roundToPx()) },
+                                .animated(ctx),
                         ) {
                             val isFabricAPIWarning =
                                 viewModel.currentAddon.legacyFabricVersion.value != null &&
@@ -453,14 +414,9 @@ fun DownloadGameWithAddonScreen(
                         }
                     }
 
-                    AnimatedItem(scope) { yOffset ->
+                    AnimatedItem { ctx ->
                         LegacyFabricAPIList(
-                            modifier = Modifier.offset {
-                                IntOffset(
-                                    x = 0,
-                                    y = yOffset.roundToPx()
-                                )
-                            },
+                            modifier = Modifier.animated(ctx),
                             currentAddon = viewModel.currentAddon,
                             onValueChanged = { viewModel.refreshIcon() },
                             addonList = viewModel.addonList
@@ -469,11 +425,11 @@ fun DownloadGameWithAddonScreen(
                 }
 
                 if (loaderSupports.isQuiltSupports) {
-                    AnimatedItem(scope) { yOffset ->
+                    AnimatedItem { ctx ->
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .offset { IntOffset(x = 0, y = yOffset.roundToPx()) },
+                                .animated(ctx),
                         ) {
                             val isQuiltAPIWarning =
                                 viewModel.currentAddon.quiltVersion.value != null &&
@@ -511,14 +467,9 @@ fun DownloadGameWithAddonScreen(
                         }
                     }
 
-                    AnimatedItem(scope) { yOffset ->
+                    AnimatedItem { ctx ->
                         QuiltAPIList(
-                            modifier = Modifier.offset {
-                                IntOffset(
-                                    x = 0,
-                                    y = yOffset.roundToPx()
-                                )
-                            },
+                            modifier = Modifier.animated(ctx),
                             currentAddon = viewModel.currentAddon,
                             onValueChanged = { viewModel.refreshIcon() },
                             addonList = viewModel.addonList
@@ -538,6 +489,7 @@ private fun ScreenHeader(
     itemContainerColor: Color,
     itemContentColor: Color,
     gameVersion: String,
+    gameType: MinecraftVersion.Type,
     currentAddon: CurrentAddon,
     refreshIcon: Any? = null,
     refreshErrorCheck: Any? = null,
@@ -550,6 +502,7 @@ private fun ScreenHeader(
             VersionIconPreview(
                 modifier = Modifier.size(28.dp),
                 currentAddon = currentAddon,
+                gameType = gameType,
                 refreshIcon = refreshIcon
             )
 
@@ -652,9 +605,10 @@ private fun ScreenHeader(
 private fun VersionIconPreview(
     modifier: Modifier = Modifier,
     currentAddon: CurrentAddon,
+    gameType: MinecraftVersion.Type,
     refreshIcon: Any? = null
 ) {
-    val iconRes = remember(refreshIcon) {
+    val iconRes = remember(refreshIcon, gameType) {
         when {
             currentAddon.optifineVersion.value != null && currentAddon.forgeVersion.value != null -> R.drawable.img_anvil //OptiFine & Forge 同时选择
             currentAddon.optifineVersion.value != null -> R.drawable.img_loader_optifine
@@ -663,8 +617,7 @@ private fun VersionIconPreview(
             currentAddon.fabricVersion.value != null -> R.drawable.img_loader_fabric
             currentAddon.legacyFabricVersion.value != null -> R.drawable.img_loader_legacy_fabric
             currentAddon.quiltVersion.value != null -> R.drawable.img_loader_quilt
-            currentAddon.cleanroomVersion.value != null -> R.drawable.img_loader_cleanroom
-            else -> R.drawable.img_minecraft
+            else -> getGameVersionIconRes(gameType)
         }
     }
 
@@ -693,7 +646,6 @@ private fun AutoChangeVersionName(
         currentAddon.fabricVersion.value,
         currentAddon.legacyFabricVersion.value,
         currentAddon.quiltVersion.value,
-        currentAddon.cleanroomVersion.value,
     ) {
         if (editedByUser) return@LaunchedEffect
 
@@ -715,7 +667,6 @@ private fun AutoChangeVersionName(
                     fabricVersion.value != null -> append(formatModloader(ModLoader.FABRIC.displayName, fabricVersion.value!!.version))
                     legacyFabricVersion.value != null -> append(formatModloader(ModLoader.LEGACY_FABRIC.displayName, legacyFabricVersion.value!!.version))
                     quiltVersion.value != null -> append(formatModloader(ModLoader.QUILT.displayName, quiltVersion.value!!.version))
-                    cleanroomVersion.value != null -> append(formatModloader(ModLoader.CLEANROOM.displayName, cleanroomVersion.value!!.version))
                     else -> {
                         changeValue(gameVersion)
                         return@LaunchedEffect

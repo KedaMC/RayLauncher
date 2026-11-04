@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -78,6 +78,12 @@ class VersionConfig(
     @SerializedName("renderer")
     var renderer: String = ""
         get() = getStringNotNull(field)
+    @SerializedName("sfpewPluginLayer")
+    var sfpewPluginLayer: SettingState = SettingState.FOLLOW_GLOBAL
+        get() = getSettingStateNotNull(field)
+    @SerializedName("sfpewRelaxedContext")
+    var sfpewRelaxedContext: SettingState = SettingState.FOLLOW_GLOBAL
+        get() = getSettingStateNotNull(field)
     @SerializedName("driver")
     var driver: String = ""
         get() = getStringNotNull(field)
@@ -120,6 +126,8 @@ class VersionConfig(
         jvmArgs: String = "",
         gameArgs: String = "",
         renderer: String = "",
+        sfpewPluginLayer: SettingState = SettingState.FOLLOW_GLOBAL,
+        sfpewRelaxedContext: SettingState = SettingState.FOLLOW_GLOBAL,
         driver: String = "",
         graphicsApi: GraphicsApi? = null,
         control: String = "",
@@ -139,6 +147,8 @@ class VersionConfig(
         this.jvmArgs = jvmArgs
         this.gameArgs = gameArgs
         this.renderer = renderer
+        this.sfpewPluginLayer = sfpewPluginLayer
+        this.sfpewRelaxedContext = sfpewRelaxedContext
         this.driver = driver
         this.graphicsApi = graphicsApi
         this.control = control
@@ -161,6 +171,8 @@ class VersionConfig(
         getStringNotNull(jvmArgs),
         getStringNotNull(gameArgs),
         getStringNotNull(renderer),
+        getSettingStateNotNull(sfpewPluginLayer),
+        getSettingStateNotNull(sfpewRelaxedContext),
         getStringNotNull(driver),
         graphicsApi,
         getStringNotNull(control),
@@ -174,6 +186,30 @@ class VersionConfig(
         themeAccent,
         themeGlassTier,
     )
+
+    /**
+     * 判断此配置与另一个配置所承载的设置是否存在差异
+     */
+    fun isModified(other: VersionConfig): Boolean {
+        return getSettingStateNotNull(isolationType) != getSettingStateNotNull(other.isolationType) ||
+                getSettingStateNotNull(skipGameIntegrityCheck) != getSettingStateNotNull(other.skipGameIntegrityCheck) ||
+                getStringNotNull(javaRuntime) != getStringNotNull(other.javaRuntime) ||
+                getStringNotNull(jvmArgs) != getStringNotNull(other.jvmArgs) ||
+                getStringNotNull(gameArgs) != getStringNotNull(other.gameArgs) ||
+                getStringNotNull(renderer) != getStringNotNull(other.renderer) ||
+                getSettingStateNotNull(sfpewPluginLayer) != getSettingStateNotNull(other.sfpewPluginLayer) ||
+                getSettingStateNotNull(sfpewRelaxedContext) != getSettingStateNotNull(other.sfpewRelaxedContext) ||
+                getStringNotNull(driver) != getStringNotNull(other.driver) ||
+                graphicsApi != other.graphicsApi ||
+                getStringNotNull(control) != getStringNotNull(other.control) ||
+                getStringNotNull(customPath) != getStringNotNull(other.customPath) ||
+                getStringNotNull(customInfo) != getStringNotNull(other.customInfo) ||
+                getStringNotNull(versionSummary) != getStringNotNull(other.versionSummary) ||
+                getStringNotNull(serverIp) != getStringNotNull(other.serverIp) ||
+                ramAllocation != other.ramAllocation ||
+                touchVibrateDuration != other.touchVibrateDuration ||
+                touchVibrateKind != other.touchVibrateKind
+    }
 
     fun save() {
         runCatching {
@@ -206,6 +242,10 @@ class VersionConfig(
 
     fun skipGameIntegrityCheck(): Boolean = skipGameIntegrityCheck.toBoolean(AllSettings.skipGameIntegrityCheck.getValue())
 
+    fun isSfpewPluginLayerEnabled(): Boolean = sfpewPluginLayer.toBoolean(AllSettings.sfpewPluginLayer.getValue())
+
+    fun isSfpewRelaxedContextEnabled(): Boolean = sfpewRelaxedContext.toBoolean(AllSettings.sfpewRelaxedContext.getValue())
+
     private fun SettingState.toBoolean(global: Boolean) = when(getSettingStateNotNull(this)) {
         SettingState.FOLLOW_GLOBAL -> global
         SettingState.ENABLE -> true
@@ -223,6 +263,8 @@ class VersionConfig(
             writeString(getStringNotNull(jvmArgs))
             writeString(getStringNotNull(gameArgs))
             writeString(getStringNotNull(renderer))
+            writeInt(getSettingStateNotNull(sfpewPluginLayer).ordinal)
+            writeInt(getSettingStateNotNull(sfpewRelaxedContext).ordinal)
             writeString(getStringNotNull(driver))
             writeInt(graphicsApi?.ordinal ?: -1)
             writeString(getStringNotNull(control))
@@ -248,6 +290,8 @@ class VersionConfig(
             val jvmArgs = parcel.readString().orEmpty()
             val gameArgs = parcel.readString().orEmpty()
             val renderer = parcel.readString().orEmpty()
+            val sfpewPluginLayer = SettingState.entries.getOrNull(parcel.readInt()) ?: SettingState.FOLLOW_GLOBAL
+            val sfpewRelaxedContext = SettingState.entries.getOrNull(parcel.readInt()) ?: SettingState.FOLLOW_GLOBAL
             val driver = parcel.readString().orEmpty()
             val graphicsApi = GraphicsApi.entries.getOrNull(parcel.readInt())
             val control = parcel.readString().orEmpty()
@@ -270,6 +314,8 @@ class VersionConfig(
                 jvmArgs,
                 gameArgs,
                 renderer,
+                sfpewPluginLayer,
+                sfpewRelaxedContext,
                 driver,
                 graphicsApi,
                 control,
@@ -317,6 +363,28 @@ class VersionConfig(
         fun createIsolation(versionPath: File): VersionConfig {
             val config = VersionConfig(versionPath)
             config.isolationType = SettingState.ENABLE
+            return config
+        }
+
+        /**
+         * 为整合包创建版本配置：如果整合包通过 overrides 预置了 ZalithLauncher/version.config，
+         * 则沿用其中的渲染器、驱动与图形 API 设置，其余设置保持默认
+         */
+        fun createIsolationForModPack(versionPath: File): VersionConfig {
+            val config = createIsolation(versionPath)
+            val presetFile = File(getZalithVersionPath(versionPath), "version.config")
+            if (!presetFile.isFile) return config
+
+            runCatching {
+                GSON.fromJson(presetFile.readText(), VersionConfig::class.java)
+            }.onSuccess { preset ->
+                config.renderer = preset.renderer
+                config.driver = preset.driver
+                config.graphicsApi = preset.graphicsApi
+                Logger.info(TAG, "Applied modpack preset: renderer=${config.renderer}, driver=${config.driver}, graphicsApi=${config.graphicsApi}")
+            }.onFailure { e ->
+                Logger.warning(TAG, "Failed to read the modpack preset version configuration.", e)
+            }
             return config
         }
     }

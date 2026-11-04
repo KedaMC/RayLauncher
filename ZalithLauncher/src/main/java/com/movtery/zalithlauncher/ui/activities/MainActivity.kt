@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -82,7 +82,6 @@ import com.movtery.zalithlauncher.ui.toAndroidString
 import com.movtery.zalithlauncher.ui.vulkan_checker.VCOperation
 import com.movtery.zalithlauncher.ui.vulkan_checker.VulkanChecker
 import com.movtery.zalithlauncher.upgrade.TooFrequentOperationException
-import com.movtery.zalithlauncher.utils.RegionRestriction
 import com.movtery.zalithlauncher.utils.compareLangTag
 import com.movtery.zalithlauncher.utils.copyText
 import com.movtery.zalithlauncher.utils.festival.getTodayFestivals
@@ -107,6 +106,8 @@ import com.movtery.zalithlauncher.viewmodel.ModpackImportOperation
 import com.movtery.zalithlauncher.viewmodel.ModpackImportViewModel
 import com.movtery.zalithlauncher.viewmodel.ModpackVersionNameOperation
 import com.movtery.zalithlauncher.viewmodel.ScreenBackStackViewModel
+import com.movtery.zalithlauncher.viewmodel.SponsorsDialog
+import com.movtery.zalithlauncher.viewmodel.SponsorsViewModel
 import com.movtery.zalithlauncher.viewmodel.VulkanCheckerViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -167,6 +168,11 @@ class MainActivity : BaseAppCompatActivity() {
     val launcherUpgradeViewModel: LauncherUpgradeViewModel by viewModels()
 
     /**
+     * 当月赞助者 ViewModel
+     */
+    private val sponsorsViewModel: SponsorsViewModel by viewModels()
+
+    /**
      * 游戏日志分享菜单 ViewModel
      */
     private val logShareViewModel: LogShareViewModel by viewModels()
@@ -208,8 +214,11 @@ class MainActivity : BaseAppCompatActivity() {
         //初始化通知管理（创建渠道）
         NotificationManager.initManager(this)
 
+        //拉取当月赞助者数据
         lifecycleScope.launch {
-            RegionRestriction.ensureChecked()
+            sponsorsViewModel.loadOnStart(
+                showLastMonth = !isImporting
+            )
         }
 
         //错误信息展示
@@ -244,6 +253,9 @@ class MainActivity : BaseAppCompatActivity() {
                     }
                     is EventViewModel.Event.CheckUpdate -> {
                         checkUpdate()
+                    }
+                    is EventViewModel.Event.ShowSponsors -> {
+                        sponsorsViewModel.openDialog()
                     }
                     is EventViewModel.Event.KeepScreen -> {
                         keepScreen(event.on)
@@ -463,6 +475,14 @@ class MainActivity : BaseAppCompatActivity() {
                     onLinkClick = { eventViewModel.sendEvent(EventViewModel.Event.OpenLink(it)) }
                 )
 
+                //当月赞助者对话框 / 上月赞助者结算报告
+                SponsorsDialog(
+                    viewModel = sponsorsViewModel,
+                    onSupportClick = {
+                        eventViewModel.sendEvent(EventViewModel.Event.OpenLink(URL_SUPPORT))
+                    }
+                )
+
                 //版本修改操作流程
                 ModifyVersionOperation(
                     operation = modifyVersionViewModel.installOperation,
@@ -633,6 +653,7 @@ class MainActivity : BaseAppCompatActivity() {
                             return@forEach
                         }
                         ControlManager.importControl(
+                            context = this@MainActivity,
                             inputStream = inputStream,
                             onSerializationError = {
                                 showError(

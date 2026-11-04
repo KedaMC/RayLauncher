@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -88,7 +88,7 @@ import com.movtery.zalithlauncher.ui.theme.onBackgroundColor
 import com.movtery.zalithlauncher.ui.theme.onCardColor
 import com.movtery.zalithlauncher.ui.theme.onItemColor
 import com.movtery.zalithlauncher.utils.animation.getAnimateTween
-import com.movtery.zalithlauncher.utils.animation.getAnimateTweenJellyBounce
+import com.movtery.zalithlauncher.utils.animation.getEnterTween
 import java.text.DecimalFormat
 
 /**
@@ -160,7 +160,7 @@ fun MenuSubscreen(
             AnimatedVisibility(
                 visible = visible,
                 enter = fadeIn() + slideInHorizontally(
-                    animationSpec = getAnimateTweenJellyBounce()
+                    animationSpec = getEnterTween()
                 ) {
                     if (isRtl) -40 else 40
                   },
@@ -180,16 +180,11 @@ fun MenuSubscreen(
 }
 
 /**
- * Panel tint. In game with Liquid Glass on, panels use the same tint as the floating toolbar
- * ([FloatingBall]) so both look identical; otherwise the regular themed color.
+ * Panel tint shared by the dual menu panels and the in-game floating toolbar, so the game menu
+ * looks the same as the control layout editor menu (themed tint over the glass).
  */
 @Composable
-private fun menuPanelColor(): Color =
-    if (LocalLiquidGlassInGame.current && liquidGlassBackdrop() != null) {
-        Color.Black.copy(alpha = 0.25f)
-    } else {
-        backgroundColor()
-    }
+internal fun menuPanelColor(): Color = backgroundColor()
 
 @Composable
 fun DualMenuSubscreen(
@@ -236,7 +231,7 @@ fun DualMenuSubscreen(
             AnimatedVisibility(
                 visible = visible,
                 enter = fadeIn() + slideInHorizontally(
-                    animationSpec = getAnimateTweenJellyBounce()
+                    animationSpec = getEnterTween()
                 ) {
                     if (isRtl) 40 else -40
                   },
@@ -273,7 +268,7 @@ fun DualMenuSubscreen(
             AnimatedVisibility(
                 visible = visible,
                 enter = fadeIn() + slideInHorizontally(
-                    animationSpec = getAnimateTweenJellyBounce()
+                    animationSpec = getEnterTween()
                 ) {
                     if (isRtl) -40 else 40
                   },
@@ -662,7 +657,7 @@ fun MenuSliderLayout(
     color: Color = itemColor(influencedByBackground),
     contentColor: Color = onItemColor(),
 ) {
-    val formatter = DecimalFormat(decimalFormat)
+    val formatter = remember(decimalFormat) { DecimalFormat(decimalFormat) }
     fun getTextString(value: Float) = formatter.format(value) + (suffix ?: "")
 
     val interactionSource = remember { MutableInteractionSource() }

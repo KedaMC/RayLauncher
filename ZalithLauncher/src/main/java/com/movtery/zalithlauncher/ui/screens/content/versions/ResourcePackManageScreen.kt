@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,7 +37,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -61,6 +60,7 @@ import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.nonInteractiveScrollbar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -79,7 +79,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
@@ -101,7 +100,9 @@ import com.movtery.zalithlauncher.ui.components.ScalingLabel
 import com.movtery.zalithlauncher.ui.components.SimpleAlertDialog
 import com.movtery.zalithlauncher.ui.components.SimpleTextInputField
 import com.movtery.zalithlauncher.ui.components.TooltipIconButton
+import com.movtery.zalithlauncher.ui.components.animated
 import com.movtery.zalithlauncher.ui.components.fadeEdge
+import com.movtery.zalithlauncher.ui.components.rememberAnimatedContext
 import com.movtery.zalithlauncher.ui.screens.NestedNavKey
 import com.movtery.zalithlauncher.ui.screens.NormalNavKey
 import com.movtery.zalithlauncher.ui.screens.TitledNavKey
@@ -121,7 +122,6 @@ import com.movtery.zalithlauncher.ui.screens.content.versions.layouts.VersionChu
 import com.movtery.zalithlauncher.ui.theme.itemColor
 import com.movtery.zalithlauncher.ui.theme.onItemColor
 import com.movtery.zalithlauncher.utils.animation.getAnimateTween
-import com.movtery.zalithlauncher.utils.animation.swapAnimateDpAsState
 import com.movtery.zalithlauncher.utils.file.FolderFileCounter
 import com.movtery.zalithlauncher.utils.file.formatFileSize
 import com.movtery.zalithlauncher.viewmodel.ErrorViewModel
@@ -262,7 +262,6 @@ private class ResourcePackManageViewModel(
     }
 
     override fun onCleared() {
-        super.onCleared()
         job?.cancel()
         job = null
     }
@@ -316,102 +315,106 @@ fun ResourcePackManageScreen(
             onRefresh = { viewModel.refresh() }
         )
 
-        val yOffset by swapAnimateDpAsState(
-            targetValue = (-40).dp,
-            swapIn = isVisible
-        )
+        val ctx = rememberAnimatedContext(isVisible = isVisible)
 
         VersionChunkBackground(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(all = 12.dp)
-                .offset { IntOffset(x = 0, y = yOffset.roundToPx()) },
+                .animated(ctx),
             paddingValues = PaddingValues()
         ) {
             val operationScope = rememberCoroutineScope()
 
-            when (viewModel.packState) {
-                is LoadingState.None -> {
-                    var resourcePackOperation by remember { mutableStateOf<ResourcePackOperation>(ResourcePackOperation.None) }
-                    fun runProgress(task: () -> Unit) {
-                        operationScope.launch(Dispatchers.IO) {
-                            resourcePackOperation = ResourcePackOperation.Progress
-                            task()
-                            resourcePackOperation = ResourcePackOperation.None
-                            viewModel.refresh()
-                        }
-                    }
-                    ResourcePackOperation(
-                        resourcePackDir = resourcePackDir,
-                        resourcePackOperation = resourcePackOperation,
-                        updateOperation = { resourcePackOperation = it },
-                        onRename = { newName, packInfo ->
-                            runProgress {
-                                val extension = if (packInfo.file.isFile) {
-                                    ".${packInfo.file.extension}"
-                                } else ""
-                                packInfo.file.renameTo(File(resourcePackDir, "$newName$extension"))
-                            }
-                        },
-                        onDelete = { packInfo ->
-                            runProgress {
-                                FileUtils.deleteQuietly(packInfo.file)
+            PullToRefreshBox(
+                modifier = Modifier.fillMaxSize(),
+                isRefreshing = false,
+                enabled = viewModel.packState !is LoadingState.Loading,
+                onRefresh = viewModel::refresh,
+            ) {
+                when (viewModel.packState) {
+                    is LoadingState.None -> {
+                        var resourcePackOperation by remember { mutableStateOf<ResourcePackOperation>(ResourcePackOperation.None) }
+                        fun runProgress(task: () -> Unit) {
+                            operationScope.launch(Dispatchers.IO) {
+                                resourcePackOperation = ResourcePackOperation.Progress
+                                task()
+                                resourcePackOperation = ResourcePackOperation.None
+                                viewModel.refresh()
                             }
                         }
-                    )
-
-                    Column {
-                        ResourcePackHeader(
-                            modifier = Modifier.fillMaxWidth(),
-                            packFilter = viewModel.packFilter,
-                            changePackFilter = { viewModel.updateFilter(it) },
-                            supportedSortByEnums = viewModel.supportedSortByEnums,
-                            sortByEnum = viewModel.sortByEnum,
-                            onSortByChanged = { viewModel.updateSortBy(it) },
-                            isAscending = viewModel.isAscending,
-                            onToggleSortOrder = { viewModel.updateSortOrder() },
+                        ResourcePackOperation(
                             resourcePackDir = resourcePackDir,
-                            onDeleteAll = {
-                                val selected = viewModel.selectedPacks
-                                if (
-                                    viewModel.deleteAllOperation == DeleteAllOperation.None &&
-                                    selected.isNotEmpty()
-                                ) {
-                                    viewModel.deleteAllOperation = DeleteAllOperation.Warning(
-                                        files = selected.map { pack ->
-                                            pack.file
-                                        }
-                                    )
+                            resourcePackOperation = resourcePackOperation,
+                            updateOperation = { resourcePackOperation = it },
+                            onRename = { newName, packInfo ->
+                                runProgress {
+                                    val extension = if (packInfo.file.isFile) {
+                                        ".${packInfo.file.extension}"
+                                    } else ""
+                                    packInfo.file.renameTo(File(resourcePackDir, "$newName$extension"))
                                 }
                             },
-                            isFilesSelected = viewModel.selectedPacks.isNotEmpty(),
-                            onSelectAll = { viewModel.selectAllFiles() },
-                            onClearFilesSelected = { viewModel.clearSelected() },
-                            swapToDownload = swapToDownload,
-                            onRefresh = {
-                                viewModel.refresh()
-                            },
-                            submitError = submitError,
+                            onDelete = { packInfo ->
+                                runProgress {
+                                    FileUtils.deleteQuietly(packInfo.file)
+                                }
+                            }
                         )
 
-                        ResourcePackList(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f),
-                            packList = viewModel.filteredPacks,
-                            selectedPacks = viewModel.selectedPacks,
-                            removeFromSelected = { viewModel.selectedPacks.remove(it) },
-                            addToSelected = { viewModel.selectedPacks.add(it) },
-                            updateOperation = { resourcePackOperation = it }
-                        )
+                        Column {
+                            ResourcePackHeader(
+                                modifier = Modifier.fillMaxWidth(),
+                                packFilter = viewModel.packFilter,
+                                changePackFilter = { viewModel.updateFilter(it) },
+                                supportedSortByEnums = viewModel.supportedSortByEnums,
+                                sortByEnum = viewModel.sortByEnum,
+                                onSortByChanged = { viewModel.updateSortBy(it) },
+                                isAscending = viewModel.isAscending,
+                                onToggleSortOrder = { viewModel.updateSortOrder() },
+                                resourcePackDir = resourcePackDir,
+                                onDeleteAll = {
+                                    val selected = viewModel.selectedPacks
+                                    if (
+                                        viewModel.deleteAllOperation == DeleteAllOperation.None &&
+                                        selected.isNotEmpty()
+                                    ) {
+                                        viewModel.deleteAllOperation = DeleteAllOperation.Warning(
+                                            files = selected.map { pack ->
+                                                pack.file
+                                            }
+                                        )
+                                    }
+                                },
+                                isFilesSelected = viewModel.selectedPacks.isNotEmpty(),
+                                onSelectAll = { viewModel.selectAllFiles() },
+                                onClearFilesSelected = { viewModel.clearSelected() },
+                                swapToDownload = swapToDownload,
+                                onRefresh = {
+                                    viewModel.refresh()
+                                },
+                                submitError = submitError,
+                            )
+
+                            ResourcePackList(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f),
+                                packList = viewModel.filteredPacks,
+                                selectedPacks = viewModel.selectedPacks,
+                                removeFromSelected = { viewModel.selectedPacks.remove(it) },
+                                addToSelected = { viewModel.selectedPacks.add(it) },
+                                updateOperation = { resourcePackOperation = it }
+                            )
+                        }
                     }
-                }
-                is LoadingState.Loading -> {
-                    Box(
-                        Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        LoadingIndicator()
+                    is LoadingState.Loading -> {
+                        Box(
+                            Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            LoadingIndicator()
+                        }
                     }
                 }
             }

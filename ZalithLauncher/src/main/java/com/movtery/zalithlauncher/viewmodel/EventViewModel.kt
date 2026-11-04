@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,14 +65,6 @@ class EventViewModel : ViewModel() {
             /** [com.movtery.zalithlauncher.game.launch.handler.AbstractHandler.onResume] */
             data object OnResume: Game
         }
-        sealed interface Terracotta : Event {
-            /** 申请 VPN 权限 */
-            data object RequestVPN : Terracotta
-            /** 更新 VPN 状态文本 */
-            data class VPNUpdateState(val stringRes: Int): Terracotta
-            /** 关停 VPN */
-            data object StopVPN : Terracotta
-        }
         /** 启动游戏相关的事件 */
         sealed interface Launch : Event {
             /** 主菜单的启动游戏 */
@@ -84,6 +76,8 @@ class EventViewModel : ViewModel() {
         }
         /** 检查更新 */
         data object CheckUpdate : Event
+        /** 查看当月赞助者 */
+        data object ShowSponsors : Event
         /** 在浏览器访问链接 */
         data class OpenLink(val url: String) : Event
         /** 让 MainActivity 防止熄屏 */

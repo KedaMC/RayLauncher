@@ -1,6 +1,6 @@
 /*
  * Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,6 @@ import android.provider.MediaStore
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
@@ -49,7 +48,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -67,6 +65,7 @@ import androidx.compose.material3.MaterialTheme
 import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -84,7 +83,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
@@ -103,7 +101,9 @@ import com.movtery.zalithlauncher.ui.components.EdgeDirection
 import com.movtery.zalithlauncher.ui.components.ScalingLabel
 import com.movtery.zalithlauncher.ui.components.SimpleAlertDialog
 import com.movtery.zalithlauncher.ui.components.SimpleTextInputField
+import com.movtery.zalithlauncher.ui.components.animated
 import com.movtery.zalithlauncher.ui.components.fadeEdge
+import com.movtery.zalithlauncher.ui.components.rememberAnimatedContext
 import com.movtery.zalithlauncher.ui.screens.NestedNavKey
 import com.movtery.zalithlauncher.ui.screens.NormalNavKey
 import com.movtery.zalithlauncher.ui.screens.TitledNavKey
@@ -116,7 +116,6 @@ import com.movtery.zalithlauncher.ui.screens.content.versions.layouts.VersionChu
 import com.movtery.zalithlauncher.ui.theme.itemColor
 import com.movtery.zalithlauncher.ui.theme.onItemColor
 import com.movtery.zalithlauncher.utils.animation.getAnimateTween
-import com.movtery.zalithlauncher.utils.animation.swapAnimateDpAsState
 import com.movtery.zalithlauncher.utils.logging.Logger
 import com.movtery.zalithlauncher.utils.string.getMessageOrToString
 import com.movtery.zalithlauncher.viewmodel.ErrorViewModel
@@ -128,6 +127,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -382,21 +382,27 @@ class ScreenshotsManageViewModel @Inject constructor(
         SortByEnum.Name, SortByEnum.FileModifiedTime
     )
 
+    private var filterJob: Job? = null
+
     private fun applyFilterAndSort() {
-        filteredScreenshots = allScreenshots
-            .takeIf { it.isNotEmpty() }
-            ?.filter { info ->
-                if (filter.filterName.isBlank()) true
-                else info.name.contains(filter.filterName, ignoreCase = true)
-            }
-            ?.sortedWith { o1, o2 ->
-                val value = when (sortByEnum) {
-                    SortByEnum.Name -> o1.name.compareTo(o2.name)
-                    SortByEnum.FileModifiedTime -> o1.lastModified.compareTo(o2.lastModified)
-                    else -> error("This sorting method is not supported: $sortByEnum")
+        filterJob?.cancel()
+        filterJob = viewModelScope.launch(Dispatchers.Default) {
+            val result = allScreenshots
+                .takeIf { it.isNotEmpty() }
+                ?.filter { info ->
+                    filter.filterName.isBlank() || info.name.contains(filter.filterName, ignoreCase = true)
                 }
-                if (isAscending) value else -value
-            }
+                ?.sortedWith { o1, o2 ->
+                    val value = when (sortByEnum) {
+                        SortByEnum.Name -> o1.name.compareTo(o2.name)
+                        SortByEnum.FileModifiedTime -> o1.lastModified.compareTo(o2.lastModified)
+                        else -> error("This sorting method is not supported: $sortByEnum")
+                    }
+                    if (isAscending) value else -value
+                }
+            if (!isActive) return@launch
+            filteredScreenshots = result
+        }
     }
 
     override fun onCleared() {
@@ -471,78 +477,82 @@ fun ScreenshotsManagerScreen(
             }
         )
 
-        val yOffset by swapAnimateDpAsState(
-            targetValue = (-40).dp,
-            swapIn = isVisible
-        )
+        val ctx = rememberAnimatedContext(isVisible = isVisible)
 
         VersionChunkBackground(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(all = 12.dp)
-                .offset { IntOffset(x = 0, y = yOffset.roundToPx()) },
+                .animated(ctx),
             paddingValues = PaddingValues()
         ) {
-            when (viewModel.listState) {
-                is LoadingState.None -> {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        Column(modifier = Modifier.fillMaxSize()) {
-                            ScreenshotHeader(
-                                modifier = Modifier.fillMaxWidth(),
-                                filter = viewModel.filter,
-                                changeFilter = { viewModel.updateFilter(it) },
-                                supportedSortByEnums = viewModel.supportedSortByEnums,
-                                sortByEnum = viewModel.sortByEnum,
-                                onSortByChanged = { viewModel.updateSortBy(it) },
-                                isAscending = viewModel.isAscending,
-                                onToggleSortOrder = { viewModel.updateSortOrder() },
-                                onDeleteAll = { viewModel.requestDeleteSelected() },
-                                isFilesSelected = viewModel.selectedShots.isNotEmpty(),
-                                onSelectAll = { viewModel.selectAllFiles() },
-                                onClearFilesSelected = { viewModel.clearSelected() },
-                                onRefresh = { viewModel.refresh() }
-                            )
-
-                            ScreenshotGrid(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .weight(1f),
-                                list = viewModel.filteredScreenshots,
-                                selected = viewModel.selectedShots,
-                                removeFromSelected = { viewModel.selectedShots.remove(it) },
-                                addToSelected = { viewModel.selectedShots.add(it) }
-                            )
-                        }
-
-                        //导出图片悬浮按钮
-                        if (viewModel.allScreenshots.isNotEmpty()) {
-                            FloatingActionButton(
-                                onClick = {
-                                    if (viewModel.listState != LoadingState.Loading) {
-                                        viewModel.exportOperation = ExportOperation.Ask
-                                    }
-                                },
-                                modifier = Modifier
-                                    .align(Alignment.BottomEnd)
-                                    .padding(16.dp),
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = MaterialTheme.colorScheme.onPrimary
-                            ) {
-                                Icon(
-                                    painter = painterResource(R.drawable.ic_file_export_outlined),
-                                    contentDescription = stringResource(R.string.screenshots_manage_export)
+            PullToRefreshBox(
+                modifier = Modifier.fillMaxSize(),
+                isRefreshing = false,
+                enabled = viewModel.listState !is LoadingState.Loading,
+                onRefresh = viewModel::refresh,
+            ) {
+                when (viewModel.listState) {
+                    is LoadingState.None -> {
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            Column(modifier = Modifier.fillMaxSize()) {
+                                ScreenshotHeader(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    filter = viewModel.filter,
+                                    changeFilter = { viewModel.updateFilter(it) },
+                                    supportedSortByEnums = viewModel.supportedSortByEnums,
+                                    sortByEnum = viewModel.sortByEnum,
+                                    onSortByChanged = { viewModel.updateSortBy(it) },
+                                    isAscending = viewModel.isAscending,
+                                    onToggleSortOrder = { viewModel.updateSortOrder() },
+                                    onDeleteAll = { viewModel.requestDeleteSelected() },
+                                    isFilesSelected = viewModel.selectedShots.isNotEmpty(),
+                                    onSelectAll = { viewModel.selectAllFiles() },
+                                    onClearFilesSelected = { viewModel.clearSelected() },
+                                    onRefresh = { viewModel.refresh() }
                                 )
+
+                                ScreenshotGrid(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .weight(1f),
+                                    list = viewModel.filteredScreenshots,
+                                    selected = viewModel.selectedShots,
+                                    removeFromSelected = { viewModel.selectedShots.remove(it) },
+                                    addToSelected = { viewModel.selectedShots.add(it) }
+                                )
+                            }
+
+                            //导出图片悬浮按钮
+                            if (viewModel.allScreenshots.isNotEmpty()) {
+                                FloatingActionButton(
+                                    onClick = {
+                                        if (viewModel.listState != LoadingState.Loading) {
+                                            viewModel.exportOperation = ExportOperation.Ask
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .align(Alignment.BottomEnd)
+                                        .padding(16.dp),
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary
+                                ) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.ic_file_export_outlined),
+                                        contentDescription = stringResource(R.string.screenshots_manage_export)
+                                    )
+                                }
                             }
                         }
                     }
-                }
 
-                is LoadingState.Loading -> {
-                    Box(
-                        Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        LoadingIndicator()
+                    is LoadingState.Loading -> {
+                        Box(
+                            Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            LoadingIndicator()
+                        }
                     }
                 }
             }
@@ -770,7 +780,6 @@ private fun ScreenshotGrid(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ScreenshotItemLayout(
     modifier: Modifier = Modifier,
