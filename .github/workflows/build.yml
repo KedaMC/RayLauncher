@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - feature/liquid-glass-2.8.1
   workflow_dispatch:
     inputs:
       ref:
@@ -61,7 +62,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.ref || 'feature/liquid-glass-2.8.1' }}
+          ref: ${{ inputs.ref || github.ref }}
           submodules: recursive
 
       - name: Set up JDK 21
