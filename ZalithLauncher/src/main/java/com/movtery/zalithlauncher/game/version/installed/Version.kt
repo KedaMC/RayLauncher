@@ -128,7 +128,7 @@ class Version(
     /**
      * @return 启动器版本标识文件夹
      */
-    fun getZalithVersionPath(): File = File(getVersionPath(), BuildKeys.LAUNCHER_IDENTIFIER)
+    fun getZalithVersionPath(): File = getZalithVersionPath(getVersionPath())
 
     /**
      * @return 游戏的上一次运行日志
@@ -243,7 +243,18 @@ class Version(
 }
 
 /** 通过版本文件夹获取启动器版本标识文件夹 */
-fun getZalithVersionPath(versionFolder: File): File = File(versionFolder, BuildKeys.LAUNCHER_IDENTIFIER)
+fun getZalithVersionPath(versionFolder: File): File {
+    val target = File(versionFolder, BuildKeys.LAUNCHER_IDENTIFIER)
+    if (!target.exists()) {
+        //Migrate the folder created under the old identifier name
+        versionFolder.listFiles()
+            ?.firstOrNull { it.isDirectory && LEGACY_IDENTIFIER_REGEX.matches(it.name) }
+            ?.renameTo(target)
+    }
+    return target
+}
+
+private val LEGACY_IDENTIFIER_REGEX = Regex("^ray ?launcher \\(unofficial modified version\\)$", RegexOption.IGNORE_CASE)
 
 /** 通过版本文件夹获取版本图标文件 */
 fun getVersionIconFile(versionFolder: File): File = File(getZalithVersionPath(versionFolder), "VersionIcon.png")

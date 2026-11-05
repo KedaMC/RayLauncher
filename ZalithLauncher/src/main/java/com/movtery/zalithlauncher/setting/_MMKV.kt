@@ -18,10 +18,12 @@
 
 package com.movtery.zalithlauncher.setting
 
-import com.movtery.zalithlauncher.BuildKeys
 import com.tencent.mmkv.MMKV
 
 /**
  * 启动器全局 MMKV，管理所有设置项
  */
-fun launcherMMKV(): MMKV = MMKV.mmkvWithID(BuildKeys.LAUNCHER_IDENTIFIER, MMKV.MULTI_PROCESS_MODE)
+fun launcherMMKV(): MMKV = MMKV.mmkvWithID(MMKV_ID, MMKV.MULTI_PROCESS_MODE)
+
+/** Pinned to the legacy identifier so existing settings survive the rename */
+private const val MMKV_ID = "Raylauncher (Unofficial Modified Version)"
