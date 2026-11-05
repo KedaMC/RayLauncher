@@ -167,13 +167,23 @@ fun AboutInfoScreen(
                 )
             }
             //Lite: maintainer fork ini; tombol sponsor dikosongkan dulu
-            row("maintainer_keda", 0, last = true) { modifier, position ->
+            row("maintainer_keda", 0) { modifier, position ->
                 ButtonIconItem(
                     modifier = modifier,
                     position = position,
                     icon = painterResource(R.drawable.img_avatar_keda),
                     title = "Keda",
                     text = stringResource(R.string.about_launcher_maintainer_keda_text),
+                    button = {}
+                )
+            }
+            row("contributor_fazry", 0, last = true) { modifier, position ->
+                ButtonIconItem(
+                    modifier = modifier,
+                    position = position,
+                    icon = painterResource(R.drawable.img_avatar_fazry),
+                    title = "Fazry",
+                    text = stringResource(R.string.about_launcher_fazry_text),
                     button = {}
                 )
             }
