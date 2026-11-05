@@ -148,7 +148,7 @@ fun AboutInfoScreen(
                     position = position,
                     icon = painterResource(R.drawable.img_launcher),
                     title = BuildKeys.LAUNCHER_NAME,
-                    text = stringResource(R.string.about_launcher_version, BuildConfig.VERSION_NAME) + "\n" + stringResource(R.string.launcher_unofficial_notice),
+                    text = stringResource(R.string.about_launcher_version, BuildConfig.VERSION_NAME),
                     //Lite: tombol “Cek pembaruan” dan “Link Project” ditahan sampai fork siap dirilis
                     button = {}
                 )
@@ -159,7 +159,7 @@ fun AboutInfoScreen(
                     position = position,
                     icon = painterResource(R.drawable.img_avatar_movtery),
                     title = stringResource(R.string.about_launcher_author_movtery_title),
-                    text = stringResource(R.string.about_launcher_author_movtery_text),
+                    text = stringResource(R.string.about_launcher_author_movtery_text, "Zalith Launcher 2"),
                     button = {
                         ScalingActionButton(
                             onClick = { openLink(URL_SUPPORT) }
