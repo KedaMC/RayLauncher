@@ -62,7 +62,7 @@ fun NavBackStack<TitledNavKey>.navigateToLogView(
 /** 日志查看器加载的日志体积上限，超过则只读取末尾部分 */
 private const val MAX_LOG_VIEW_SIZE: Long = 8L * 1024 * 1024
 
-private fun readLog(file: File): String {
+internal fun readLog(file: File): String {
     val size = file.length()
     if (size <= MAX_LOG_VIEW_SIZE) return file.readText()
     RandomAccessFile(file, "r").use { raf ->

@@ -33,6 +33,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContent
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import com.movtery.zalithlauncher.ui.components.DropdownMenu
 import com.movtery.zalithlauncher.ui.components.DropdownMenuItem
@@ -46,6 +49,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,8 +59,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.movtery.zalithlauncher.BuildKeys
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.setting.AllSettings
@@ -64,6 +70,7 @@ import com.movtery.zalithlauncher.ui.activities.CrashType
 import com.movtery.zalithlauncher.ui.components.BackgroundCard
 import com.movtery.zalithlauncher.ui.components.MarqueeText
 import com.movtery.zalithlauncher.ui.components.ScalingActionButton
+import com.movtery.zalithlauncher.ui.components.lazyScrollWithBar
 import com.movtery.zalithlauncher.ui.components.verticalScrollWithBar
 import com.movtery.zalithlauncher.ui.theme.backgroundColor
 import com.movtery.zalithlauncher.ui.theme.onBackgroundColor
@@ -74,6 +81,7 @@ fun ErrorScreen(
     shareLogs: Boolean = true,
     canUpload: Boolean = false,
     canRestart: Boolean = true,
+    logLines: List<String>? = null,
     onShareLogsClick: () -> Unit = {},
     onUploadClick: () -> Unit = {},
     onRestartClick: () -> Unit = {},
@@ -91,6 +99,7 @@ fun ErrorScreen(
             shareLogs = shareLogs,
             canUpload = canUpload,
             canRestart = canRestart,
+            logLines = logLines,
             onShareLogsClick = onShareLogsClick,
             onUploadClick = onUploadClick,
             onRestartClick = onRestartClick,
@@ -106,6 +115,7 @@ fun ErrorScreen(
             shareLogs = shareLogs,
             canUpload = canUpload,
             canRestart = canRestart,
+            logLines = logLines,
             onShareLogsClick = onShareLogsClick,
             onUploadClick = onUploadClick,
             onRestartClick = onRestartClick,
@@ -127,6 +137,7 @@ private fun ErrorScreenLandscape(
     shareLogs: Boolean,
     canUpload: Boolean,
     canRestart: Boolean,
+    logLines: List<String>?,
     onShareLogsClick: () -> Unit,
     onUploadClick: () -> Unit,
     onRestartClick: () -> Unit,
@@ -181,6 +192,7 @@ private fun ErrorScreenLandscape(
         ) {
             ErrorContent(
                 modifier = Modifier.weight(7f),
+                logLines = logLines,
                 body = body
             )
 
@@ -208,6 +220,7 @@ private fun ErrorScreenPortrait(
     shareLogs: Boolean,
     canUpload: Boolean,
     canRestart: Boolean,
+    logLines: List<String>?,
     onShareLogsClick: () -> Unit,
     onUploadClick: () -> Unit,
     onRestartClick: () -> Unit,
@@ -302,6 +315,32 @@ private fun ErrorScreenPortrait(
             )
         }
     ) { innerPadding ->
+        if (logLines != null) {
+            //游戏崩溃：固定顶部信息，日志列表占满剩余空间并自行滚动
+            Column(
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize()
+                    .padding(all = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = stringResource(
+                        R.string.crash_type,
+                        stringResource(crashType.textRes)
+                    )
+                )
+                body()
+                ErrorLogList(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    lines = logLines
+                )
+            }
+            return@Scaffold
+        }
+
         Column(
             modifier = Modifier
                 .padding(innerPadding)
@@ -339,9 +378,42 @@ private fun ErrorScreenPortrait(
     }
 }
 
+/**
+ * 完整的游戏日志列表，按行懒加载，可滚动到最底部，打开时定位到末尾
+ */
+@Composable
+private fun ErrorLogList(
+    modifier: Modifier = Modifier,
+    lines: List<String>
+) {
+    val listState = rememberLazyListState()
+    LaunchedEffect(lines) {
+        if (lines.isNotEmpty()) listState.scrollToItem(lines.lastIndex)
+    }
+
+    val logStyle = MaterialTheme.typography.bodySmall.copy(
+        fontFamily = FontFamily.Monospace,
+        fontSize = 11.sp,
+        lineHeight = 14.sp
+    )
+
+    LazyColumn(
+        modifier = modifier.lazyScrollWithBar(listState),
+        state = listState
+    ) {
+        items(lines) { line ->
+            Text(
+                text = line,
+                style = logStyle
+            )
+        }
+    }
+}
+
 @Composable
 private fun ErrorContent(
     modifier: Modifier = Modifier,
+    logLines: List<String>? = null,
     body: @Composable ColumnScope.() -> Unit
 ) {
     BackgroundCard(
@@ -349,6 +421,24 @@ private fun ErrorContent(
         influencedByBackground = false,
         shape = MaterialTheme.shapes.extraLarge
     ) {
+        if (logLines != null) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(all = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                body()
+                ErrorLogList(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    lines = logLines
+                )
+            }
+            return@BackgroundCard
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()

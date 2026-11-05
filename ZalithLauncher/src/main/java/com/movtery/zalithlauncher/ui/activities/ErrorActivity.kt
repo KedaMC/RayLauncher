@@ -28,12 +28,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
 import com.jakewharton.processphoenix.ProcessPhoenix
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.context.COPY_LABEL_LINK
 import com.movtery.zalithlauncher.path.PathManager
 import com.movtery.zalithlauncher.ui.base.BaseAppCompatActivity
+import com.movtery.zalithlauncher.ui.screens.content.readLog
 import com.movtery.zalithlauncher.ui.screens.main.ErrorScreen
 import com.movtery.zalithlauncher.ui.screens.main.crashlogs.ShareLinkOperation
 import com.movtery.zalithlauncher.ui.theme.ZalithLauncherTheme
@@ -47,6 +50,8 @@ import com.movtery.zalithlauncher.utils.network.openLink
 import com.movtery.zalithlauncher.utils.string.throwableToString
 import com.movtery.zalithlauncher.viewmodel.LogsUploadViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.parcelize.Parcelize
 import java.io.File
 
@@ -100,10 +105,10 @@ class ErrorActivity : BaseAppCompatActivity() {
                 val jvmCrash = extras.getParcelableSafely(BUNDLE_JVM_CRASH, JvmCrash::class.java) ?: return runFinish()
                 val messageResId = if (jvmCrash.isSignal) R.string.crash_singnal_message else R.string.crash_exit_message
                 val message = getString(messageResId, jvmCrash.code)
-                val messageBody = getString(R.string.crash_exit_note)
+                //游戏崩溃时直接展示 latest_game.log，不再显示“请查看日志文件”的提示
                 ErrorMessage(
                     message = message,
-                    messageBody = messageBody,
+                    messageBody = "",
                     crashType = CrashType.GAME_CRASH,
                     logFile = File(jvmCrash.logPath).also { file ->
                         //检查日志文件是否适合上传
@@ -128,7 +133,26 @@ class ErrorActivity : BaseAppCompatActivity() {
         val canRestart: Boolean = extras.getBoolean(BUNDLE_CAN_RESTART, true)
         val logExists = logFile.exists() && logFile.isFile
 
+        val isGameCrash = errorMessage.crashType == CrashType.GAME_CRASH
+
         setContent {
+            //在后台读取完整日志，读取完成前先显示空列表
+            val gameLogLines: List<String>? = if (isGameCrash) {
+                val lines by produceState(initialValue = emptyList<String>(), logFile, logExists) {
+                    value = if (logExists) {
+                        withContext(Dispatchers.IO) {
+                            runCatching { readLog(logFile).lines() }
+                                .getOrElse { e -> listOf(e.message ?: e.toString()) }
+                        }
+                    } else {
+                        emptyList()
+                    }
+                }
+                lines
+            } else {
+                null
+            }
+
             ZalithLauncherTheme {
                 ShareLinkOperation(
                     operation = viewModel.operation,
@@ -152,6 +176,7 @@ class ErrorActivity : BaseAppCompatActivity() {
                         shareLogs = logExists,
                         canUpload = viewModel.canUpload,
                         canRestart = canRestart,
+                        logLines = gameLogLines,
                         onShareLogsClick = {
                             if (logExists) {
                                 shareFile(this@ErrorActivity, logFile)
@@ -172,10 +197,12 @@ class ErrorActivity : BaseAppCompatActivity() {
                             text = errorMessage.message,
                             style = MaterialTheme.typography.bodyMedium
                         )
-                        Text(
-                            text = errorMessage.messageBody,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
+                        if (errorMessage.messageBody.isNotEmpty()) {
+                            Text(
+                                text = errorMessage.messageBody,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
                     }
                 }
             }
