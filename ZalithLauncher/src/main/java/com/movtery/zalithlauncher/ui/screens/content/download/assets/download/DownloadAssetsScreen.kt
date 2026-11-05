@@ -36,7 +36,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.LinearWavyProgressIndicator
+import com.movtery.zalithlauncher.ui.components.GlassLinearProgress
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -453,7 +453,7 @@ private fun Versions(
                             }
                         }
                     }
-                    LinearWavyProgressIndicator(
+                    GlassLinearProgress(
                         modifier = Modifier.width(168.dp),
                         wavelength = 32.dp
                     )

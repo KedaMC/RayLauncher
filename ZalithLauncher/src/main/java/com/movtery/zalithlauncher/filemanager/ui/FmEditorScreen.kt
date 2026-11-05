@@ -51,7 +51,7 @@ import androidx.compose.material3.FloatingActionButtonMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearWavyProgressIndicator
+import com.movtery.zalithlauncher.ui.components.GlassLinearProgress
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.SnackbarHost
@@ -568,7 +568,7 @@ fun FmEditorScreen(
                 text = stringResource(R.string.generic_saving),
                 style = MaterialTheme.typography.titleMedium
             )
-            LinearWavyProgressIndicator(
+            GlassLinearProgress(
                 modifier = Modifier.fillMaxWidth()
             )
             FilledTonalButton(

@@ -50,7 +50,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import com.movtery.zalithlauncher.ui.components.IconButton
-import androidx.compose.material3.LinearWavyProgressIndicator
+import com.movtery.zalithlauncher.ui.components.GlassLinearProgress
 import androidx.compose.material3.MaterialTheme
 import com.movtery.zalithlauncher.ui.components.Surface
 import androidx.compose.material3.Text
@@ -147,7 +147,7 @@ fun ResultListLayout(
                         .padding(all = 12.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    LinearWavyProgressIndicator(
+                    GlassLinearProgress(
                         modifier = Modifier.width(168.dp),
                         wavelength = 32.dp
                     )

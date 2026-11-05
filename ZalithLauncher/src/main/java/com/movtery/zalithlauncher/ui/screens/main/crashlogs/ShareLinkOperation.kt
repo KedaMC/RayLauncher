@@ -22,7 +22,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import com.movtery.zalithlauncher.ui.components.AlertDialog
 import com.movtery.zalithlauncher.ui.components.FilledTonalButton
-import androidx.compose.material3.LinearWavyProgressIndicator
+import com.movtery.zalithlauncher.ui.components.GlassLinearProgress
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -83,7 +83,7 @@ fun ShareLinkOperation(
                         Text(
                             text = stringResource(R.string.crash_link_share_uploading, operation.apiRoot)
                         )
-                        LinearWavyProgressIndicator(
+                        GlassLinearProgress(
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
