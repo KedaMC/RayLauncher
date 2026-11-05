@@ -80,7 +80,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.Dimension
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.entryProvider
 import com.movtery.zalithlauncher.BuildKeys
@@ -277,6 +282,16 @@ private fun <E: TitledNavKey> TopBar(
     val inDownloadScreen = mainScreenKey is NestedNavKey.Download
     val inSettingsScreen = mainScreenKey is NestedNavKey.Settings
 
+    // The title is centered on the screen instead of between the side groups, so its
+    // position no longer depends on how wide the right buttons currently are. Both sides
+    // get the same margin (the wider side wins), which only limits the title's max width.
+    val density = LocalDensity.current
+    var backWidthPx by remember { mutableIntStateOf(0) }
+    var endWidthPx by remember { mutableIntStateOf(0) }
+    val titleSideMargin = with(density) {
+        maxOf(backWidthPx, endWidthPx + 12.dp.roundToPx()).toDp()
+    } + 8.dp
+
     CompositionLocalProvider(
         LocalContentColor provides if (launcherGlassOn()) Color.White else contentColor
     ) {
@@ -314,6 +329,7 @@ private fun <E: TitledNavKey> TopBar(
                         top.linkTo(parent.top)
                         bottom.linkTo(parent.bottom)
                     }
+                    .onSizeChanged { backWidthPx = it.width }
                     .fillMaxHeight()
             ) {
                 AnimatedVisibility(
@@ -367,9 +383,12 @@ private fun <E: TitledNavKey> TopBar(
             Crossfade(
                 modifier = Modifier.constrainAs(title) {
                     centerVerticallyTo(parent)
-                    start.linkTo(backCenter.end, margin = if (inLauncherScreen) 12.dp else 16.dp)
-                    if (!inLauncherScreen) {
-                        end.linkTo(endButtons.start, margin = 8.dp)
+                    if (inLauncherScreen) {
+                        start.linkTo(backCenter.end, margin = 12.dp)
+                    } else {
+                        start.linkTo(parent.start, margin = titleSideMargin)
+                        end.linkTo(parent.end, margin = titleSideMargin)
+                        width = Dimension.fillToConstraints
                     }
                 },
                 targetState = parentRes to childRes
@@ -399,13 +418,22 @@ private fun <E: TitledNavKey> TopBar(
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                             text = titleText,
                             style = style,
+                            overflow = TextOverflow.Ellipsis,
                             softWrap = softWarp,
                             maxLines = maxLines
                         )
                     }
                 }
 
-                if (titleBackdrop != null) {
+                if (!inLauncherScreen) {
+                    // Fixed-width slot centered on screen; keeps the text from drifting while crossfading
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        TitleContent()
+                    }
+                } else if (titleBackdrop != null) {
                     LiquidGlassSurface(
                         backdrop = titleBackdrop,
                         shape = MaterialTheme.shapes.large,
@@ -426,7 +454,8 @@ private fun <E: TitledNavKey> TopBar(
                         top.linkTo(parent.top)
                         bottom.linkTo(parent.bottom)
                         end.linkTo(parent.end, margin = 12.dp)
-                    },
+                    }
+                    .onSizeChanged { endWidthPx = it.width },
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
