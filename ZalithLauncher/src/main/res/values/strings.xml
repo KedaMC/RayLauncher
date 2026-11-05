@@ -2561,6 +2561,7 @@
     <string name="about_launcher_author_movtery_title">MovTery</string>
     <!-- Description under the author name on the About page; %s is the launcher name -->
     <string name="about_launcher_author_movtery_text">Author of %s</string>
+    <string name="about_launcher_fazry_text">Random Kid</string>
     <!-- Button on the About page opening the project website -->
     <string name="about_launcher_project_link">Project Link</string>
     <!-- Button on the About page opening the sponsorship page; also the title of the sponsorship dialog -->
