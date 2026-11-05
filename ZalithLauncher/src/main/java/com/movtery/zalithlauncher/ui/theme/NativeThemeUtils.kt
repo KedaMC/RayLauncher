@@ -180,37 +180,18 @@ private fun buildColorScheme(seedColor: Int, darkTheme: Boolean): NativeColorSch
 }
 
 private fun getSeedColor(context: Context, darkTheme: Boolean): Int {
-    return when (AllSettings.launcherColorTheme.state) {
-        ColorThemeType.DYNAMIC -> {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                    if (darkTheme) {
-                        context.resources.getColor(android.R.color.system_primary_dark, context.theme)
-                    } else {
-                        context.resources.getColor(android.R.color.system_primary_light, context.theme)
-                    }
-                } else {
-                    context.resources.getColor(android.R.color.system_accent1_200, context.theme)
-                }
-            } else {
-                getPredefinedSeedColor(ColorThemeType.EMBERMIRE, darkTheme)
-            }
-        }
-        ColorThemeType.CUSTOM -> AllSettings.launcherCustomColor.state
-        else -> getPredefinedSeedColor(AllSettings.launcherColorTheme.state, darkTheme)
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+        //Embermire fallback, same seed as the Compose theme uses below Android 12
+        return if (darkTheme) 0xFFFFB598.toInt() else 0xFFA63A17.toInt()
     }
-}
-
-private fun getPredefinedSeedColor(theme: ColorThemeType, darkTheme: Boolean): Int {
-    return when (theme) {
-        ColorThemeType.EMBERMIRE -> if (darkTheme) 0xFFFFB598.toInt() else 0xFFA63A17.toInt()
-        ColorThemeType.VELVET_ROSE -> if (darkTheme) 0xFFF9B2D2.toInt() else 0xFF723D57.toInt()
-        ColorThemeType.MISTWAVE -> if (darkTheme) 0xFFCEF3F9.toInt() else 0xFF426469.toInt()
-        ColorThemeType.GLACIER -> if (darkTheme) 0xFF73D2FB.toInt() else 0xFF006684.toInt()
-        ColorThemeType.VERDANTFIELD -> if (darkTheme) 0xFFD2C972.toInt() else 0xFF676014.toInt()
-        ColorThemeType.URBAN_ASH -> if (darkTheme) 0xFFC7C6C6.toInt() else 0xFF5E5E5F.toInt()
-        ColorThemeType.VERDANT_DAWN -> if (darkTheme) 0xFF8ED88E.toInt() else 0xFF004814.toInt()
-        else -> 0xFFA63A17.toInt()
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        if (darkTheme) {
+            context.resources.getColor(android.R.color.system_primary_dark, context.theme)
+        } else {
+            context.resources.getColor(android.R.color.system_primary_light, context.theme)
+        }
+    } else {
+        context.resources.getColor(android.R.color.system_accent1_200, context.theme)
     }
 }
 

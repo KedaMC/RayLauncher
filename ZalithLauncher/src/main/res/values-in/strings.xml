@@ -42,18 +42,11 @@
     <string name="years_ago">%d tahun yang lalu</string>
     <string name="launcher_version_debug_warning">Anda sedang menggunakan versi uji coba %s! Versi ini mungkin tidak stabil dan ditujukan terutama untuk pengetesan fitur dan akses awal. Versi ini tidak disarankan untuk penggunaan jangka panjang. Jika Anda mengalami masalah selama pengujian, harap laporkan melalui GitHub dan kami akan segera mengatasinya.</string>
     <string name="launcher_version_debug_warning_cant_close">Peringatan ini Tidak bisa diabaikan</string>
-    <string name="theme_color_dynamic">Dinamis (Android 12+)</string>
-    <string name="theme_color_embermire">Embermire</string>
     <string name="generic_all">Semua</string>
     <string name="generic_file_name">Nama File: %s</string>
     <string name="generic_file_size">Ukuran File: %s</string>
     <string name="generic_authorization">Otorisasi</string>
     <string name="generic_unspecified">Tidak ditentukan</string>
-    <string name="theme_color_velvet_rose">Mawar Beludru</string>
-    <string name="theme_color_mistwave">Mistwave</string>
-    <string name="theme_color_glacier">Gletser</string>
-    <string name="theme_color_verdant_field">Hijau Senja</string>
-    <string name="theme_color_urban_ash">Urban Ash</string>
     <string name="theme_color_picker_title">Pemilihan Warna</string>
     <string name="crash_launcher_title">%sTerjadi kesalahan fatal</string>
     <string name="crash_launcher_message">Aplikasi ini tiba-tiba crash. Rincian kesalahan di bawah ini akan membantu pengembang memperbaiki aplikasi.</string>
@@ -118,7 +111,6 @@
     <string name="download_game_addon_debug">Debug</string>
     <string name="download_game_addon_recommended">Direkomendasikan %s</string>
     <string name="download_game_addon_not_installable">Tidak dapat dipasang secara otomatis</string>
-    <string name="theme_color_verdant_dawn">Hutan Fajar yang Hening</string>
     <string name="download_game_install_title">Menginstal Game</string>
     <string name="download_game_install_vanilla">Mengunduh Vanila %s</string>
     <string name="download_game_install_base_download_file">Unduh file utama untuk %1$s %2$s</string>
@@ -617,8 +609,6 @@
     <string name="settings_control_gesture_trigger_mouse_left">Klik Kiri</string>
     <string name="settings_control_gesture_trigger_mouse_right">Klik Kanan</string>
     <string name="settings_control_gesture_long_press_delay_title">Penundaan Gestur Tekan Lama</string>
-    <string name="settings_launcher_color_theme_title">Tema Warna</string>
-    <string name="settings_launcher_color_theme_summary">Sesuaikan warna launcher</string>
     <string name="settings_launcher_full_screen_summary">Buat halaman launcher jadi layar penuh, mengabaikan area aman seperti notch dan punch-hole</string>
     <string name="settings_launcher_liquid_glass_title">Liquid Glass</string>
     <string name="settings_launcher_liquid_glass_summary">Aktifkan atau nonaktifkan efek Liquid Glass pada top bar dan kartu beranda. Butuh latar gambar; refraksi penuh butuh Android 13+</string>
@@ -1203,7 +1193,6 @@
     <string name="download_assets_id_tip">Cari project berdasarkan ID</string>
     <string name="download_assets_id_not_found">Project tidak ditemukan!</string>
     <string name="download_assets_id_unsupported">Project tidak didukung!</string>
-    <string name="settings_launcher_color_theme_style">Gaya Palet</string>
     <string name="settings_renderer_config_title">Konfigurasi Renderer</string>
     <string name="control_editor_menu_new_widget_joystick">Tambahkan Joystick</string>
     <string name="control_editor_edit_category_joystick_config">Konfigurasi Joystick</string>

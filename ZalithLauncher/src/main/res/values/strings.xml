@@ -126,22 +126,6 @@
     <string name="launcher_version_debug_warning">You are using a test version of %s! This version may be unstable and is primarily intended for feature testing and early access. It is not recommended for long-term use! If you encounter any issues during testing, please report them to us via GitHub and we will address them as soon as possible.</string>
     <!-- Caption on the test build warning card explaining it cannot be dismissed -->
     <string name="launcher_version_debug_warning_cant_close">This warning cannot be dismissed</string>
-    <!-- Option of the theme color setting in launcher settings -->
-    <string name="theme_color_dynamic">Dynamic (Android 12+)</string>
-    <!-- Option of the theme color setting in launcher settings -->
-    <string name="theme_color_embermire">Embermire</string>
-    <!-- Option of the theme color setting in launcher settings -->
-    <string name="theme_color_velvet_rose">Velvet Rose</string>
-    <!-- Option of the theme color setting in launcher settings -->
-    <string name="theme_color_mistwave">Mistwave</string>
-    <!-- Option of the theme color setting in launcher settings -->
-    <string name="theme_color_glacier">Glacier</string>
-    <!-- Option of the theme color setting in launcher settings -->
-    <string name="theme_color_verdant_field">Verdant Twilight</string>
-    <!-- Option of the theme color setting in launcher settings -->
-    <string name="theme_color_urban_ash">Urban Ash</string>
-    <!-- Option of the theme color setting in launcher settings -->
-    <string name="theme_color_verdant_dawn">Silent Forest Dawn</string>
     <!-- Title of the color picker dialog -->
     <string name="theme_color_picker_title">Color Picker</string>
     <!-- Button in the color picker dialog to edit the color as a hex code -->
@@ -2169,12 +2153,6 @@
     <string name="settings_gamepad_config_create_contains">A configuration with the same name already exists</string>
     <!-- Disabled item in the in-game menu gamepad section when no mapping profiles exist -->
     <string name="settings_gamepad_config_no_items">No configurations created, unable to switch</string>
-    <!-- Title of the color theme setting in Launcher settings; also the custom color dialog title -->
-    <string name="settings_launcher_color_theme_title">Color Theme</string>
-    <!-- Description of the color theme setting in Launcher settings -->
-    <string name="settings_launcher_color_theme_summary">Customize launcher colors</string>
-    <!-- Label in the custom color dialog above the palette style list -->
-    <string name="settings_launcher_color_theme_style">Palette Style</string>
     <!-- Title of the dark mode picker in Launcher settings -->
     <string name="settings_launcher_dark_mode_title">Dark Mode</string>
     <!-- Title of the launcher language picker in Launcher settings -->

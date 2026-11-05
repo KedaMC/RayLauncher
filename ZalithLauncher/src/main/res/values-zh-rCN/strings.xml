@@ -89,14 +89,6 @@
     <string name="launcher_version_debug_warning">您正在使用测试版的 %s！该版本可能并不稳定，主要是用于功能测试、尝鲜，不建议长期使用这个版本！如果您在测试过程中发现任何问题，请通过 Github 反馈给我们，我们会尽快处理。</string>
     <string name="launcher_version_debug_warning_cant_close">这条警告无法被关闭</string>
     <!--  主题  -->
-    <string name="theme_color_dynamic">动态 (Android 12+)</string>
-    <string name="theme_color_embermire">釉烬</string>
-    <string name="theme_color_velvet_rose">绒玫</string>
-    <string name="theme_color_mistwave">雾澜</string>
-    <string name="theme_color_glacier">冰川</string>
-    <string name="theme_color_verdant_field">原野暮光</string>
-    <string name="theme_color_urban_ash">钛影</string>
-    <string name="theme_color_verdant_dawn">静林之晨</string>
     <string name="theme_color_picker_title">颜色选择器</string>
     <string name="theme_color_picker_edit_hex">编辑 Hex</string>
     <string name="theme_color_picker_edit_hex_invalid">无效 Hex</string>
@@ -1133,9 +1125,6 @@
     <string name="settings_gamepad_config_create_name">配置名称</string>
     <string name="settings_gamepad_config_create_contains">已有同名称的配置</string>
     <string name="settings_gamepad_config_no_items">未创建配置，无法切换</string>
-    <string name="settings_launcher_color_theme_title">颜色主题</string>
-    <string name="settings_launcher_color_theme_summary">更改启动器的整体颜色主题</string>
-    <string name="settings_launcher_color_theme_style">配色风格</string>
     <string name="settings_launcher_dark_mode_title">深色模式</string>
     <string name="settings_launcher_language">语言</string>
     <string name="settings_launcher_full_screen_title">页面全屏化</string>

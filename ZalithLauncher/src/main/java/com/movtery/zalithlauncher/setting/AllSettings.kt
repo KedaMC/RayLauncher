@@ -18,11 +18,7 @@
 
 package com.movtery.zalithlauncher.setting
 
-import android.os.Build
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
-import com.materialkolor.PaletteStyle
 import com.movtery.layer_controller.utils.snap.SnapMode
 import com.movtery.zalithlauncher.BuildKeys
 import com.movtery.zalithlauncher.game.download.assets.platform.Platform
@@ -45,7 +41,6 @@ import com.movtery.zalithlauncher.ui.control.gamepad.JoystickMode
 import com.movtery.zalithlauncher.ui.control.mouse.CENTER_HOTSPOT
 import com.movtery.zalithlauncher.ui.control.mouse.CursorHotspot
 import com.movtery.zalithlauncher.ui.control.mouse.LEFT_TOP_HOTSPOT
-import com.movtery.zalithlauncher.ui.theme.ColorThemeType
 
 
 object AllSettings : SettingsRegistry() {
@@ -333,26 +328,6 @@ object AllSettings : SettingsRegistry() {
     val gestureLongPressDelay = intSetting("gestureLongPressDelay", 300, 100..1000)
 
     //Launcher
-    /**
-     * 颜色主题色
-     * Android 12+ 默认动态主题色
-     */
-    val launcherColorTheme = enumSetting(
-        "launcherColorTheme",
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) ColorThemeType.DYNAMIC
-        else ColorThemeType.EMBERMIRE
-    )
-
-    /**
-     * 自定义颜色主题色
-     */
-    val launcherCustomColor = intSetting("launcherCustomColor", Color.Blue.toArgb())
-
-    /**
-     * 自定义颜色配色风格
-     */
-    val launcherCustomPaletteStyle = enumSetting("launcherCustomPaletteStyle", PaletteStyle.TonalSpot)
-
     /**
      * 启动器UI深色主题
      */

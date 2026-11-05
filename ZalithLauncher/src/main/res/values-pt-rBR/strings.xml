@@ -56,14 +56,6 @@
     <string name="generic_no_matching_items">Nenhum item correspondente</string>
     <string name="generic_follow_system">Siga o Sistema</string>
     <string name="unit_day">Dia</string>
-    <string name="theme_color_dynamic">Dinâmico (Requer Android 12+)</string>
-    <string name="theme_color_embermire">Embermire</string>
-    <string name="theme_color_velvet_rose">Rosa de veludo</string>
-    <string name="theme_color_mistwave">Onda de névoa</string>
-    <string name="theme_color_glacier">Geleira</string>
-    <string name="theme_color_verdant_field">Crepúsculo Verdejante</string>
-    <string name="theme_color_urban_ash">Cinzas Urbanas</string>
-    <string name="theme_color_verdant_dawn">Amanhecer Silencioso na Floresta</string>
     <string name="theme_color_picker_title">Seletor de cores</string>
     <string name="theme_color_picker_edit_hex">Editar Hex</string>
     <string name="theme_color_picker_edit_hex_invalid">Hex Inválido</string>
@@ -855,8 +847,6 @@
     <string name="settings_gamepad_remapping_finished_title">Vinculação concluída</string>
     <string name="settings_gamepad_remapping_finished_saving">Aguarde, o launcher está salvando e aplicando as configurações.</string>
     <string name="settings_gamepad_remapping_finished_saved">Mapeamento do controle salvo com sucesso.\nAgora você pode fechar esta caixa de diálogo!</string>
-    <string name="settings_launcher_color_theme_title">Tema de cores</string>
-    <string name="settings_launcher_color_theme_summary">Personalizar cores do launcher</string>
     <string name="settings_launcher_dark_mode_title">Modo escuro</string>
     <string name="settings_launcher_language">Idioma</string>
     <string name="settings_launcher_full_screen_title">Modo Tela cheia</string>
@@ -1179,7 +1169,6 @@
     <string name="download_assets_id_tip">Obtenha rapidamente o projeto correspondente pelo ID do projeto</string>
     <string name="download_assets_id_not_found">Projeto não encontrado!</string>
     <string name="download_assets_id_unsupported">Projeto não suportado!</string>
-    <string name="settings_launcher_color_theme_style">Estilo de paleta</string>
     <string name="settings_renderer_config_title">Configuração do Renderizador</string>
     <string name="control_editor_menu_new_widget_joystick">Adicionar Joystick</string>
     <string name="control_editor_edit_category_joystick_config">Configuração do Joystick</string>
