@@ -720,7 +720,7 @@
     <string name="about_launcher_version">Versi Launcher: %s</string>
     <string name="about_launcher_author_movtery_title">MovTery</string>
     <string name="about_launcher_author_movtery_text">Pembuat Zalith Launcher</string>
-    <string name="about_launcher_maintainer_keda_text">Maintainer Ray Launcher</string>
+    <string name="about_launcher_maintainer_keda_text">Maintainer RayLauncher</string>
     <string name="about_launcher_project_link">Link Project</string>
     <string name="about_sponsor">Dukung Dengan Sponsor</string>
     <string name="about_acknowledgements_title">Ucapan Terima Kasih Kepada</string>
@@ -1457,7 +1457,7 @@
     <string name="cape_name_twisted">Twisted</string>
     <string name="cape_name_hero">Hero</string>
     <string name="cape_name_aurora">Aurora</string>
-    <string name="launcher_unofficial_notice">Raylauncher (Versi Modifikasi Tidak Resmi)</string>
+    <string name="launcher_unofficial_notice">RayLauncher (Versi Modifikasi Tidak Resmi)</string>
     <string name="game_menu_option_fps_display_mode_number">Angka</string>
     <string name="versions_modify_select_mc">Pilih versi Minecraft</string>
     <!-- Glass tier, tema per-profil, dan overlay dekorasi -->

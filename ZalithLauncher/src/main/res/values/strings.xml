@@ -2595,10 +2595,6 @@
     <string name="sponsors_dialog_title">Sponsors of This Month</string>
     <!-- Shown in the sponsors dialog when there is no data to display -->
     <string name="sponsors_empty">No data available</string>
-    <!-- Title of the last month sponsors settlement dialog -->
-    <string name="sponsors_last_month_title">Last Month\'s Sponsors</string>
-    <!-- Summary of the last month sponsors settlement dialog; %s is the hardcoded launcher name -->
-    <string name="sponsors_last_month_summary">Here are the sponsors who supported %s last month. Thanks for all your support!</string>
     <!-- Section title of the acknowledgements list on the About page -->
     <string name="about_acknowledgements_title">Acknowledgements</string>
     <!-- Description of the PojavLauncher item in the acknowledgements; %s is the launcher name -->
@@ -3053,7 +3049,7 @@
     <string name="guide_tip_finish">Tap any blank area to finish the guide</string>
 
     <!-- Ray Launcher strings (restored after upstream 2.8.1 merge) -->
-    <string name="about_launcher_maintainer_keda_text">Maintainer of Ray Launcher</string>
+    <string name="about_launcher_maintainer_keda_text">Maintainer of RayLauncher</string>
     <string name="account_capes_delete_message">Remove \"%s\" from your cape collection?</string>
     <string name="account_capes_import">Import cape</string>
     <string name="account_capes_import_failed">Failed to import cape: %s</string>
@@ -3075,7 +3071,7 @@
     <string name="game_menu_recorder_stopped">Recording stopped, saving video…</string>
     <string name="glass_tier_full">Full</string>
     <string name="glass_tier_lite">Lite</string>
-    <string name="launcher_unofficial_notice">Raylauncher (Unofficial Modified Version)</string>
+    <string name="launcher_unofficial_notice">RayLauncher (Unofficial Modified Version)</string>
     <string name="recorder_notification_channel_name">Game recorder</string>
     <string name="recorder_notification_text">Recording game video and sound</string>
     <string name="recorder_notification_title">Recording game</string>

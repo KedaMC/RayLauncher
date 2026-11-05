@@ -90,7 +90,7 @@
     <string name="crash_singnal_message">A inicialização da Java Virtual Machine foi abortada devido ao sinal fatal %d.</string>
     <string name="crash_exit_note">Para detalhes sobre a causa, verifique o arquivo de log. Se você não conseguir resolver o problema sozinho, envie o arquivo de log para alguém que possa analisá-lo. Essa pessoa poderá ajudá-lo a diagnosticar e corrigir o problema. Não tire uma captura de tela da tela atual, pois as capturas de tela podem não fornecer informações suficientes para resolver o problema.</string>
     <string name="crash_type">Tipo da falha: %s</string>
-    <string name="crash_type_launcher">Oh não! O launcher crashou. Contate os desenvolvedores do ZalithLauncher2 ou verifique as logs para conseguir consertar esse problema</string>
+    <string name="crash_type_launcher">Oh não! O launcher crashou. Contate os desenvolvedores do RayLauncher ou verifique as logs para conseguir consertar esse problema</string>
     <string name="crash_type_game">Oh não! O jogo crashou. Provavelmente algum erro nos argumentos da Java Virtual Machine, falta de dependências obrigatórias de algum mod (se usando Forge, Fabric, Quilt ou NeoForge) ou algum outro problema, verifique as logs do jogo para saber mais</string>
     <string name="crash_share_logs">Compartilhe os registros</string>
     <string name="crash_restart">Reiniciar</string>
@@ -1522,8 +1522,6 @@
     <string name="about_sponsors_summary">Agradecemos a todos os patrocinadores que apoiam %s</string>
     <string name="sponsors_dialog_title">Patrocinadores deste mês</string>
     <string name="sponsors_empty">Nenhum dado disponível</string>
-    <string name="sponsors_last_month_title">Patrocinadores do mês passado</string>
-    <string name="sponsors_last_month_summary">Aqui estão os patrocinadores que apoiaram %s no mês passado. Obrigado por todo o seu apoio!</string>
     <string name="generic_move_up">Mover para cima</string>
     <string name="generic_move_down">Deslizar para baixo</string>
     <string name="renderer_config_mg_multidraw_order_title">Ordem da estratégia MultiDraw</string>

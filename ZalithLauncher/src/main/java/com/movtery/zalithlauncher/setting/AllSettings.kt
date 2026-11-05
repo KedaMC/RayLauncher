@@ -579,7 +579,6 @@ object AllSettings : SettingsRegistry() {
     /**
      * 上次已展示结算报告的上月赞助者月份标识
      */
-    val lastSponsorReportMonth = stringSetting("lastSponsorReportMonth", "")
 
     /**
      * 搜索模组的初始搜索平台

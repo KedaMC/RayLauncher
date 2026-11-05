@@ -385,7 +385,7 @@ private fun <E: TitledNavKey> TopBar(
                         if (festivals.isEmpty()) {
                             Text(
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                                text = BuildKeys.LAUNCHER_IDENTIFIER,
+                                text = stringResource(R.string.launcher_unofficial_notice),
                                 style = style,
                                 softWrap = softWarp,
                                 maxLines = maxLines

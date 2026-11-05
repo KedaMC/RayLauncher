@@ -105,7 +105,6 @@ private fun TopBar(
             modifier = modifier,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = BuildKeys.LAUNCHER_NAME)
             //Lite: GPLv3 要求醒目标注这是修改版
             Text(
                 text = stringResource(R.string.launcher_unofficial_notice),

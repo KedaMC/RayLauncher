@@ -32,22 +32,6 @@ data class MonthlySponsors(
     /** 赞助条目，按时间从新到旧排序 */
     @SerialName("sponsors")
     val sponsors: List<Sponsor>,
-    /** 上月结算数据块 */
-    @SerialName("last_month")
-    val lastMonth: LastMonthSponsors
-)
-
-/**
- * 上月结算数据
- */
-@Serializable
-data class LastMonthSponsors(
-    /** 结算月份标识，格式 YYYY-MM，北京时间 */
-    @SerialName("month")
-    val month: String,
-    /** 上月赞助条目，上月无赞助时为空数组 */
-    @SerialName("list")
-    val list: List<Sponsor> = emptyList()
 )
 
 /**

@@ -1348,8 +1348,6 @@
     <string name="about_sponsors_summary">感谢所有支持 %s 的赞助者们</string>
     <string name="sponsors_dialog_title">当月赞助者</string>
     <string name="sponsors_empty">暂无数据</string>
-    <string name="sponsors_last_month_title">上个月的赞助者</string>
-    <string name="sponsors_last_month_summary">以下为上个月赞助支持 %s 的赞助者，感谢大家的支持！</string>
     <string name="about_acknowledgements_title">鸣谢</string>
     <string name="about_acknowledgements_pojav_text">%s 使用了 PojavLauncher 的启动后端</string>
     <string name="about_acknowledgements_modrinth_text">%s 移植了 Modrinth 的玩家模型动画预设</string>
