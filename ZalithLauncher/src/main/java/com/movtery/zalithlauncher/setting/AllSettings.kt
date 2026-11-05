@@ -129,7 +129,7 @@ object AllSettings : SettingsRegistry() {
     /**
      * 版本自定义信息
      */
-    val versionCustomInfo = stringSetting("versionCustomInfo", "${BuildKeys.LAUNCHER_IDENTIFIER}[zl_version]")
+    val versionCustomInfo = stringSetting("versionCustomInfo", BuildKeys.LAUNCHER_NAME)
 
     /**
      * 启动器的Java环境
