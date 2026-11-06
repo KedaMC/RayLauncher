@@ -268,7 +268,9 @@ private fun NavigationUI(
                     }
                 }
                 entry<NormalNavKey.Settings.ControlManager> {
-                    ControlManageScreen(key, settingsScreenKey, mainScreenKey, eventViewModel, submitError)
+                    SharedGlassBlurPage {
+                        ControlManageScreen(key, settingsScreenKey, mainScreenKey, eventViewModel, submitError)
+                    }
                 }
                 entry<NormalNavKey.Settings.AboutInfo> {
                     AboutInfoScreen(
