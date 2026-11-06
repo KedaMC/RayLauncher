@@ -78,9 +78,11 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.Dimension
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.entryProvider
 import com.movtery.zalithlauncher.BuildKeys
@@ -369,7 +371,12 @@ private fun <E: TitledNavKey> TopBar(
                     centerVerticallyTo(parent)
                     start.linkTo(backCenter.end, margin = if (inLauncherScreen) 12.dp else 16.dp)
                     if (!inLauncherScreen) {
+                        // Left-aligned at a fixed start point (the back/home group is always
+                        // present on inner pages), so the text no longer drifts when the
+                        // right button group changes width.
                         end.linkTo(endButtons.start, margin = 8.dp)
+                        width = Dimension.preferredWrapContent
+                        horizontalBias = 0f
                     }
                 },
                 targetState = parentRes to childRes
@@ -399,6 +406,7 @@ private fun <E: TitledNavKey> TopBar(
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                             text = titleText,
                             style = style,
+                            overflow = TextOverflow.Ellipsis,
                             softWrap = softWarp,
                             maxLines = maxLines
                         )
