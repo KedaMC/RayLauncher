@@ -468,38 +468,21 @@ private fun VersionsContent(
             }
         }
 
-        val glassBackdrop = liquidGlassBackdrop()
-        val launchButtonModifier = Modifier
-            .fillMaxWidth()
-            .padding(PaddingValues(horizontal = 12.dp))
-            .padding(bottom = 8.dp)
-        if (glassBackdrop != null) {
-            ScalingActionButton(
-                modifier = launchButtonModifier,
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
-                onClick = { onLaunchGame(null) },
-                content = {
-                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        MarqueeText(text = stringResource(R.string.main_launch_game))
-                    }
+        //Default button colors in both modes, so the Launch button matches every other button
+        //even when Liquid Glass is off.
+        ScalingActionButton(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(PaddingValues(horizontal = 12.dp))
+                .padding(bottom = 8.dp),
+            elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
+            onClick = { onLaunchGame(null) },
+            content = {
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    MarqueeText(text = stringResource(R.string.main_launch_game))
                 }
-            )
-        } else {
-            ScalingActionButton(
-                modifier = launchButtonModifier,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.72f),
-                    contentColor = Color.White
-                ),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
-                onClick = { onLaunchGame(null) },
-                content = {
-                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        MarqueeText(text = stringResource(R.string.main_launch_game))
-                    }
-                }
-            )
-        }
+            }
+        )
     }
 }
 
