@@ -91,6 +91,7 @@ import com.movtery.zalithlauncher.ui.AndroidStringText
 import com.movtery.zalithlauncher.ui.androidText
 import com.movtery.zalithlauncher.ui.components.ButtonPosition
 import com.movtery.zalithlauncher.ui.components.LocalLiquidGlassBackdrop
+import com.movtery.zalithlauncher.ui.components.SharedGlassBlurRecorder
 import com.movtery.zalithlauncher.ui.components.MarqueeText
 import com.movtery.zalithlauncher.ui.components.PositionButton
 import com.movtery.zalithlauncher.ui.components.PositionFilledTonalButton
@@ -637,6 +638,8 @@ fun Background(
                 }
             }
         }
+        //Pre-blurred copy of a still wallpaper, shared by all glass surfaces on opted-in pages
+        if (glassBackdrop != null) SharedGlassBlurRecorder()
     }
 }
 

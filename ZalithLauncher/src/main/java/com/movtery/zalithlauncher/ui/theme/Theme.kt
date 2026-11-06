@@ -48,6 +48,8 @@ import com.movtery.zalithlauncher.ui.components.launcherGlassOn
 import com.movtery.zalithlauncher.ui.components.LocalLiquidGlassBackdrop
 import com.movtery.zalithlauncher.ui.components.LocalLiquidGlassInGame
 import com.movtery.zalithlauncher.ui.components.LocalLiquidGlassPage
+import com.movtery.zalithlauncher.ui.components.LocalLiquidGlassSharedBlur
+import com.movtery.zalithlauncher.ui.components.rememberSharedGlassBlur
 import com.movtery.zalithlauncher.viewmodel.BackgroundViewModel
 import com.movtery.zalithlauncher.viewmodel.LocalBackgroundViewModel
 import com.styropyr0.prismal.sources.rememberPrismalGlassLayer
@@ -229,12 +231,17 @@ fun ZalithLauncherTheme(
     val pageCapture = remember(pageLayer) { GlassPageCapture(pageLayer) }
     val activePageCapture = pageCapture.takeIf { activeGlassLayer != null }
 
+    //Launcher only: the wallpaper blurred once at low resolution, sampled by glass instead of a live blur per surface
+    val sharedBlur = rememberSharedGlassBlur()
+    val activeSharedBlur = sharedBlur.takeIf { activeGlassLayer != null && !forceGlassLayer }
+
     CompositionLocalProvider(
         LocalBackgroundViewModel provides backgroundViewModel,
         LocalFestivals provides festivals,
         LocalLiquidGlassBackdrop provides activeGlassLayer,
         LocalLiquidGlassInGame provides forceGlassLayer,
-        LocalLiquidGlassPage provides activePageCapture
+        LocalLiquidGlassPage provides activePageCapture,
+        LocalLiquidGlassSharedBlur provides activeSharedBlur
     ) {
         MaterialExpressiveTheme(
             colorScheme = currentDisplayScheme,
