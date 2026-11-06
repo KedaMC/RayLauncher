@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.entryProvider
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.ui.base.BaseScreen
+import com.movtery.zalithlauncher.ui.components.SharedGlassBlurPage
 import com.movtery.zalithlauncher.ui.components.GlassRailItemBody
 import com.movtery.zalithlauncher.ui.components.LiquidGlassSurface
 import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
@@ -237,7 +238,9 @@ private fun NavigationUI(
             popTransitionSpec = rememberTransitionSpec(),
             entryProvider = entryProvider {
                 entry<NormalNavKey.Settings.Renderer> {
-                    RendererSettingsScreen(key, settingsScreenKey, mainScreenKey, eventViewModel)
+                    SharedGlassBlurPage {
+                        RendererSettingsScreen(key, settingsScreenKey, mainScreenKey, eventViewModel)
+                    }
                 }
                 entry<NormalNavKey.Settings.Game> {
                     GameSettingsScreen(key, settingsScreenKey, mainScreenKey, eventViewModel)
