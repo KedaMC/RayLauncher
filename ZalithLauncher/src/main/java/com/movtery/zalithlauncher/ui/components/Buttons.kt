@@ -175,6 +175,7 @@ fun IconTextButton(
     style: TextStyle = MaterialTheme.typography.labelMedium,
     enabled: Boolean = true,
     onLongClick: () -> Unit = {},
+    glassColor: Color = MaterialTheme.colorScheme.surface,
 ) {
     BaseIconTextButton(
         onClick = onClick,
@@ -190,7 +191,8 @@ fun IconTextButton(
         text = text,
         style = style,
         enabled = enabled,
-        onLongClick = onLongClick
+        onLongClick = onLongClick,
+        glassColor = glassColor
     )
 }
 
@@ -235,6 +237,7 @@ fun BaseIconTextButton(
     style: TextStyle = MaterialTheme.typography.labelMedium,
     enabled: Boolean = true,
     onLongClick: () -> Unit = {},
+    glassColor: Color = MaterialTheme.colorScheme.surface,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -281,7 +284,7 @@ fun BaseIconTextButton(
             shape = shape,
             // 玻璃按钮自带背景与边框，相邻按钮会紧贴在一起，这里留出水平间距
             modifier = modifier.padding(horizontal = 4.dp),
-            containerColor = MaterialTheme.colorScheme.surface,
+            containerColor = glassColor,
             contentColor = LocalContentColor.current,
             blurRadius = 8.dp
         ) {

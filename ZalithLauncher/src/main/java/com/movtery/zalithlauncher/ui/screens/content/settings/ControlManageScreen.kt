@@ -523,7 +523,9 @@ private fun ControlListHeader(
     onCreate: () -> Unit,
     eventViewModel: EventViewModel,
 ) {
-    CardTitleLayout {
+    //Same colours as the About page: flat header on the glass card, buttons use itemColor
+    val buttonColor = itemColor()
+    CardTitleLayout(flatUnderGlass = true) {
         val scrollState = rememberScrollState()
 
         Row(
@@ -546,18 +548,21 @@ private fun ControlListHeader(
                 painter = painterResource(R.drawable.ic_refresh),
                 contentDescription = stringResource(R.string.generic_refresh),
                 text = stringResource(R.string.generic_refresh),
+                glassColor = buttonColor,
             )
             ImportMultipleFileButton(
                 extension = "json",
                 progressUris = { uris ->
                     eventViewModel.sendEvent(EventViewModel.Event.ImportControls(uris))
-                }
+                },
+                glassColor = buttonColor
             )
             IconTextButton(
                 onClick = onCreate,
                 painter = painterResource(R.drawable.ic_add_box_outlined),
                 contentDescription = stringResource(R.string.control_manage_create_new),
                 text = stringResource(R.string.control_manage_create_new),
+                glassColor = buttonColor,
             )
         }
     }

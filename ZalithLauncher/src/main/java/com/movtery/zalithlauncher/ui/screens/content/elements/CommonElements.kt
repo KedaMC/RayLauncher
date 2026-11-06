@@ -279,7 +279,8 @@ fun ImportMultipleFileButton(
     progressUris: (uris: List<Uri>) -> Unit,
     modifier: Modifier = Modifier,
     painter: Painter = painterResource(R.drawable.ic_add),
-    text: String = stringResource(R.string.generic_import)
+    text: String = stringResource(R.string.generic_import),
+    glassColor: Color = MaterialTheme.colorScheme.surface
 ) {
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetMultipleContents()
@@ -295,7 +296,8 @@ fun ImportMultipleFileButton(
             launcher.launch(extension.extensionToMimeType())
         },
         painter = painter,
-        text = text
+        text = text,
+        glassColor = glassColor
     )
 }
 
@@ -307,7 +309,8 @@ fun ImportSingleFileButton(
     painter: Painter = painterResource(R.drawable.ic_add),
     text: String = stringResource(R.string.generic_import),
     onClick: () -> Unit = {},
-    onLongClick: ((launch: () -> Unit) -> Unit)? = null
+    onLongClick: ((launch: () -> Unit) -> Unit)? = null,
+    glassColor: Color = MaterialTheme.colorScheme.surface
 ) {
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -325,6 +328,7 @@ fun ImportSingleFileButton(
         },
         painter = painter,
         text = text,
+        glassColor = glassColor,
         onLongClick = {
             if (onLongClick != null) {
                 onLongClick { launcher.launch(extension.extensionToMimeType()) }

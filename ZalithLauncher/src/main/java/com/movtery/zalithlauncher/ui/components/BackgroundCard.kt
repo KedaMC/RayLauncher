@@ -153,16 +153,23 @@ fun BackgroundCard(
 /**
  * 适合在背景卡片组件顶部使用的标题栏Layout
  * @param alpha 组件背景颜色不透明度
+ * @param flatUnderGlass when true and Liquid Glass is active, the title bar draws no band of its own,
+ * so it shows the parent glass card colour instead of a darker strip
  */
 @Composable
 fun CardTitleLayout(
     modifier: Modifier = Modifier,
     influencedByBackground: Boolean = true,
     alpha: Float = 0.5f,
-    color: Color = influencedByBackgroundColor(
-        color = cardTitleColor(alpha),
-        enabled = influencedByBackground
-    ),
+    flatUnderGlass: Boolean = false,
+    color: Color = if (flatUnderGlass && liquidGlassBackdrop() != null) {
+        Color.Transparent
+    } else {
+        influencedByBackgroundColor(
+            color = cardTitleColor(alpha),
+            enabled = influencedByBackground
+        )
+    },
     contentColor: Color = onCardColor(),
     blur: Int = effectiveBackgroundBlur(),
     content: @Composable @UiComposable ColumnScope.() -> Unit
