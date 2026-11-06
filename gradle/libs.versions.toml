@@ -55,7 +55,7 @@ appcompat = "1.8.0"
 dagger = "2.60.1"
 hilt = "1.4.0"
 webkit = "1.18.0"
-prismal = "v1.0.4"
+prismal = "v1.0.6"
 
 [libraries]
 androidx-media3-exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "media3Exoplayer" }
