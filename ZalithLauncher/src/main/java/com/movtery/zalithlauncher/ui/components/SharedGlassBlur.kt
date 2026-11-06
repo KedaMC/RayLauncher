@@ -74,21 +74,19 @@ import kotlin.math.sqrt
  */
 @Stable
 class SharedGlassBlur internal constructor(
-    /** Layer the pre-blurred wallpaper is recorded into; aligned with the wallpaper layer. */
-    internal val layer: PrismalGlassLayer,
-    private val imageState: MutableState<ImageBitmap?>
+    internal val slots: List<SharedBlurSlot>
 ) {
-    /** Blur radius (dp) the current image was made with. */
-    private var radiusDp by mutableFloatStateOf(0f)
-
-    /** The shared layer when it holds an image blurred with [radiusDp], otherwise null (use the live blur). */
+    /** The shared layer holding an image blurred with [radiusDp], otherwise null (use the live blur). */
     fun layerFor(radiusDp: Float): PrismalGlassLayer? =
-        if (imageState.value != null && abs(radiusDp - this.radiusDp) < 0.01f) layer else null
+        slots.firstOrNull { it.image != null && abs(radiusDp - it.radiusDp) < 0.01f }?.layer
+}
 
-    internal fun publish(image: ImageBitmap?, radiusDp: Float) {
-        imageState.value = image
-        this.radiusDp = radiusDp
-    }
+/** One pre-blurred copy of the wallpaper: its layer, image and the blur radius (dp) it was made with. */
+@Stable
+internal class SharedBlurSlot(internal val layer: PrismalGlassLayer, internal val imageState: MutableState<ImageBitmap?>) {
+    var radiusDp by mutableFloatStateOf(0f)
+        internal set
+    val image: ImageBitmap? get() = imageState.value
 }
 
 /** Set by the theme in the launcher when Liquid Glass is on. Null in game and when glass is off. */
@@ -97,29 +95,34 @@ val LocalLiquidGlassSharedBlur = staticCompositionLocalOf<SharedGlassBlur?> { nu
 /** True inside a page that opted in with [SharedGlassBlurPage]. */
 private val LocalSharedGlassBlurPage = staticCompositionLocalOf { false }
 
-/** Blur radius (dp) served by the shared image: the default radius of [LiquidGlassSurface]. */
-private const val SHARED_BLUR_RADIUS_DP = 8f
+/**
+ * Blur radii (dp) served by shared images: the default radius of [LiquidGlassSurface] and the one of
+ * the inner page header.
+ */
+private val SHARED_BLUR_RADII_DP = floatArrayOf(8f, 12f)
 
 /** The shared image is a quarter of the page size; the blur is far too soft to show the difference. */
 private const val SHARED_BLUR_DOWNSCALE = 4
 
 @Composable
 internal fun rememberSharedGlassBlur(): SharedGlassBlur {
-    val imageState = remember { mutableStateOf<ImageBitmap?>(null) }
-    val onDraw = remember<ContentDrawScope.() -> Unit> {
-        {
-            val image = imageState.value
-            if (image != null) {
-                drawImage(
-                    image = image,
-                    dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt()),
-                    filterQuality = FilterQuality.Low
-                )
+    val slots = SHARED_BLUR_RADII_DP.map { _ ->
+        val imageState = remember { mutableStateOf<ImageBitmap?>(null) }
+        val onDraw = remember<ContentDrawScope.() -> Unit> {
+            {
+                val image = imageState.value
+                if (image != null) {
+                    drawImage(
+                        image = image,
+                        dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt()),
+                        filterQuality = FilterQuality.Low
+                    )
+                }
             }
         }
+        SharedBlurSlot(rememberPrismalGlassLayer(onDraw = onDraw), imageState)
     }
-    val layer = rememberPrismalGlassLayer(onDraw = onDraw)
-    return remember(layer) { SharedGlassBlur(layer, imageState) }
+    return remember(slots.map { it.layer }) { SharedGlassBlur(slots) }
 }
 
 /**
@@ -155,33 +158,37 @@ fun SharedGlassBlurRecorder() {
     var size by remember { mutableStateOf(IntSize.Zero) }
 
     val lite = launcherGlassTier() == GlassTier.LITE
-    val radiusDp = if (lite) SHARED_BLUR_RADIUS_DP * LITE_BLUR_FACTOR else SHARED_BLUR_RADIUS_DP
     val file = background.activeFile
     val candidate = background.isValid && background.isImage
 
-    LaunchedEffect(file, background.refreshTrigger, candidate, size, radiusDp, density) {
-        shared.publish(null, radiusDp)
+    LaunchedEffect(file, background.refreshTrigger, candidate, size, lite, density) {
+        val radii = SHARED_BLUR_RADII_DP.map { if (lite) it * LITE_BLUR_FACTOR else it }
+        shared.slots.forEachIndexed { i, slot -> slot.publish(null, radii[i]) }
         if (!candidate || size.width <= 0 || size.height <= 0) return@LaunchedEffect
-        val image = withContext(Dispatchers.IO) {
-            runCatching { renderBlurredWallpaper(file, size, radiusDp * density) }.getOrNull()
-        }
-        if (image != null) shared.publish(image.asImageBitmap(), radiusDp)
+        val images = withContext(Dispatchers.IO) {
+            runCatching { renderBlurredWallpapers(file, size, radii.map { it * density }) }.getOrNull()
+        } ?: return@LaunchedEffect
+        shared.slots.forEachIndexed { i, slot -> slot.publish(images[i].asImageBitmap(), radii[i]) }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .onSizeChanged { size = it }
-            .prismalGlassLayer(shared.layer)
-    )
+    Box(modifier = Modifier.fillMaxSize().onSizeChanged { size = it }) {
+        shared.slots.forEach { slot ->
+            Box(modifier = Modifier.fillMaxSize().prismalGlassLayer(slot.layer))
+        }
+    }
+}
+
+private fun SharedBlurSlot.publish(image: ImageBitmap?, radiusDp: Float) {
+    imageState.value = image
+    this.radiusDp = radiusDp
 }
 
 /**
  * Decodes [file] the way the wallpaper is shown (centre crop, EXIF orientation) at a quarter of
- * [pageSize] and blurs it with a Gaussian of [sigmaPx] (measured at full size). Null for GIFs, which
- * animate and so cannot share a still blur.
+ * [pageSize] once, then blurs a copy per entry of [sigmasPx] with a Gaussian (measured at full size).
+ * Null for GIFs, which animate and so cannot share a still blur.
  */
-private fun renderBlurredWallpaper(file: File, pageSize: IntSize, sigmaPx: Float): Bitmap? {
+private fun renderBlurredWallpapers(file: File, pageSize: IntSize, sigmasPx: List<Float>): List<Bitmap>? {
     if (!file.exists() || file.isGifFile()) return null
     val targetWidth = (pageSize.width / SHARED_BLUR_DOWNSCALE).coerceAtLeast(1)
     val targetHeight = (pageSize.height / SHARED_BLUR_DOWNSCALE).coerceAtLeast(1)
@@ -222,7 +229,9 @@ private fun renderBlurredWallpaper(file: File, pageSize: IntSize, sigmaPx: Float
     Canvas(scaled).drawBitmap(decoded, matrix, Paint(Paint.FILTER_BITMAP_FLAG))
     decoded.recycle()
 
-    return gaussianBlur(scaled, sigmaPx / SHARED_BLUR_DOWNSCALE)
+    val blurred = sigmasPx.map { gaussianBlur(scaled.copy(Bitmap.Config.ARGB_8888, false), it / SHARED_BLUR_DOWNSCALE) }
+    scaled.recycle()
+    return blurred
 }
 
 private fun readExifOrientation(file: File): Int = runCatching {

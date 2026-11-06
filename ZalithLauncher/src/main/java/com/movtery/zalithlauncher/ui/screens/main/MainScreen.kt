@@ -20,6 +20,7 @@ package com.movtery.zalithlauncher.ui.screens.main
 
 import com.movtery.zalithlauncher.ui.components.effectiveBackgroundOpacity
 import com.movtery.zalithlauncher.ui.components.launcherGlassOn
+import com.movtery.zalithlauncher.ui.components.SharedGlassBlurPage
 import com.movtery.zalithlauncher.ui.components.glassTint
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.AnimatedVisibility
@@ -289,22 +290,24 @@ private fun <E: TitledNavKey> TopBar(
             // Inner pages share one continuous glass header. The launcher home keeps
             // its title and action group as separate surfaces.
             if (headerGlassBackdrop != null && !inLauncherScreen) {
-                LiquidGlassSurface(
-                    backdrop = headerGlassBackdrop,
-                    shape = MaterialTheme.shapes.large,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight()
-                        .constrainAs(headerGlass) {
-                            start.linkTo(parent.start)
-                            end.linkTo(parent.end)
-                            top.linkTo(parent.top)
-                            bottom.linkTo(parent.bottom)
-                        },
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = Color.White,
-                    blurRadius = 12.dp
-                ) {}
+                SharedGlassBlurPage {
+                    LiquidGlassSurface(
+                        backdrop = headerGlassBackdrop,
+                        shape = MaterialTheme.shapes.large,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight()
+                            .constrainAs(headerGlass) {
+                                start.linkTo(parent.start)
+                                end.linkTo(parent.end)
+                                top.linkTo(parent.top)
+                                bottom.linkTo(parent.bottom)
+                            },
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        contentColor = Color.White,
+                        blurRadius = 12.dp
+                    ) {}
+                }
             }
 
             val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
@@ -723,13 +726,15 @@ private fun NavigationUI(
                     )
                 }
                 entry<NestedNavKey.Download> { key ->
-                    DownloadScreen(
-                        key = key,
-                        backScreenViewModel = screenBackStackModel,
-                        eventViewModel = eventViewModel,
-                        modpackImportViewModel = modpackImportViewModel,
-                        submitError = submitError
-                    )
+                    SharedGlassBlurPage {
+                        DownloadScreen(
+                            key = key,
+                            backScreenViewModel = screenBackStackModel,
+                            eventViewModel = eventViewModel,
+                            modpackImportViewModel = modpackImportViewModel,
+                            submitError = submitError
+                        )
+                    }
                 }
                 entry<NestedNavKey.AssetInfo> { key ->
                     AssetInfoScreen(
