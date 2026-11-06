@@ -263,7 +263,9 @@ private fun NavigationUI(
                     }
                 }
                 entry<NormalNavKey.Settings.JavaManager> {
-                    JavaManageScreen(key, settingsScreenKey, mainScreenKey, eventViewModel, submitError)
+                    SharedGlassBlurPage {
+                        JavaManageScreen(key, settingsScreenKey, mainScreenKey, eventViewModel, submitError)
+                    }
                 }
                 entry<NormalNavKey.Settings.ControlManager> {
                     ControlManageScreen(key, settingsScreenKey, mainScreenKey, eventViewModel, submitError)
