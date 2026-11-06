@@ -273,21 +273,23 @@ private fun NavigationUI(
                     }
                 }
                 entry<NormalNavKey.Settings.AboutInfo> {
-                    AboutInfoScreen(
-                        key = key,
-                        settingsScreenKey = settingsScreenKey,
-                        mainScreenKey = mainScreenKey,
-                        checkUpdate = {
-                            eventViewModel.sendEvent(EventViewModel.Event.CheckUpdate)
-                        },
-                        onViewSponsors = {
-                            eventViewModel.sendEvent(EventViewModel.Event.ShowSponsors)
-                        },
-                        openLicense = openLicenseScreen,
-                        openLink = { url ->
-                            eventViewModel.sendEvent(EventViewModel.Event.OpenLink(url))
-                        }
-                    )
+                    SharedGlassBlurPage {
+                        AboutInfoScreen(
+                            key = key,
+                            settingsScreenKey = settingsScreenKey,
+                            mainScreenKey = mainScreenKey,
+                            checkUpdate = {
+                                eventViewModel.sendEvent(EventViewModel.Event.CheckUpdate)
+                            },
+                            onViewSponsors = {
+                                eventViewModel.sendEvent(EventViewModel.Event.ShowSponsors)
+                            },
+                            openLicense = openLicenseScreen,
+                            openLink = { url ->
+                                eventViewModel.sendEvent(EventViewModel.Event.OpenLink(url))
+                            }
+                        )
+                    }
                 }
             }
         )
