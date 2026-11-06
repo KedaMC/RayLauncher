@@ -249,12 +249,14 @@ private fun NavigationUI(
                     ControlSettingsScreen(key, settingsScreenKey, mainScreenKey, eventViewModel, submitError)
                 }
                 entry<NormalNavKey.Settings.Launcher> {
-                    LauncherSettingsScreen(
-                        key = key,
-                        settingsScreenKey = settingsScreenKey,
-                        mainScreenKey = mainScreenKey,
-                        submitError = submitError,
-                    )
+                    SharedGlassBlurPage {
+                        LauncherSettingsScreen(
+                            key = key,
+                            settingsScreenKey = settingsScreenKey,
+                            mainScreenKey = mainScreenKey,
+                            submitError = submitError,
+                        )
+                    }
                 }
                 entry<NormalNavKey.Settings.JavaManager> {
                     JavaManageScreen(key, settingsScreenKey, mainScreenKey, eventViewModel, submitError)
