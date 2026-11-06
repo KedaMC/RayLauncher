@@ -243,7 +243,9 @@ private fun NavigationUI(
                     }
                 }
                 entry<NormalNavKey.Settings.Game> {
-                    GameSettingsScreen(key, settingsScreenKey, mainScreenKey, eventViewModel)
+                    SharedGlassBlurPage {
+                        GameSettingsScreen(key, settingsScreenKey, mainScreenKey, eventViewModel)
+                    }
                 }
                 entry<NormalNavKey.Settings.Control> {
                     ControlSettingsScreen(key, settingsScreenKey, mainScreenKey, eventViewModel, submitError)
