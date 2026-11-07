@@ -18,6 +18,7 @@
 
 package com.movtery.zalithlauncher.ui.screens.main
 
+import com.movtery.cardgrid.state.rememberCardGridState
 import com.movtery.zalithlauncher.ui.components.effectiveBackgroundOpacity
 import com.movtery.zalithlauncher.ui.components.launcherGlassOn
 import com.movtery.zalithlauncher.ui.components.SharedGlassBlurPage
@@ -598,6 +599,8 @@ private fun NavigationUI(
 ) {
     val backStack = screenBackStackModel.mainScreen.backStack
     val currentKey = backStack.lastOrNull()
+    //主页网格状态随主导航存活，离开主页再返回时不会重建、重播种与重放入场动画
+    val homeGridState = rememberCardGridState()
 
     LaunchedEffect(currentKey) {
         screenBackStackModel.mainScreen.currentKey = currentKey
@@ -634,6 +637,7 @@ private fun NavigationUI(
                     SharedGlassBlurPage {
                         LauncherScreen(
                             backStackViewModel = screenBackStackModel,
+                            gridState = homeGridState,
                             navigateToVersions = navigateToVersions,
                             onLaunchGame = { version ->
                                 eventViewModel.sendEvent(

@@ -103,8 +103,14 @@ fun HomeGrid(
     //长按调整工具栏触发的卡片操作
     var operation by remember { mutableStateOf<HomeCardOperation>(HomeCardOperation.None) }
 
-    // 播种持久化的用户卡片布局
+    // 网格状态跨导航存活：离开主页时退出调整态，避免回来时仍停留在调整态
+    DisposableEffect(state) {
+        onDispose { state.exitAdjusting() }
+    }
+
+    // 播种持久化的用户卡片布局（状态存活期间只播种一次，回到主页不重放）
     LaunchedEffect(Unit) {
+        if (state.isSeeded) return@LaunchedEffect
         val snapshot = HomeGridStore.load()
         state.seed(
             types = HomeCards.userCardTypes,

@@ -74,7 +74,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.movtery.cardgrid.state.rememberCardGridState
+import com.movtery.cardgrid.state.CardGridState
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.game.account.Account
 import com.movtery.zalithlauncher.game.account.AccountsManager
@@ -122,6 +122,7 @@ private val ActionMenuOuterPadding = 12.dp
 @Composable
 fun LauncherScreen(
     backStackViewModel: ScreenBackStackViewModel,
+    gridState: CardGridState,
     navigateToVersions: (Version) -> Unit,
     onLaunchGame: (Version?) -> Unit,
     onQuickPlayServer: (Version?, String) -> Unit,
@@ -199,6 +200,7 @@ fun LauncherScreen(
                         .weight(ContentWeight)
                         .offset { IntOffset(x = dragState.previewShift.value.roundToInt(), y = 0) },
                     isVisible = isVisible,
+                    gridState = gridState,
                     onLaunchGame = { version ->
                         onLaunchGame(version)
                     },
@@ -249,13 +251,13 @@ fun LauncherScreen(
 @Composable
 private fun ContentMenu(
     isVisible: Boolean,
+    gridState: CardGridState,
     onLaunchGame: (Version) -> Unit,
     onQuickPlayServer: (Version?, String) -> Unit,
     onOpenVersionSettings: (Version) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val ctx = rememberAnimatedContext(isVisible = isVisible)
-    val gridState = rememberCardGridState()
 
     CompositionLocalProvider(
         LocalHomeCardLauncher provides onLaunchGame,
