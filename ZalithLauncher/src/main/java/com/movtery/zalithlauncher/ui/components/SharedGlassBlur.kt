@@ -96,10 +96,10 @@ val LocalLiquidGlassSharedBlur = staticCompositionLocalOf<SharedGlassBlur?> { nu
 private val LocalSharedGlassBlurPage = staticCompositionLocalOf { false }
 
 /**
- * Blur radii (dp) served by shared images: the default radius of [LiquidGlassSurface] and the one of
- * the inner page header.
+ * Blur radii (dp) served by shared images: the default radius of [LiquidGlassSurface] (8), the home
+ * title and version card (10) and the page header and home toolbar (12).
  */
-private val SHARED_BLUR_RADII_DP = floatArrayOf(8f, 12f)
+private val SHARED_BLUR_RADII_DP = floatArrayOf(8f, 10f, 12f)
 
 /** The shared image is a quarter of the page size; the blur is far too soft to show the difference. */
 private const val SHARED_BLUR_DOWNSCALE = 4

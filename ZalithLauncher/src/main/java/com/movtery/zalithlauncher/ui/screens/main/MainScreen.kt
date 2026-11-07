@@ -417,14 +417,16 @@ private fun <E: TitledNavKey> TopBar(
                 }
 
                 if (titleBackdrop != null) {
-                    LiquidGlassSurface(
-                        backdrop = titleBackdrop,
-                        shape = MaterialTheme.shapes.large,
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        contentColor = Color.White,
-                        blurRadius = 10.dp
-                    ) {
-                        TitleContent()
+                    SharedGlassBlurPage {
+                        LiquidGlassSurface(
+                            backdrop = titleBackdrop,
+                            shape = MaterialTheme.shapes.large,
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            contentColor = Color.White,
+                            blurRadius = 10.dp
+                        ) {
+                            TitleContent()
+                        }
                     }
                 } else {
                     TitleContent()
@@ -509,15 +511,17 @@ private fun <E: TitledNavKey> TopBar(
                     }
                 }
                 if (toolbarGlassBackdrop != null && inLauncherScreen) {
-                    LiquidGlassSurface(
-                        backdrop = toolbarGlassBackdrop,
-                        shape = MaterialTheme.shapes.large,
-                        modifier = Modifier.height(40.dp),
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        contentColor = LocalContentColor.current,
-                        blurRadius = 12.dp
-                    ) {
-                        toolbarActions()
+                    SharedGlassBlurPage {
+                        LiquidGlassSurface(
+                            backdrop = toolbarGlassBackdrop,
+                            shape = MaterialTheme.shapes.large,
+                            modifier = Modifier.height(40.dp),
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            contentColor = LocalContentColor.current,
+                            blurRadius = 12.dp
+                        ) {
+                            toolbarActions()
+                        }
                     }
                 } else {
                     toolbarActions()
@@ -627,29 +631,31 @@ private fun NavigationUI(
             popTransitionSpec = rememberTransitionSpec(),
             entryProvider = entryProvider {
                 entry<NormalNavKey.LauncherMain> {
-                    LauncherScreen(
-                        backStackViewModel = screenBackStackModel,
-                        navigateToVersions = navigateToVersions,
-                        onLaunchGame = { version ->
-                            eventViewModel.sendEvent(
-                                EventViewModel.Event.Launch.Game(version)
-                            )
-                        },
-                        onQuickPlayServer = { version, address ->
-                            val target = (version ?: VersionsManager.currentVersion.value)?.takeIf { it.isValid() }
-                            if (target != null) {
+                    SharedGlassBlurPage {
+                        LauncherScreen(
+                            backStackViewModel = screenBackStackModel,
+                            navigateToVersions = navigateToVersions,
+                            onLaunchGame = { version ->
                                 eventViewModel.sendEvent(
-                                    EventViewModel.Event.Launch.PlayServer(target, address)
+                                    EventViewModel.Event.Launch.Game(version)
                                 )
-                            } else {
-                                eventViewModel.sendToast(androidText(R.string.game_launch_no_version))
-                                screenBackStackModel.mainScreen.navigateTo(NormalNavKey.VersionsManager)
+                            },
+                            onQuickPlayServer = { version, address ->
+                                val target = (version ?: VersionsManager.currentVersion.value)?.takeIf { it.isValid() }
+                                if (target != null) {
+                                    eventViewModel.sendEvent(
+                                        EventViewModel.Event.Launch.PlayServer(target, address)
+                                    )
+                                } else {
+                                    eventViewModel.sendToast(androidText(R.string.game_launch_no_version))
+                                    screenBackStackModel.mainScreen.navigateTo(NormalNavKey.VersionsManager)
+                                }
+                            },
+                            onOpenLink = {
+                                eventViewModel.sendEvent(EventViewModel.Event.OpenLink(it))
                             }
-                        },
-                        onOpenLink = {
-                            eventViewModel.sendEvent(EventViewModel.Event.OpenLink(it))
-                        }
-                    )
+                        )
+                    }
                 }
                 entry<NestedNavKey.Settings> { key ->
                     SettingsScreen(
