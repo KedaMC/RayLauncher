@@ -675,16 +675,18 @@ private fun NavigationUI(
                     )
                 }
                 entry<NormalNavKey.AccountManager> { key ->
-                    AccountManageScreen(
-                        key = key,
-                        backStackViewModel = screenBackStackModel,
-                        backToMainScreen = toMainScreen,
-                        openLink = { url ->
-                            eventViewModel.sendEvent(EventViewModel.Event.OpenLink(url))
-                        },
-                        eventViewModel = eventViewModel,
-                        submitError = submitError
-                    )
+                    SharedGlassBlurPage {
+                        AccountManageScreen(
+                            key = key,
+                            backStackViewModel = screenBackStackModel,
+                            backToMainScreen = toMainScreen,
+                            openLink = { url ->
+                                eventViewModel.sendEvent(EventViewModel.Event.OpenLink(url))
+                            },
+                            eventViewModel = eventViewModel,
+                            submitError = submitError
+                        )
+                    }
                 }
                 entry<NormalNavKey.WebScreen> { key ->
                     WebViewScreen(
@@ -749,13 +751,15 @@ private fun NavigationUI(
                     }
                 }
                 entry<NestedNavKey.AssetInfo> { key ->
-                    AssetInfoScreen(
-                        key = key,
-                        mainScreenKey = screenBackStackModel.mainScreen.currentKey,
-                        assetInfoScreenKey = key.currentKey,
-                        eventViewModel = eventViewModel,
-                        submitError = submitError,
-                    )
+                    SharedGlassBlurPage {
+                        AssetInfoScreen(
+                            key = key,
+                            mainScreenKey = screenBackStackModel.mainScreen.currentKey,
+                            assetInfoScreenKey = key.currentKey,
+                            eventViewModel = eventViewModel,
+                            submitError = submitError,
+                        )
+                    }
                 }
                 entry<NormalNavKey.LogView> { key ->
                     LogViewScreen(
