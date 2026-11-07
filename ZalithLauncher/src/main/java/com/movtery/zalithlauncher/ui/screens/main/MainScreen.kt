@@ -688,13 +688,15 @@ private fun NavigationUI(
                     )
                 }
                 entry<NormalNavKey.VersionsManager> {
-                    VersionsManageScreen(
-                        backScreenViewModel = screenBackStackModel,
-                        navigateToVersions = navigateToVersions,
-                        navigateToExport = navigateToExport,
-                        eventViewModel = eventViewModel,
-                        submitError = submitError
-                    )
+                    SharedGlassBlurPage {
+                        VersionsManageScreen(
+                            backScreenViewModel = screenBackStackModel,
+                            navigateToVersions = navigateToVersions,
+                            navigateToExport = navigateToExport,
+                            eventViewModel = eventViewModel,
+                            submitError = submitError
+                        )
+                    }
                 }
                 entry<NormalNavKey.FileSelector> { key ->
                     FileSelectorScreen(
@@ -705,25 +707,29 @@ private fun NavigationUI(
                     }
                 }
                 entry<NestedNavKey.VersionSettings> { key ->
-                    VersionSettingsScreen(
-                        key = key,
-                        modifyViewModel = modifyVersionViewModel,
-                        backScreenViewModel = screenBackStackModel,
-                        backToMainScreen = toMainScreen,
-                        onExportModpack = {
-                            navigateToExport(key.version)
-                        },
-                        eventViewModel = eventViewModel,
-                        submitError = submitError
-                    )
+                    SharedGlassBlurPage {
+                        VersionSettingsScreen(
+                            key = key,
+                            modifyViewModel = modifyVersionViewModel,
+                            backScreenViewModel = screenBackStackModel,
+                            backToMainScreen = toMainScreen,
+                            onExportModpack = {
+                                navigateToExport(key.version)
+                            },
+                            eventViewModel = eventViewModel,
+                            submitError = submitError
+                        )
+                    }
                 }
                 entry<NestedNavKey.VersionExport> { key ->
-                    VersionExportScreen(
-                        key = key,
-                        backScreenViewModel = screenBackStackModel,
-                        eventViewModel = eventViewModel,
-                        backToMainScreen = toMainScreen
-                    )
+                    SharedGlassBlurPage {
+                        VersionExportScreen(
+                            key = key,
+                            backScreenViewModel = screenBackStackModel,
+                            eventViewModel = eventViewModel,
+                            backToMainScreen = toMainScreen
+                        )
+                    }
                 }
                 entry<NestedNavKey.Download> { key ->
                     SharedGlassBlurPage {
