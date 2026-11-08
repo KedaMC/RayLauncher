@@ -511,6 +511,14 @@ fun liquidGlassBackdrop(): PrismalBackdrop? {
 }
 
 /**
+ * True only while glass is really drawn: the switch is on and a sampleable backdrop exists.
+ * Use this (not [liquidGlassEnabled] / launcherGlassOn) to pick colors, so a launcher without
+ * a wallpaper, or with glass off, keeps the plain Material 3 look.
+ */
+@Composable
+fun liquidGlassActive(): Boolean = liquidGlassBackdrop() != null
+
+/**
  * 统一的 Liquid Glass 表面，所有使用该效果的组件都应通过它绘制
  * @param containerColor 叠加在玻璃上的容器色（会被降低不透明度）
  * @param contentColor 内容颜色

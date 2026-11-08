@@ -176,7 +176,7 @@ fun ZalithLauncherTheme(
 
     //Glass is tinted dark and carries white content in both themes. While it is on, a light theme uses
     //the dark palette so text, tints and surfaces match dark mode instead of turning black or white.
-    val paletteDark = darkTheme || glassEnabled
+    val paletteDark = darkTheme || activeGlassLayer != null
 
     val targetColorScheme = remember(paletteDark, dynamicColor, profileAccent) {
         when {

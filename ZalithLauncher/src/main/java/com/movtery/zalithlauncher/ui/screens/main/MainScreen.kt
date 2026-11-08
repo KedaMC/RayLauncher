@@ -20,7 +20,7 @@ package com.movtery.zalithlauncher.ui.screens.main
 
 import com.movtery.cardgrid.state.rememberCardGridState
 import com.movtery.zalithlauncher.ui.components.effectiveBackgroundOpacity
-import com.movtery.zalithlauncher.ui.components.launcherGlassOn
+import com.movtery.zalithlauncher.ui.components.liquidGlassActive
 import com.movtery.zalithlauncher.ui.components.SharedGlassBlurPage
 import com.movtery.zalithlauncher.ui.components.glassTint
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
@@ -178,7 +178,7 @@ fun MainScreen(
 
     //With Liquid Glass on, a light theme veil over the wallpaper would wash it out to white
     val backgroundColor = if (isBackgroundValid) {
-        val base = if (launcherGlassOn()) glassTint(backgroundColor()) else backgroundColor()
+        val base = if (liquidGlassActive()) glassTint(backgroundColor()) else backgroundColor()
         base.copy(alpha = launcherBackgroundOpacity)
     } else backgroundColor()
 
@@ -282,7 +282,7 @@ private fun <E: TitledNavKey> TopBar(
     val inSettingsScreen = mainScreenKey is NestedNavKey.Settings
 
     CompositionLocalProvider(
-        LocalContentColor provides if (launcherGlassOn()) Color.White else contentColor
+        LocalContentColor provides if (liquidGlassActive()) Color.White else contentColor
     ) {
         ConstraintLayout(modifier = modifier) {
             val (backCenter, title, endButtons, headerGlass) = createRefs()

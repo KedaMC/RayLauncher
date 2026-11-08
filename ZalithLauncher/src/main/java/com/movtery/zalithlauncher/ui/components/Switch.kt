@@ -55,7 +55,7 @@ fun DefaultSwitch(
     colors: SwitchColors = SwitchDefaults.colors(),
     interactionSource: MutableInteractionSource? = null
 ) {
-    val glassEnabled = liquidGlassEnabled()
+    val glassEnabled = liquidGlassBackdrop() != null
     val backdrop = liquidGlassBackdrop()
     val glassColors = if (glassEnabled) {
         SwitchDefaults.colors(

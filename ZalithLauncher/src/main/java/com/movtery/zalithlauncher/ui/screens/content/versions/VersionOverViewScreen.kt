@@ -19,7 +19,7 @@
 package com.movtery.zalithlauncher.ui.screens.content.versions
 
 import androidx.compose.foundation.layout.Arrangement
-import com.movtery.zalithlauncher.ui.components.launcherGlassOn
+import com.movtery.zalithlauncher.ui.components.liquidGlassActive
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -361,7 +361,7 @@ private fun VersionManagementLayout(
             ) {
                 OutlinedButton(
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                        contentColor = if (liquidGlassActive()) Color.White else MaterialTheme.colorScheme.primary
                     ),
                     onClick = onEditSummary
                 ) {
@@ -371,7 +371,7 @@ private fun VersionManagementLayout(
                 }
                 OutlinedButton(
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                        contentColor = if (liquidGlassActive()) Color.White else MaterialTheme.colorScheme.primary
                     ),
                     onClick = onRename
                 ) {
@@ -381,7 +381,7 @@ private fun VersionManagementLayout(
                 }
                 OutlinedButton(
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                        contentColor = if (liquidGlassActive()) Color.White else MaterialTheme.colorScheme.primary
                     ),
                     onClick = onExport
                 ) {
@@ -391,7 +391,7 @@ private fun VersionManagementLayout(
                 }
                 OutlinedButton(
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                        contentColor = if (liquidGlassActive()) Color.White else MaterialTheme.colorScheme.primary
                     ),
                     enabled = logExists,
                     onClick = {
@@ -447,7 +447,7 @@ private fun VersionQuickActions(
             ) {
                 OutlinedButton(
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                        contentColor = if (liquidGlassActive()) Color.White else MaterialTheme.colorScheme.primary
                     ),
                     onClick = { accessFolder("") }
                 ) {
@@ -457,7 +457,7 @@ private fun VersionQuickActions(
                 }
                 OutlinedButton(
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                        contentColor = if (liquidGlassActive()) Color.White else MaterialTheme.colorScheme.primary
                     ),
                     onClick = { accessFolder(VersionFolders.SAVES.folderName) }
                 ) {
@@ -467,7 +467,7 @@ private fun VersionQuickActions(
                 }
                 OutlinedButton(
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                        contentColor = if (liquidGlassActive()) Color.White else MaterialTheme.colorScheme.primary
                     ),
                     onClick = { accessFolder(VersionFolders.RESOURCE_PACK.folderName) }
                 ) {
@@ -477,7 +477,7 @@ private fun VersionQuickActions(
                 }
                 OutlinedButton(
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                        contentColor = if (liquidGlassActive()) Color.White else MaterialTheme.colorScheme.primary
                     ),
                     onClick = { accessFolder(VersionFolders.SHADERS.folderName) }
                 ) {
@@ -487,7 +487,7 @@ private fun VersionQuickActions(
                 }
                 OutlinedButton(
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                        contentColor = if (liquidGlassActive()) Color.White else MaterialTheme.colorScheme.primary
                     ),
                     onClick = { accessFolder(VersionFolders.MOD.folderName) }
                 ) {
@@ -497,7 +497,7 @@ private fun VersionQuickActions(
                 }
                 OutlinedButton(
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                        contentColor = if (liquidGlassActive()) Color.White else MaterialTheme.colorScheme.primary
                     ),
                     onClick = { accessFolder("screenshots") }
                 ) {
@@ -507,7 +507,7 @@ private fun VersionQuickActions(
                 }
                 OutlinedButton(
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                        contentColor = if (liquidGlassActive()) Color.White else MaterialTheme.colorScheme.primary
                     ),
                     onClick = { accessFolder("logs") }
                 ) {
@@ -517,7 +517,7 @@ private fun VersionQuickActions(
                 }
                 OutlinedButton(
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                        contentColor = if (liquidGlassActive()) Color.White else MaterialTheme.colorScheme.primary
                     ),
                     onClick = { accessFolder("crash-reports") }
                 ) {

@@ -92,7 +92,6 @@ import com.movtery.zalithlauncher.game.version.mod.InstalledMod
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.ui.AndroidStringText
 import com.movtery.zalithlauncher.ui.androidText
-import com.movtery.zalithlauncher.ui.components.BackgroundCard
 import com.movtery.zalithlauncher.ui.components.GlassItemSurface
 import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
 import com.movtery.zalithlauncher.ui.components.MarqueeText
@@ -317,14 +316,17 @@ private fun PageController(
         }
     }
 
+    val glassPager = liquidGlassBackdrop() != null
     GlassItemSurface(
         modifier = modifier,
         shape = shape,
-        color = Color.Transparent,
+        color = if (glassPager) Color.Transparent else color,
         contentColor = contentColor
     ) {
         Row(
-            modifier = Modifier.padding(all = 4.dp),
+            modifier = Modifier
+                .backgroundGlass(blur, color, influencedByBackground && !glassPager)
+                .padding(all = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
@@ -385,20 +387,8 @@ private fun ResultList(
     installedInfo: ((Platform, projectId: String) -> InstalledMod?)? = null
 ) {
     val context = LocalContext.current
-    // With Liquid Glass every entry has its own glass box, so no big backing card here.
-    val glassActive = liquidGlassBackdrop() != null
-    val container: @Composable (@Composable () -> Unit) -> Unit = { inner ->
-        if (glassActive) {
-            Box(modifier = modifier) { inner() }
-        } else {
-            BackgroundCard(
-                modifier = modifier,
-                shape = MaterialTheme.shapes.extraLarge,
-                liquidGlass = true
-            ) { inner() }
-        }
-    }
-    container {
+    // Entries are individual cards (glass or plain M3), so no big backing card here.
+    Box(modifier = modifier) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             state = state,
