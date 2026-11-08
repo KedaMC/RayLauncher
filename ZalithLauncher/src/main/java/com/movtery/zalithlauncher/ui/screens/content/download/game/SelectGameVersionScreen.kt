@@ -305,22 +305,36 @@ private fun SelectGameVersionContent(
 
                 is VersionState.None -> {
                     Column {
-                        BackgroundCard(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 12.dp),
-                            shape = MaterialTheme.shapes.large,
-                            liquidGlass = true
-                        ) {
-                            val glassActive = liquidGlassBackdrop() != null
+                        if (liquidGlassBackdrop() != null) {
+                            BackgroundCard(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp),
+                                shape = MaterialTheme.shapes.large,
+                                liquidGlass = true
+                            ) {
+                                VersionHeader(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 8.dp, vertical = 8.dp),
+                                    versionFilter = viewModel.versionFilter,
+                                    onVersionFilterChange = { viewModel.filterWith(it) },
+                                    itemContainerColor = Color.Transparent,
+                                    itemContentColor = Color.White,
+                                    onRefreshClick = {
+                                        viewModel.refresh(true)
+                                    }
+                                )
+                            }
+                        } else {
                             VersionHeader(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 8.dp, vertical = 8.dp),
+                                    .padding(horizontal = 12.dp),
                                 versionFilter = viewModel.versionFilter,
                                 onVersionFilterChange = { viewModel.filterWith(it) },
-                                itemContainerColor = if (glassActive) Color.Transparent else cardColor(),
-                                itemContentColor = if (glassActive) Color.White else onCardColor(),
+                                itemContainerColor = cardColor(),
+                                itemContentColor = onCardColor(),
                                 onRefreshClick = {
                                     viewModel.refresh(true)
                                 }

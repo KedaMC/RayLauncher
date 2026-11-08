@@ -18,6 +18,7 @@
 
 package com.movtery.zalithlauncher.ui.screens.content.download.assets.favorites
 
+import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
 import com.movtery.zalithlauncher.ui.components.effectiveBackgroundBlur
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -375,7 +376,9 @@ private fun FavoritesContent(
                 val blur = effectiveBackgroundBlur()
                 val barColor = cardColor()
                 BaseFilterLayout(
-                    modifier = Modifier.padding(all = 12.dp),
+                    modifier = Modifier
+                        .padding(all = 12.dp)
+                        .then(if (liquidGlassBackdrop() == null) barShadowModifier else Modifier),
                     color = barColor,
                     contentColor = onCardColor(),
                     shape = MaterialTheme.shapes.large,
@@ -470,16 +473,19 @@ private fun FavoritesFilter(
                         contentDescription = stringResource(R.string.generic_search)
                     )
                 },
-                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent,
-                    errorContainerColor = Color.Transparent,
-                    focusedBorderColor = Color.Transparent,
-                    unfocusedBorderColor = Color.Transparent,
-                    disabledBorderColor = Color.Transparent,
-                    errorBorderColor = Color.Transparent
-                ),
+                //Borderless on the glass box; stock outlined field (null = defaults) otherwise
+                colors = if (liquidGlassBackdrop() != null) {
+                    androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        errorContainerColor = Color.Transparent,
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent,
+                        disabledBorderColor = Color.Transparent,
+                        errorBorderColor = Color.Transparent
+                    )
+                } else null,
                 shape = MaterialTheme.shapes.large
             )
             }

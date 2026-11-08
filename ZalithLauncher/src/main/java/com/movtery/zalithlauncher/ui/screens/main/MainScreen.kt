@@ -286,6 +286,8 @@ private fun <E: TitledNavKey> TopBar(
     ) {
         ConstraintLayout(modifier = modifier) {
             val (backCenter, title, endButtons, headerGlass) = createRefs()
+            //Title spacing below is glass-only; with glass off the title keeps the stock layout
+            val titleGlass = liquidGlassBackdrop() != null
 
             val headerGlassBackdrop = liquidGlassBackdrop()
             // Inner pages share one continuous glass header. The launcher home keeps
@@ -373,8 +375,8 @@ private fun <E: TitledNavKey> TopBar(
             Crossfade(
                 modifier = Modifier.constrainAs(title) {
                     centerVerticallyTo(parent)
-                    start.linkTo(backCenter.end, margin = if (inLauncherScreen) 12.dp else 16.dp)
-                    if (!inLauncherScreen) {
+                    start.linkTo(backCenter.end, margin = if (titleGlass && inLauncherScreen) 12.dp else 16.dp)
+                    if (titleGlass && !inLauncherScreen) {
                         // Left-aligned at a fixed start point (the back/home group is always
                         // present on inner pages), so the text no longer drifts when the
                         // right button group changes width.
@@ -395,7 +397,7 @@ private fun <E: TitledNavKey> TopBar(
                     if (parent == null) {
                         if (festivals.isEmpty()) {
                             Text(
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                modifier = if (titleGlass) Modifier.padding(horizontal = 10.dp, vertical = 5.dp) else Modifier,
                                 text = stringResource(R.string.launcher_unofficial_notice),
                                 style = style,
                                 softWrap = softWarp,
@@ -407,10 +409,10 @@ private fun <E: TitledNavKey> TopBar(
                     } else {
                         val titleText = if (child != null) androidText(parent, androidText(" - "), child) else parent
                         AndroidStringText(
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                            modifier = if (titleGlass) Modifier.padding(horizontal = 10.dp, vertical = 5.dp) else Modifier,
                             text = titleText,
                             style = style,
-                            overflow = TextOverflow.Ellipsis,
+                            overflow = if (titleGlass) TextOverflow.Ellipsis else TextOverflow.Clip,
                             softWrap = softWarp,
                             maxLines = maxLines
                         )
@@ -477,7 +479,7 @@ private fun <E: TitledNavKey> TopBar(
                 val toolbarActions: @Composable () -> Unit = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                        horizontalArrangement = Arrangement.spacedBy(if (toolbarGlassBackdrop != null) 2.dp else 8.dp)
                     ) {
                         ToolbarTooltip(label = "File manager") {
                             IconButton(onClick = openFileManager) {
@@ -538,6 +540,11 @@ private fun ToolbarTooltip(
     label: String,
     content: @Composable () -> Unit
 ) {
+    //Tooltips are part of the glass toolbar only; stock toolbar has none
+    if (liquidGlassBackdrop() == null) {
+        content()
+        return
+    }
     TooltipBox(
         positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
             positioning = TooltipAnchorPosition.Below
@@ -566,9 +573,10 @@ private fun TopBarRailItem(
         onClick = onClick,
         text = {
             AnimatedVisibility(visible = selected) {
+                val glassRail = liquidGlassBackdrop() != null
                 Row(
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier = if (glassRail) Modifier.padding(horizontal = 8.dp, vertical = 4.dp) else Modifier,
+                    verticalAlignment = if (glassRail) Alignment.CenterVertically else Alignment.Top
                 ) {
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(text = text, style = textStyle)

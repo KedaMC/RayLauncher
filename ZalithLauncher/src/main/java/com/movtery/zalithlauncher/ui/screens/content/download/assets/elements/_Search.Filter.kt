@@ -350,15 +350,18 @@ private fun <E> SuggestionsText(
             value = value,
             onValueChange = onValueChange,
             shape = fieldShape,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = Color.Transparent,
-                unfocusedContainerColor = Color.Transparent,
-                disabledContainerColor = Color.Transparent,
-                errorContainerColor = Color.Transparent,
-                focusedBorderColor = Color.White.copy(alpha = 0.45f),
-                unfocusedBorderColor = Color.Transparent,
-                disabledBorderColor = Color.Transparent
-            ),
+            //Borderless on the glass box; stock outlined field (null = defaults) otherwise
+            colors = if (liquidGlassBackdrop() != null) {
+                OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    disabledContainerColor = Color.Transparent,
+                    errorContainerColor = Color.Transparent,
+                    focusedBorderColor = Color.White.copy(alpha = 0.45f),
+                    unfocusedBorderColor = Color.Transparent,
+                    disabledBorderColor = Color.Transparent
+                )
+            } else null,
             label = {
                 Text(text = label)
             },

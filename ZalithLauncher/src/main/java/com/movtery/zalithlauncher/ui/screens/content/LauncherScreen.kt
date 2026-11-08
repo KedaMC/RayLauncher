@@ -470,17 +470,20 @@ private fun VersionsContent(
             }
         }
 
-        //Default button colors in both modes, so the Launch button matches every other button
-        //even when Liquid Glass is off.
+        val launchGlass = liquidGlassBackdrop() != null
         ScalingActionButton(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(PaddingValues(horizontal = 12.dp))
                 .padding(bottom = 8.dp),
-            elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
+            elevation = ButtonDefaults.buttonElevation(defaultElevation = if (launchGlass) 0.dp else 1.dp),
             onClick = { onLaunchGame(null) },
             content = {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                if (launchGlass) {
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        MarqueeText(text = stringResource(R.string.main_launch_game))
+                    }
+                } else {
                     MarqueeText(text = stringResource(R.string.main_launch_game))
                 }
             }
