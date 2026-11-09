@@ -442,6 +442,21 @@ abstract class Launcher(
         } ?: libName
     }
 
+    /**
+     * Runtime libraries Minecraft never uses (debugger, RMI, Kerberos, smartcard, prefs, FFI lookup).
+     * The JVM still loads them on demand if something requests them.
+     */
+    private val SKIPPED_RUNTIME_LIBS = setOf(
+        "libjdwp.so",
+        "libdt_socket.so",
+        "librmi.so",
+        "libj2gss.so",
+        "libj2pkcs11.so",
+        "libj2pcsc.so",
+        "libprefs.so",
+        "libsyslookup.so"
+    )
+
     private fun locateLibs(path: File): List<File> {
         val children = path.listFiles() ?: return emptyList()
         return children.flatMap { file ->
@@ -515,17 +530,23 @@ abstract class Launcher(
             javaLibDir = "$runtimeHome/jre${getJavaLibDir()}"
         }
         val jvmLibDir = "$javaLibDir${getJvmLibDir()}"
-        ZLBridge.dlopen("$jliLibDir/libjli.so")
-        ZLBridge.dlopen("$jvmLibDir/libjvm.so")
-        ZLBridge.dlopen("$javaLibDir/libfreetype.so")
-        ZLBridge.dlopen("$javaLibDir/libverify.so")
-        ZLBridge.dlopen("$javaLibDir/libjava.so")
-        ZLBridge.dlopen("$javaLibDir/libnet.so")
-        ZLBridge.dlopen("$javaLibDir/libnio.so")
-        ZLBridge.dlopen("$javaLibDir/libawt.so")
-        ZLBridge.dlopen("$javaLibDir/libawt_headless.so")
-        ZLBridge.dlopen("$javaLibDir/libfontmanager.so")
+        val preloaded = linkedSetOf(
+            "$jliLibDir/libjli.so",
+            "$jvmLibDir/libjvm.so",
+            "$javaLibDir/libfreetype.so",
+            "$javaLibDir/libverify.so",
+            "$javaLibDir/libjava.so",
+            "$javaLibDir/libnet.so",
+            "$javaLibDir/libnio.so",
+            "$javaLibDir/libawt.so",
+            "$javaLibDir/libawt_headless.so",
+            "$javaLibDir/libfontmanager.so"
+        )
+        preloaded.forEach { ZLBridge.dlopen(it) }
+
         locateLibs(File(runtimeHome)).forEach { file ->
+            if (file.name in SKIPPED_RUNTIME_LIBS) return@forEach
+            if (!preloaded.add(file.absolutePath)) return@forEach
             ZLBridge.dlopen(file.absolutePath)
         }
     }
