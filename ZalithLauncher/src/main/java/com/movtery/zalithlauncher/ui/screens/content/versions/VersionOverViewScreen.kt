@@ -19,7 +19,7 @@
 package com.movtery.zalithlauncher.ui.screens.content.versions
 
 import androidx.compose.foundation.layout.Arrangement
-import com.movtery.zalithlauncher.ui.components.launcherGlassOn
+import com.movtery.zalithlauncher.ui.components.liquidGlassActive
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -354,14 +354,17 @@ private fun VersionManagementLayout(
                 style = MaterialTheme.typography.labelLarge
             )
 
+            //Glass: gap based layout. Off: stock layout (end padding on each button)
+            val glassRows = liquidGlassActive()
             FlowRow(
-                modifier = Modifier.padding(bottom = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = if (glassRows) Modifier.padding(bottom = 8.dp) else Modifier,
+                horizontalArrangement = if (glassRows) Arrangement.spacedBy(12.dp) else Arrangement.Start,
+                verticalArrangement = if (glassRows) Arrangement.spacedBy(12.dp) else Arrangement.Top
             ) {
                 OutlinedButton(
+                    modifier = if (glassRows) Modifier else Modifier.padding(end = 12.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                        contentColor = if (liquidGlassActive()) Color.White else MaterialTheme.colorScheme.primary
                     ),
                     onClick = onEditSummary
                 ) {
@@ -370,8 +373,9 @@ private fun VersionManagementLayout(
                     )
                 }
                 OutlinedButton(
+                    modifier = if (glassRows) Modifier else Modifier.padding(end = 12.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                        contentColor = if (liquidGlassActive()) Color.White else MaterialTheme.colorScheme.primary
                     ),
                     onClick = onRename
                 ) {
@@ -380,8 +384,9 @@ private fun VersionManagementLayout(
                     )
                 }
                 OutlinedButton(
+                    modifier = if (glassRows) Modifier else Modifier.padding(end = 12.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                        contentColor = if (liquidGlassActive()) Color.White else MaterialTheme.colorScheme.primary
                     ),
                     onClick = onExport
                 ) {
@@ -390,8 +395,9 @@ private fun VersionManagementLayout(
                     )
                 }
                 OutlinedButton(
+                    modifier = if (glassRows) Modifier else Modifier.padding(end = 12.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                        contentColor = if (liquidGlassActive()) Color.White else MaterialTheme.colorScheme.primary
                     ),
                     enabled = logExists,
                     onClick = {
@@ -440,14 +446,17 @@ private fun VersionQuickActions(
                 style = MaterialTheme.typography.labelLarge
             )
 
+            //Glass: gap based layout. Off: stock layout (end padding on each button)
+            val glassRows = liquidGlassActive()
             FlowRow(
-                modifier = Modifier.padding(bottom = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = if (glassRows) Modifier.padding(bottom = 8.dp) else Modifier,
+                horizontalArrangement = if (glassRows) Arrangement.spacedBy(12.dp) else Arrangement.Start,
+                verticalArrangement = if (glassRows) Arrangement.spacedBy(12.dp) else Arrangement.Top
             ) {
                 OutlinedButton(
+                    modifier = if (glassRows) Modifier else Modifier.padding(end = 12.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                        contentColor = if (liquidGlassActive()) Color.White else MaterialTheme.colorScheme.primary
                     ),
                     onClick = { accessFolder("") }
                 ) {
@@ -456,8 +465,9 @@ private fun VersionQuickActions(
                     )
                 }
                 OutlinedButton(
+                    modifier = if (glassRows) Modifier else Modifier.padding(end = 12.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                        contentColor = if (liquidGlassActive()) Color.White else MaterialTheme.colorScheme.primary
                     ),
                     onClick = { accessFolder(VersionFolders.SAVES.folderName) }
                 ) {
@@ -466,8 +476,9 @@ private fun VersionQuickActions(
                     )
                 }
                 OutlinedButton(
+                    modifier = if (glassRows) Modifier else Modifier.padding(end = 12.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                        contentColor = if (liquidGlassActive()) Color.White else MaterialTheme.colorScheme.primary
                     ),
                     onClick = { accessFolder(VersionFolders.RESOURCE_PACK.folderName) }
                 ) {
@@ -476,8 +487,9 @@ private fun VersionQuickActions(
                     )
                 }
                 OutlinedButton(
+                    modifier = if (glassRows) Modifier else Modifier.padding(end = 12.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                        contentColor = if (liquidGlassActive()) Color.White else MaterialTheme.colorScheme.primary
                     ),
                     onClick = { accessFolder(VersionFolders.SHADERS.folderName) }
                 ) {
@@ -486,8 +498,9 @@ private fun VersionQuickActions(
                     )
                 }
                 OutlinedButton(
+                    modifier = if (glassRows) Modifier else Modifier.padding(end = 12.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                        contentColor = if (liquidGlassActive()) Color.White else MaterialTheme.colorScheme.primary
                     ),
                     onClick = { accessFolder(VersionFolders.MOD.folderName) }
                 ) {
@@ -496,8 +509,9 @@ private fun VersionQuickActions(
                     )
                 }
                 OutlinedButton(
+                    modifier = if (glassRows) Modifier else Modifier.padding(end = 12.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                        contentColor = if (liquidGlassActive()) Color.White else MaterialTheme.colorScheme.primary
                     ),
                     onClick = { accessFolder("screenshots") }
                 ) {
@@ -506,8 +520,9 @@ private fun VersionQuickActions(
                     )
                 }
                 OutlinedButton(
+                    modifier = if (glassRows) Modifier else Modifier.padding(end = 12.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                        contentColor = if (liquidGlassActive()) Color.White else MaterialTheme.colorScheme.primary
                     ),
                     onClick = { accessFolder("logs") }
                 ) {
@@ -516,8 +531,9 @@ private fun VersionQuickActions(
                     )
                 }
                 OutlinedButton(
+                    modifier = if (glassRows) Modifier else Modifier.padding(end = 12.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.primary
+                        contentColor = if (liquidGlassActive()) Color.White else MaterialTheme.colorScheme.primary
                     ),
                     onClick = { accessFolder("crash-reports") }
                 ) {

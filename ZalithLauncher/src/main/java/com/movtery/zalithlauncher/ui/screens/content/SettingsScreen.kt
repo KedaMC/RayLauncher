@@ -35,19 +35,18 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationRailItem
-import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.entryProvider
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.ui.base.BaseScreen
+import com.movtery.zalithlauncher.ui.components.SharedGlassBlurPage
 import com.movtery.zalithlauncher.ui.components.GlassRailItemBody
 import com.movtery.zalithlauncher.ui.components.LiquidGlassSurface
 import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
@@ -178,13 +177,6 @@ private fun TabMenu(
                 }
             } else {
                 NavigationRailItem(
-                    colors = NavigationRailItemDefaults.colors(
-                        indicatorColor = if (glassBackdrop != null) Color.Transparent else MaterialTheme.colorScheme.secondaryContainer,
-                        selectedIconColor = if (glassBackdrop != null) Color.White else MaterialTheme.colorScheme.onSecondaryContainer,
-                        selectedTextColor = if (glassBackdrop != null) Color.White else MaterialTheme.colorScheme.onSecondaryContainer,
-                        unselectedIconColor = if (glassBackdrop != null) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
-                        unselectedTextColor = if (glassBackdrop != null) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
-                    ),
                     selected = settingsScreenKey == item.key,
                     onClick = {
                         navigateTo(item.key)
@@ -237,44 +229,58 @@ private fun NavigationUI(
             popTransitionSpec = rememberTransitionSpec(),
             entryProvider = entryProvider {
                 entry<NormalNavKey.Settings.Renderer> {
-                    RendererSettingsScreen(key, settingsScreenKey, mainScreenKey, eventViewModel)
+                    SharedGlassBlurPage {
+                        RendererSettingsScreen(key, settingsScreenKey, mainScreenKey, eventViewModel)
+                    }
                 }
                 entry<NormalNavKey.Settings.Game> {
-                    GameSettingsScreen(key, settingsScreenKey, mainScreenKey, eventViewModel)
+                    SharedGlassBlurPage {
+                        GameSettingsScreen(key, settingsScreenKey, mainScreenKey, eventViewModel)
+                    }
                 }
                 entry<NormalNavKey.Settings.Control> {
-                    ControlSettingsScreen(key, settingsScreenKey, mainScreenKey, eventViewModel, submitError)
+                    SharedGlassBlurPage {
+                        ControlSettingsScreen(key, settingsScreenKey, mainScreenKey, eventViewModel, submitError)
+                    }
                 }
                 entry<NormalNavKey.Settings.Launcher> {
-                    LauncherSettingsScreen(
-                        key = key,
-                        settingsScreenKey = settingsScreenKey,
-                        mainScreenKey = mainScreenKey,
-                        submitError = submitError,
-                    )
+                    SharedGlassBlurPage {
+                        LauncherSettingsScreen(
+                            key = key,
+                            settingsScreenKey = settingsScreenKey,
+                            mainScreenKey = mainScreenKey,
+                            submitError = submitError,
+                        )
+                    }
                 }
                 entry<NormalNavKey.Settings.JavaManager> {
-                    JavaManageScreen(key, settingsScreenKey, mainScreenKey, eventViewModel, submitError)
+                    SharedGlassBlurPage {
+                        JavaManageScreen(key, settingsScreenKey, mainScreenKey, eventViewModel, submitError)
+                    }
                 }
                 entry<NormalNavKey.Settings.ControlManager> {
-                    ControlManageScreen(key, settingsScreenKey, mainScreenKey, eventViewModel, submitError)
+                    SharedGlassBlurPage {
+                        ControlManageScreen(key, settingsScreenKey, mainScreenKey, eventViewModel, submitError)
+                    }
                 }
                 entry<NormalNavKey.Settings.AboutInfo> {
-                    AboutInfoScreen(
-                        key = key,
-                        settingsScreenKey = settingsScreenKey,
-                        mainScreenKey = mainScreenKey,
-                        checkUpdate = {
-                            eventViewModel.sendEvent(EventViewModel.Event.CheckUpdate)
-                        },
-                        onViewSponsors = {
-                            eventViewModel.sendEvent(EventViewModel.Event.ShowSponsors)
-                        },
-                        openLicense = openLicenseScreen,
-                        openLink = { url ->
-                            eventViewModel.sendEvent(EventViewModel.Event.OpenLink(url))
-                        }
-                    )
+                    SharedGlassBlurPage {
+                        AboutInfoScreen(
+                            key = key,
+                            settingsScreenKey = settingsScreenKey,
+                            mainScreenKey = mainScreenKey,
+                            checkUpdate = {
+                                eventViewModel.sendEvent(EventViewModel.Event.CheckUpdate)
+                            },
+                            onViewSponsors = {
+                                eventViewModel.sendEvent(EventViewModel.Event.ShowSponsors)
+                            },
+                            openLicense = openLicenseScreen,
+                            openLink = { url ->
+                                eventViewModel.sendEvent(EventViewModel.Event.OpenLink(url))
+                            }
+                        )
+                    }
                 }
             }
         )

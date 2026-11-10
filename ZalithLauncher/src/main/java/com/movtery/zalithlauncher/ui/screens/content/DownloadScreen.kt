@@ -48,9 +48,9 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.entryProvider
 import com.movtery.zalithlauncher.R
-import com.movtery.zalithlauncher.game.download.assets.favorites.FavoriteProjectsRepository
-import com.movtery.zalithlauncher.game.download.assets.platform.Platform
-import com.movtery.zalithlauncher.game.download.assets.platform.PlatformClasses
+import com.movtery.zalithlauncher.game.download.addon.favorites.FavoriteProjectsRepository
+import com.movtery.zalithlauncher.game.download.addon.platform.Platform
+import com.movtery.zalithlauncher.game.download.addon.platform.PlatformClasses
 import com.movtery.zalithlauncher.ui.base.BaseScreen
 import com.movtery.zalithlauncher.ui.components.GlassRailItemBody
 import com.movtery.zalithlauncher.ui.components.LiquidGlassSurface
@@ -70,7 +70,7 @@ import com.movtery.zalithlauncher.ui.screens.content.download.DownloadModScreen
 import com.movtery.zalithlauncher.ui.screens.content.download.DownloadResourcePackScreen
 import com.movtery.zalithlauncher.ui.screens.content.download.DownloadSavesScreen
 import com.movtery.zalithlauncher.ui.screens.content.download.DownloadShadersScreen
-import com.movtery.zalithlauncher.ui.screens.content.download.assets.search.SearchIdScreen
+import com.movtery.zalithlauncher.ui.screens.content.download.addon.search.SearchIdScreen
 import com.movtery.zalithlauncher.ui.screens.content.elements.CategoryIcon
 import com.movtery.zalithlauncher.ui.screens.content.elements.CategoryItem
 import com.movtery.zalithlauncher.ui.screens.navigateOnce
@@ -96,7 +96,7 @@ fun ScreenBackStackViewModel.navigateToDownload(targetScreen: TitledNavKey? = nu
 /**
  * 跳转到资源类型对应的下载分类屏幕，并进入项目详情页
  */
-private fun ScreenBackStackViewModel.swapToCategoryAssets(
+private fun ScreenBackStackViewModel.swapToCategoryAddon(
     platform: Platform,
     classes: PlatformClasses,
     projectId: String,
@@ -112,7 +112,7 @@ private fun ScreenBackStackViewModel.swapToCategoryAssets(
     navigateToDownload(
         targetScreen = targetScreen.apply {
             navigateTo(
-                NormalNavKey.DownloadAssets(
+                NormalNavKey.DownloadAddon(
                     platform = platform,
                     projectId = projectId,
                     classes = classes,
@@ -366,7 +366,7 @@ private fun NavigationUI(
                         mainScreenKey = backScreenViewModel.mainScreen.currentKey,
                         downloadScreenKey = backScreenViewModel.downloadScreen.currentKey,
                         swapToDownload = { platform, classes, projectId, iconUrl ->
-                            backScreenViewModel.swapToCategoryAssets(platform, classes, projectId, iconUrl)
+                            backScreenViewModel.swapToCategoryAddon(platform, classes, projectId, iconUrl)
                         },
                         openLink = { link ->
                             eventViewModel.sendEvent(EventViewModel.Event.OpenLink(link))
@@ -383,7 +383,7 @@ private fun NavigationUI(
                             backScreenViewModel.downloadFavoritesScreen.currentKey = newKey
                         },
                         swapToDownload = { platform, classes, projectId, iconUrl ->
-                            backScreenViewModel.swapToCategoryAssets(platform, classes, projectId, iconUrl)
+                            backScreenViewModel.swapToCategoryAddon(platform, classes, projectId, iconUrl)
                         }
                     )
                 }

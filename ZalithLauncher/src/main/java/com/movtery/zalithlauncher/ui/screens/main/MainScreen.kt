@@ -18,8 +18,10 @@
 
 package com.movtery.zalithlauncher.ui.screens.main
 
+import com.movtery.cardgrid.state.rememberCardGridState
 import com.movtery.zalithlauncher.ui.components.effectiveBackgroundOpacity
-import com.movtery.zalithlauncher.ui.components.launcherGlassOn
+import com.movtery.zalithlauncher.ui.components.liquidGlassActive
+import com.movtery.zalithlauncher.ui.components.SharedGlassBlurPage
 import com.movtery.zalithlauncher.ui.components.glassTint
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.AnimatedVisibility
@@ -78,14 +80,15 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.Dimension
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.entryProvider
 import com.movtery.zalithlauncher.BuildKeys
 import com.movtery.zalithlauncher.R
-import com.movtery.zalithlauncher.coroutine.Task
 import com.movtery.zalithlauncher.coroutine.TaskSystem
 import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.game.version.installed.VersionsManager
@@ -115,7 +118,7 @@ import com.movtery.zalithlauncher.ui.screens.content.VersionExportScreen
 import com.movtery.zalithlauncher.ui.screens.content.VersionSettingsScreen
 import com.movtery.zalithlauncher.ui.screens.content.VersionsManageScreen
 import com.movtery.zalithlauncher.ui.screens.content.WebViewScreen
-import com.movtery.zalithlauncher.ui.screens.content.assetinfo.AssetInfoScreen
+import com.movtery.zalithlauncher.ui.screens.content.addoninfo.AddonInfoScreen
 import com.movtery.zalithlauncher.ui.screens.content.navigateToDownload
 import com.movtery.zalithlauncher.ui.screens.navigateTo
 import com.movtery.zalithlauncher.ui.screens.onBack
@@ -174,7 +177,7 @@ fun MainScreen(
 
     //With Liquid Glass on, a light theme veil over the wallpaper would wash it out to white
     val backgroundColor = if (isBackgroundValid) {
-        val base = if (launcherGlassOn()) glassTint(backgroundColor()) else backgroundColor()
+        val base = if (liquidGlassActive()) glassTint(backgroundColor()) else backgroundColor()
         base.copy(alpha = launcherBackgroundOpacity)
     } else backgroundColor()
 
@@ -278,31 +281,35 @@ private fun <E: TitledNavKey> TopBar(
     val inSettingsScreen = mainScreenKey is NestedNavKey.Settings
 
     CompositionLocalProvider(
-        LocalContentColor provides if (launcherGlassOn()) Color.White else contentColor
+        LocalContentColor provides if (liquidGlassActive()) Color.White else contentColor
     ) {
         ConstraintLayout(modifier = modifier) {
             val (backCenter, title, endButtons, headerGlass) = createRefs()
+            //Title spacing below is glass-only; with glass off the title keeps the stock layout
+            val titleGlass = liquidGlassBackdrop() != null
 
             val headerGlassBackdrop = liquidGlassBackdrop()
             // Inner pages share one continuous glass header. The launcher home keeps
             // its title and action group as separate surfaces.
             if (headerGlassBackdrop != null && !inLauncherScreen) {
-                LiquidGlassSurface(
-                    backdrop = headerGlassBackdrop,
-                    shape = MaterialTheme.shapes.large,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight()
-                        .constrainAs(headerGlass) {
-                            start.linkTo(parent.start)
-                            end.linkTo(parent.end)
-                            top.linkTo(parent.top)
-                            bottom.linkTo(parent.bottom)
-                        },
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = Color.White,
-                    blurRadius = 12.dp
-                ) {}
+                SharedGlassBlurPage {
+                    LiquidGlassSurface(
+                        backdrop = headerGlassBackdrop,
+                        shape = MaterialTheme.shapes.large,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight()
+                            .constrainAs(headerGlass) {
+                                start.linkTo(parent.start)
+                                end.linkTo(parent.end)
+                                top.linkTo(parent.top)
+                                bottom.linkTo(parent.bottom)
+                            },
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        contentColor = Color.White,
+                        blurRadius = 12.dp
+                    ) {}
+                }
             }
 
             val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
@@ -367,9 +374,14 @@ private fun <E: TitledNavKey> TopBar(
             Crossfade(
                 modifier = Modifier.constrainAs(title) {
                     centerVerticallyTo(parent)
-                    start.linkTo(backCenter.end, margin = if (inLauncherScreen) 12.dp else 16.dp)
-                    if (!inLauncherScreen) {
+                    start.linkTo(backCenter.end, margin = if (titleGlass && inLauncherScreen) 12.dp else 16.dp)
+                    if (titleGlass && !inLauncherScreen) {
+                        // Left-aligned at a fixed start point (the back/home group is always
+                        // present on inner pages), so the text no longer drifts when the
+                        // right button group changes width.
                         end.linkTo(endButtons.start, margin = 8.dp)
+                        width = Dimension.preferredWrapContent
+                        horizontalBias = 0f
                     }
                 },
                 targetState = parentRes to childRes
@@ -384,8 +396,8 @@ private fun <E: TitledNavKey> TopBar(
                     if (parent == null) {
                         if (festivals.isEmpty()) {
                             Text(
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                                text = BuildKeys.LAUNCHER_IDENTIFIER,
+                                modifier = if (titleGlass) Modifier.padding(horizontal = 10.dp, vertical = 5.dp) else Modifier,
+                                text = stringResource(R.string.launcher_unofficial_notice),
                                 style = style,
                                 softWrap = softWarp,
                                 maxLines = maxLines
@@ -396,9 +408,10 @@ private fun <E: TitledNavKey> TopBar(
                     } else {
                         val titleText = if (child != null) androidText(parent, androidText(" - "), child) else parent
                         AndroidStringText(
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                            modifier = if (titleGlass) Modifier.padding(horizontal = 10.dp, vertical = 5.dp) else Modifier,
                             text = titleText,
                             style = style,
+                            overflow = if (titleGlass) TextOverflow.Ellipsis else TextOverflow.Clip,
                             softWrap = softWarp,
                             maxLines = maxLines
                         )
@@ -406,14 +419,16 @@ private fun <E: TitledNavKey> TopBar(
                 }
 
                 if (titleBackdrop != null) {
-                    LiquidGlassSurface(
-                        backdrop = titleBackdrop,
-                        shape = MaterialTheme.shapes.large,
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        contentColor = Color.White,
-                        blurRadius = 10.dp
-                    ) {
-                        TitleContent()
+                    SharedGlassBlurPage {
+                        LiquidGlassSurface(
+                            backdrop = titleBackdrop,
+                            shape = MaterialTheme.shapes.large,
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            contentColor = Color.White,
+                            blurRadius = 10.dp
+                        ) {
+                            TitleContent()
+                        }
                     }
                 } else {
                     TitleContent()
@@ -463,7 +478,7 @@ private fun <E: TitledNavKey> TopBar(
                 val toolbarActions: @Composable () -> Unit = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                        horizontalArrangement = Arrangement.spacedBy(if (toolbarGlassBackdrop != null) 2.dp else 8.dp)
                     ) {
                         ToolbarTooltip(label = "File manager") {
                             IconButton(onClick = openFileManager) {
@@ -498,15 +513,17 @@ private fun <E: TitledNavKey> TopBar(
                     }
                 }
                 if (toolbarGlassBackdrop != null && inLauncherScreen) {
-                    LiquidGlassSurface(
-                        backdrop = toolbarGlassBackdrop,
-                        shape = MaterialTheme.shapes.large,
-                        modifier = Modifier.height(40.dp),
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        contentColor = LocalContentColor.current,
-                        blurRadius = 12.dp
-                    ) {
-                        toolbarActions()
+                    SharedGlassBlurPage {
+                        LiquidGlassSurface(
+                            backdrop = toolbarGlassBackdrop,
+                            shape = MaterialTheme.shapes.large,
+                            modifier = Modifier.height(40.dp),
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            contentColor = LocalContentColor.current,
+                            blurRadius = 12.dp
+                        ) {
+                            toolbarActions()
+                        }
                     }
                 } else {
                     toolbarActions()
@@ -522,6 +539,11 @@ private fun ToolbarTooltip(
     label: String,
     content: @Composable () -> Unit
 ) {
+    //Tooltips are part of the glass toolbar only; stock toolbar has none
+    if (liquidGlassBackdrop() == null) {
+        content()
+        return
+    }
     TooltipBox(
         positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
             positioning = TooltipAnchorPosition.Below
@@ -550,9 +572,10 @@ private fun TopBarRailItem(
         onClick = onClick,
         text = {
             AnimatedVisibility(visible = selected) {
+                val glassRail = liquidGlassBackdrop() != null
                 Row(
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier = if (glassRail) Modifier.padding(horizontal = 8.dp, vertical = 4.dp) else Modifier,
+                    verticalAlignment = if (glassRail) Alignment.CenterVertically else Alignment.Top
                 ) {
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(text = text, style = textStyle)
@@ -583,6 +606,8 @@ private fun NavigationUI(
 ) {
     val backStack = screenBackStackModel.mainScreen.backStack
     val currentKey = backStack.lastOrNull()
+    //主页网格状态随主导航存活，离开主页再返回时不会重建、重播种与重放入场动画
+    val homeGridState = rememberCardGridState()
 
     LaunchedEffect(currentKey) {
         screenBackStackModel.mainScreen.currentKey = currentKey
@@ -616,29 +641,32 @@ private fun NavigationUI(
             popTransitionSpec = rememberTransitionSpec(),
             entryProvider = entryProvider {
                 entry<NormalNavKey.LauncherMain> {
-                    LauncherScreen(
-                        backStackViewModel = screenBackStackModel,
-                        navigateToVersions = navigateToVersions,
-                        onLaunchGame = { version ->
-                            eventViewModel.sendEvent(
-                                EventViewModel.Event.Launch.Game(version)
-                            )
-                        },
-                        onQuickPlayServer = { version, address ->
-                            val target = (version ?: VersionsManager.currentVersion.value)?.takeIf { it.isValid() }
-                            if (target != null) {
+                    SharedGlassBlurPage {
+                        LauncherScreen(
+                            backStackViewModel = screenBackStackModel,
+                            gridState = homeGridState,
+                            navigateToVersions = navigateToVersions,
+                            onLaunchGame = { version ->
                                 eventViewModel.sendEvent(
-                                    EventViewModel.Event.Launch.PlayServer(target, address)
+                                    EventViewModel.Event.Launch.Game(version)
                                 )
-                            } else {
-                                eventViewModel.sendToast(androidText(R.string.game_launch_no_version))
-                                screenBackStackModel.mainScreen.navigateTo(NormalNavKey.VersionsManager)
+                            },
+                            onQuickPlayServer = { version, address ->
+                                val target = (version ?: VersionsManager.currentVersion.value)?.takeIf { it.isValid() }
+                                if (target != null) {
+                                    eventViewModel.sendEvent(
+                                        EventViewModel.Event.Launch.PlayServer(target, address)
+                                    )
+                                } else {
+                                    eventViewModel.sendToast(androidText(R.string.game_launch_no_version))
+                                    screenBackStackModel.mainScreen.navigateTo(NormalNavKey.VersionsManager)
+                                }
+                            },
+                            onOpenLink = {
+                                eventViewModel.sendEvent(EventViewModel.Event.OpenLink(it))
                             }
-                        },
-                        onOpenLink = {
-                            eventViewModel.sendEvent(EventViewModel.Event.OpenLink(it))
-                        }
-                    )
+                        )
+                    }
                 }
                 entry<NestedNavKey.Settings> { key ->
                     SettingsScreen(
@@ -658,16 +686,18 @@ private fun NavigationUI(
                     )
                 }
                 entry<NormalNavKey.AccountManager> { key ->
-                    AccountManageScreen(
-                        key = key,
-                        backStackViewModel = screenBackStackModel,
-                        backToMainScreen = toMainScreen,
-                        openLink = { url ->
-                            eventViewModel.sendEvent(EventViewModel.Event.OpenLink(url))
-                        },
-                        eventViewModel = eventViewModel,
-                        submitError = submitError
-                    )
+                    SharedGlassBlurPage {
+                        AccountManageScreen(
+                            key = key,
+                            backStackViewModel = screenBackStackModel,
+                            backToMainScreen = toMainScreen,
+                            openLink = { url ->
+                                eventViewModel.sendEvent(EventViewModel.Event.OpenLink(url))
+                            },
+                            eventViewModel = eventViewModel,
+                            submitError = submitError
+                        )
+                    }
                 }
                 entry<NormalNavKey.WebScreen> { key ->
                     WebViewScreen(
@@ -677,13 +707,15 @@ private fun NavigationUI(
                     )
                 }
                 entry<NormalNavKey.VersionsManager> {
-                    VersionsManageScreen(
-                        backScreenViewModel = screenBackStackModel,
-                        navigateToVersions = navigateToVersions,
-                        navigateToExport = navigateToExport,
-                        eventViewModel = eventViewModel,
-                        submitError = submitError
-                    )
+                    SharedGlassBlurPage {
+                        VersionsManageScreen(
+                            backScreenViewModel = screenBackStackModel,
+                            navigateToVersions = navigateToVersions,
+                            navigateToExport = navigateToExport,
+                            eventViewModel = eventViewModel,
+                            submitError = submitError
+                        )
+                    }
                 }
                 entry<NormalNavKey.FileSelector> { key ->
                     FileSelectorScreen(
@@ -694,43 +726,51 @@ private fun NavigationUI(
                     }
                 }
                 entry<NestedNavKey.VersionSettings> { key ->
-                    VersionSettingsScreen(
-                        key = key,
-                        modifyViewModel = modifyVersionViewModel,
-                        backScreenViewModel = screenBackStackModel,
-                        backToMainScreen = toMainScreen,
-                        onExportModpack = {
-                            navigateToExport(key.version)
-                        },
-                        eventViewModel = eventViewModel,
-                        submitError = submitError
-                    )
+                    SharedGlassBlurPage {
+                        VersionSettingsScreen(
+                            key = key,
+                            modifyViewModel = modifyVersionViewModel,
+                            backScreenViewModel = screenBackStackModel,
+                            backToMainScreen = toMainScreen,
+                            onExportModpack = {
+                                navigateToExport(key.version)
+                            },
+                            eventViewModel = eventViewModel,
+                            submitError = submitError
+                        )
+                    }
                 }
                 entry<NestedNavKey.VersionExport> { key ->
-                    VersionExportScreen(
-                        key = key,
-                        backScreenViewModel = screenBackStackModel,
-                        eventViewModel = eventViewModel,
-                        backToMainScreen = toMainScreen
-                    )
+                    SharedGlassBlurPage {
+                        VersionExportScreen(
+                            key = key,
+                            backScreenViewModel = screenBackStackModel,
+                            eventViewModel = eventViewModel,
+                            backToMainScreen = toMainScreen
+                        )
+                    }
                 }
                 entry<NestedNavKey.Download> { key ->
-                    DownloadScreen(
-                        key = key,
-                        backScreenViewModel = screenBackStackModel,
-                        eventViewModel = eventViewModel,
-                        modpackImportViewModel = modpackImportViewModel,
-                        submitError = submitError
-                    )
+                    SharedGlassBlurPage {
+                        DownloadScreen(
+                            key = key,
+                            backScreenViewModel = screenBackStackModel,
+                            eventViewModel = eventViewModel,
+                            modpackImportViewModel = modpackImportViewModel,
+                            submitError = submitError
+                        )
+                    }
                 }
-                entry<NestedNavKey.AssetInfo> { key ->
-                    AssetInfoScreen(
-                        key = key,
-                        mainScreenKey = screenBackStackModel.mainScreen.currentKey,
-                        assetInfoScreenKey = key.currentKey,
-                        eventViewModel = eventViewModel,
-                        submitError = submitError,
-                    )
+                entry<NestedNavKey.AddonInfo> { key ->
+                    SharedGlassBlurPage {
+                        AddonInfoScreen(
+                            key = key,
+                            mainScreenKey = screenBackStackModel.mainScreen.currentKey,
+                            addonInfoScreenKey = key.currentKey,
+                            eventViewModel = eventViewModel,
+                            submitError = submitError,
+                        )
+                    }
                 }
                 entry<NormalNavKey.LogView> { key ->
                     LogViewScreen(

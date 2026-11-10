@@ -30,7 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.LinearWavyProgressIndicator
+import com.movtery.zalithlauncher.ui.components.GlassLinearProgress
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.CompositionLocalProvider
@@ -105,7 +105,6 @@ private fun TopBar(
             modifier = modifier,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = BuildKeys.LAUNCHER_NAME)
             //Lite: GPLv3 要求醒目标注这是修改版
             Text(
                 text = stringResource(R.string.launcher_unofficial_notice),
@@ -190,7 +189,7 @@ private fun LoadingScreen(
                     painter = painterResource(R.drawable.img_launcher),
                     contentDescription = stringResource(R.string.generic_loading)
                 )
-                LinearWavyProgressIndicator(
+                GlassLinearProgress(
                     modifier = Modifier.width(128.dp),
                     wavelength = 32.dp
                 )

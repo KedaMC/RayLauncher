@@ -309,7 +309,7 @@ private const val LITE_SNAPSHOT_DOWNSCALE = 8
 private const val LITE_SNAPSHOT_MIN_INTERVAL_NANOS = 66_000_000L
 
 /** Lite tier uses half of the requested blur radius. */
-private const val LITE_BLUR_FACTOR = 0.5f
+internal const val LITE_BLUR_FACTOR = 0.5f
 
 private tailrec fun Context.findHostWindow(): Window? = when (this) {
     is Activity -> window
@@ -511,6 +511,14 @@ fun liquidGlassBackdrop(): PrismalBackdrop? {
 }
 
 /**
+ * True only while glass is really drawn: the switch is on and a sampleable backdrop exists.
+ * Use this (not [liquidGlassEnabled] / launcherGlassOn) to pick colors, so a launcher without
+ * a wallpaper, or with glass off, keeps the plain Material 3 look.
+ */
+@Composable
+fun liquidGlassActive(): Boolean = liquidGlassBackdrop() != null
+
+/**
  * 统一的 Liquid Glass 表面，所有使用该效果的组件都应通过它绘制
  * @param containerColor 叠加在玻璃上的容器色（会被降低不透明度）
  * @param contentColor 内容颜色
@@ -544,12 +552,19 @@ fun LiquidGlassSurface(
         }
     }
 
+    //A new lambda every recomposition makes Prismal think the shape changed and rebuild its effects
+    val shapeProvider: () -> Shape = remember(shape) { { shape } }
+
+    val effectiveBlur = if (liquidGlassTier() == GlassTier.LITE) blurRadius * LITE_BLUR_FACTOR else blurRadius
+    //On opted-in pages a still wallpaper is blurred once for everybody: sample that and skip the live blur
+    val sharedLayer = sharedGlassLayerFor(backdrop, effectiveBlur.value)
+
     PrismalGlassSurface(
-        backdrop = backdrop,
+        backdrop = sharedLayer ?: backdrop,
         modifier = modifier,
-        shape = { shape },
+        shape = shapeProvider,
         onClick = stableOnClick,
-        blurRadius = if (liquidGlassTier() == GlassTier.LITE) blurRadius * LITE_BLUR_FACTOR else blurRadius,
+        blurRadius = if (sharedLayer != null) 0.dp else effectiveBlur,
         surfaceColor = if (containerColor.isSpecified) {
             glassTint(containerColor).copy(alpha = GLASS_SURFACE_ALPHA)
         } else {

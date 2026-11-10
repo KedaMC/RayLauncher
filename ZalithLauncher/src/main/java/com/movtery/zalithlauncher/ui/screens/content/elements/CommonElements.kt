@@ -279,7 +279,8 @@ fun ImportMultipleFileButton(
     progressUris: (uris: List<Uri>) -> Unit,
     modifier: Modifier = Modifier,
     painter: Painter = painterResource(R.drawable.ic_add),
-    text: String = stringResource(R.string.generic_import)
+    text: String = stringResource(R.string.generic_import),
+    glassColor: Color = MaterialTheme.colorScheme.surface
 ) {
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetMultipleContents()
@@ -295,7 +296,8 @@ fun ImportMultipleFileButton(
             launcher.launch(extension.extensionToMimeType())
         },
         painter = painter,
-        text = text
+        text = text,
+        glassColor = glassColor
     )
 }
 
@@ -307,7 +309,8 @@ fun ImportSingleFileButton(
     painter: Painter = painterResource(R.drawable.ic_add),
     text: String = stringResource(R.string.generic_import),
     onClick: () -> Unit = {},
-    onLongClick: ((launch: () -> Unit) -> Unit)? = null
+    onLongClick: ((launch: () -> Unit) -> Unit)? = null,
+    glassColor: Color = MaterialTheme.colorScheme.surface
 ) {
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -325,6 +328,7 @@ fun ImportSingleFileButton(
         },
         painter = painter,
         text = text,
+        glassColor = glassColor,
         onLongClick = {
             if (onLongClick != null) {
                 onLongClick { launcher.launch(extension.extensionToMimeType()) }
@@ -451,13 +455,10 @@ private fun TaskFlowListColumn(
             style = MaterialTheme.typography.titleMedium
         )
 
-        //With Liquid Glass the rows use the item tint, like everything else in dialogs (and the
-        //Cancel button below them), so they all read as one family of glass
-        val rowColors = if (liquidGlassBackdrop() != null) {
-            CardDefaults.cardColors(containerColor = itemColor(), contentColor = onItemColor())
-        } else {
-            CardDefaults.cardColors(containerColor = cardColor(), contentColor = onCardColor())
-        }
+        //With Liquid Glass each row is its own glass card in the item tint, like everything else in
+        //dialogs (and the Cancel button below them). With glass off the rows are the stock plain list.
+        val glassRows = liquidGlassBackdrop() != null
+        val rowColors = CardDefaults.cardColors(containerColor = itemColor(), contentColor = onItemColor())
         val scrollState = rememberLazyListState()
         LazyColumn(
             modifier = Modifier
@@ -466,14 +467,25 @@ private fun TaskFlowListColumn(
             state = scrollState
         ) {
             items(tasks, key = { it.task.id }) { task ->
-                BackgroundCard(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
-                    shape = MaterialTheme.shapes.large,
-                    colors = rowColors,
-                    liquidGlass = true
-                ) {
+                if (glassRows) {
+                    BackgroundCard(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+                        shape = MaterialTheme.shapes.large,
+                        colors = rowColors,
+                        liquidGlass = true
+                    ) {
+                        InstallingTaskItem(
+                            modifier = Modifier.fillMaxWidth().padding(all = 8.dp),
+                            title = task.title,
+                            runningIcon = task.runningIcon,
+                            task = task.task
+                        )
+                    }
+                } else {
                     InstallingTaskItem(
-                        modifier = Modifier.fillMaxWidth().padding(all = 8.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 6.dp),
                         title = task.title,
                         runningIcon = task.runningIcon,
                         task = task.task
@@ -503,8 +515,8 @@ private fun InstallingTaskItem(
     val progressTrackColor = if (glass) Color.White.copy(alpha = 0.28f) else ProgressIndicatorDefaults.linearTrackColor
 
     Row(
-        //Keep the icon away from the rounded left edge of the glass box
-        modifier = Modifier.padding(start = 12.dp),
+        //Glass only: keep the icon away from the rounded left edge of the glass box
+        modifier = if (glass) Modifier.padding(start = 12.dp) else Modifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {

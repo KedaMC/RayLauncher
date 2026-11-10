@@ -105,8 +105,6 @@ JNIEXPORT jboolean JNICALL Java_com_movtery_zalithlauncher_bridge_ZLBridge_dlope
 	void* handle = dlopen(nameUtf, RTLD_GLOBAL | RTLD_LAZY);
 	if (!handle) {
 		LOG_TO_E("DLOPEN: %s , failed ( %s )", nameUtf, dlerror());
-	} else {
-		LOG_TO_D("DLOPEN: %s , success", nameUtf);
 	}
 	(*env)->ReleaseStringUTFChars(env, name, nameUtf);
 	return handle != NULL;

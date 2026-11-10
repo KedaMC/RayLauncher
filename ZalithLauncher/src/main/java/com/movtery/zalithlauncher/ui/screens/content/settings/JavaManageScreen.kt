@@ -161,7 +161,9 @@ fun JavaManageScreen(
                 .animated(ctx),
             position = CardPosition.Single
         ) {
-            CardTitleLayout {
+            //Same colours as the About page: flat header on the glass card, buttons use itemColor
+            val buttonColor = itemColor()
+            CardTitleLayout(flatUnderGlass = true) {
                 Row(
                     modifier = Modifier
                         .padding(horizontal = 12.dp, vertical = 8.dp)
@@ -173,6 +175,7 @@ fun JavaManageScreen(
                         painter = painterResource(R.drawable.ic_refresh),
                         contentDescription = stringResource(R.string.generic_refresh),
                         text = stringResource(R.string.generic_refresh),
+                        glassColor = buttonColor,
                     )
                     ImportMultipleFileButton(
                         extension = "xz",
@@ -185,7 +188,8 @@ fun JavaManageScreen(
                                     submitError = submitError
                                 )
                             }
-                        }
+                        },
+                        glassColor = buttonColor
                     )
                     ImportSingleFileButton(
                         extension = "jar",
@@ -218,7 +222,8 @@ fun JavaManageScreen(
                             }
                         },
                         painter = painterResource(R.drawable.ic_terminal_outlined),
-                        text = stringResource(R.string.execute_jar_title)
+                        text = stringResource(R.string.execute_jar_title),
+                        glassColor = buttonColor
                     )
                 }
             }
@@ -227,6 +232,7 @@ fun JavaManageScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .weight(1f)
                     .nonInteractiveScrollbar(
                         state = scrollState.scrollIndicatorState!!,
                         orientation = Orientation.Vertical,

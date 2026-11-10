@@ -35,7 +35,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationRailItem
-import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -44,7 +43,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -52,7 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.entryProvider
 import com.movtery.zalithlauncher.R
-import com.movtery.zalithlauncher.game.download.assets.platform.PlatformClasses
+import com.movtery.zalithlauncher.game.download.addon.platform.PlatformClasses
 import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.game.version.installed.VersionsManager
 import com.movtery.zalithlauncher.notification.NotificationManager
@@ -228,13 +226,6 @@ private fun TabMenu(
                 }
             } else {
                 NavigationRailItem(
-                    colors = NavigationRailItemDefaults.colors(
-                        indicatorColor = if (glassBackdrop != null) Color.Transparent else MaterialTheme.colorScheme.secondaryContainer,
-                        selectedIconColor = if (glassBackdrop != null) Color.White else MaterialTheme.colorScheme.onSecondaryContainer,
-                        selectedTextColor = if (glassBackdrop != null) Color.White else MaterialTheme.colorScheme.onSecondaryContainer,
-                        unselectedIconColor = if (glassBackdrop != null) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
-                        unselectedTextColor = if (glassBackdrop != null) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
-                    ),
                     selected = versionsScreenKey === item.key,
                     onClick = {
                         backStack.navigateOnce(item.key)
@@ -343,8 +334,8 @@ private fun NavigationUI(
                         },
                         onSwapMoreInfo = { projectId, platform ->
                             backScreenViewModel.mainScreen.removeAndNavigateTo(
-                                NestedNavKey.AssetInfo::class,
-                                NestedNavKey.AssetInfo(platform, projectId, PlatformClasses.MOD)
+                                NestedNavKey.AddonInfo::class,
+                                NestedNavKey.AddonInfo(platform, projectId, PlatformClasses.MOD)
                             )
                         },
                         eventViewModel = eventViewModel,

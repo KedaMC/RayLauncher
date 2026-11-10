@@ -617,7 +617,9 @@ private fun VersionsLayout(
                         val cardColor = cardColor()
 
                         BackgroundCard(
-                            modifier = Modifier.height(IntrinsicSize.Max),
+                            modifier = Modifier
+                                .height(IntrinsicSize.Max)
+                                .then(barShadowModifier),
                             shape = MaterialTheme.shapes.large,
                             liquidGlass = true
                         ) {
@@ -645,7 +647,8 @@ private fun VersionsLayout(
                         BackgroundCard(
                             modifier = Modifier
                                 .weight(1f, fill = false)
-                                .height(IntrinsicSize.Max),
+                                .height(IntrinsicSize.Max)
+                                .then(barShadowModifier),
                             shape = MaterialTheme.shapes.large,
                             liquidGlass = true
                         ) {

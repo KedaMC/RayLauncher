@@ -200,7 +200,7 @@ class MainActivity : BaseAppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //处理外部导入
-        val isImporting = handleImportIfNeeded(intent)
+        handleImportIfNeeded(intent)
 
         //加载渲染器
         Renderers.init()
@@ -216,9 +216,7 @@ class MainActivity : BaseAppCompatActivity() {
 
         //拉取当月赞助者数据
         lifecycleScope.launch {
-            sponsorsViewModel.loadOnStart(
-                showLastMonth = !isImporting
-            )
+            sponsorsViewModel.loadOnStart()
         }
 
         //错误信息展示

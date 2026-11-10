@@ -214,6 +214,10 @@ class CardGridState internal constructor(
 
     private val animators = mutableMapOf<String, Animatable<Rect, AnimationVector4D>>()
 
+    /** 是否已经播种过；状态跨导航存活时，据此避免重复播种与重放入场动画 */
+    var isSeeded: Boolean = false
+        private set
+
     // ---------- 播种 ----------
 
     /**
@@ -222,6 +226,7 @@ class CardGridState internal constructor(
      * 重复 id 的卡片仅保留最先出现的一个，类型未知的卡片被丢弃。
      */
     fun seed(types: List<CardType>, seeds: List<CardSeed>, storedColumns: Int) {
+        isSeeded = true
         typeById = types.associateBy { it.typeId }
         val distinct = seeds.distinctBy { it.id }.filter { it.typeId in typeById }
         if (distinct.isEmpty()) return

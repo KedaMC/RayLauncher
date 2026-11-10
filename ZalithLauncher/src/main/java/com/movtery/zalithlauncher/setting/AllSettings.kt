@@ -18,14 +18,10 @@
 
 package com.movtery.zalithlauncher.setting
 
-import android.os.Build
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
-import com.materialkolor.PaletteStyle
 import com.movtery.layer_controller.utils.snap.SnapMode
 import com.movtery.zalithlauncher.BuildKeys
-import com.movtery.zalithlauncher.game.download.assets.platform.Platform
+import com.movtery.zalithlauncher.game.download.addon.platform.Platform
 import com.movtery.zalithlauncher.game.path.GamePathManager
 import com.movtery.zalithlauncher.game.version.installed.GraphicsApi
 import com.movtery.zalithlauncher.setting.enums.ActionMenuSide
@@ -45,7 +41,6 @@ import com.movtery.zalithlauncher.ui.control.gamepad.JoystickMode
 import com.movtery.zalithlauncher.ui.control.mouse.CENTER_HOTSPOT
 import com.movtery.zalithlauncher.ui.control.mouse.CursorHotspot
 import com.movtery.zalithlauncher.ui.control.mouse.LEFT_TOP_HOTSPOT
-import com.movtery.zalithlauncher.ui.theme.ColorThemeType
 
 
 object AllSettings : SettingsRegistry() {
@@ -129,7 +124,7 @@ object AllSettings : SettingsRegistry() {
     /**
      * 版本自定义信息
      */
-    val versionCustomInfo = stringSetting("versionCustomInfo", "${BuildKeys.LAUNCHER_IDENTIFIER}[zl_version]")
+    val versionCustomInfo = stringSetting("versionCustomInfo", BuildKeys.LAUNCHER_NAME)
 
     /**
      * 启动器的Java环境
@@ -334,26 +329,6 @@ object AllSettings : SettingsRegistry() {
 
     //Launcher
     /**
-     * 颜色主题色
-     * Android 12+ 默认动态主题色
-     */
-    val launcherColorTheme = enumSetting(
-        "launcherColorTheme",
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) ColorThemeType.DYNAMIC
-        else ColorThemeType.EMBERMIRE
-    )
-
-    /**
-     * 自定义颜色主题色
-     */
-    val launcherCustomColor = intSetting("launcherCustomColor", Color.Blue.toArgb())
-
-    /**
-     * 自定义颜色配色风格
-     */
-    val launcherCustomPaletteStyle = enumSetting("launcherCustomPaletteStyle", PaletteStyle.TonalSpot)
-
-    /**
      * 启动器UI深色主题
      */
     val launcherDarkMode = enumSetting("launcherDarkMode", DarkMode.FollowSystem)
@@ -453,7 +428,8 @@ object AllSettings : SettingsRegistry() {
     /**
      * 资源平台下载源
      */
-    val assetPlatformSource = enumSetting(
+    val addonPlatformSource = enumSetting(
+        //历史遗留键名，保留原值以兼容旧版本数据
         "assetPlatformSource",
         MirrorSourceType.AUTO,
         MirrorSourceType.LEGACY_NAMES
@@ -579,7 +555,6 @@ object AllSettings : SettingsRegistry() {
     /**
      * 上次已展示结算报告的上月赞助者月份标识
      */
-    val lastSponsorReportMonth = stringSetting("lastSponsorReportMonth", "")
 
     /**
      * 搜索模组的初始搜索平台

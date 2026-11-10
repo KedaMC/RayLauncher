@@ -75,7 +75,6 @@ import com.movtery.zalithlauncher.path.GLOBAL_CLIENT
 import com.movtery.zalithlauncher.path.GLOBAL_JSON
 import com.movtery.zalithlauncher.path.PathManager
 import com.movtery.zalithlauncher.setting.AllSettings
-import com.movtery.zalithlauncher.sponsor.LastMonthSponsors
 import com.movtery.zalithlauncher.sponsor.MonthlySponsors
 import com.movtery.zalithlauncher.sponsor.Sponsor
 import com.movtery.zalithlauncher.sponsor.SponsorPlan
@@ -148,8 +147,6 @@ sealed interface SponsorsOperation {
     data object None : SponsorsOperation
     /** 展示赞助者对话框 */
     data object Show : SponsorsOperation
-    /** 展示上月赞助者结算报告对话框 */
-    data object LastMonth : SponsorsOperation
 }
 
 @Serializable
@@ -175,13 +172,12 @@ class SponsorsViewModel : ViewModel() {
     /**
      * 启动时预拉取数据并刷新缓存
      */
-    fun loadOnStart(showLastMonth: Boolean) {
+    fun loadOnStart() {
         viewModelScope.launch(Dispatchers.Main) {
             _data.update { DataOperation.Loading }
 
             val newData = toDataOperation(ensureData())
             _data.update { newData }
-            if (showLastMonth) checkLastMonthReport(newData)
         }
     }
 
@@ -217,25 +213,6 @@ class SponsorsViewModel : ViewModel() {
      */
     fun closeDialog() {
         _ui.update { SponsorsOperation.None }
-    }
-
-    /**
-     * 关闭上月赞助者结算报告对话框，并写入已结算月份标记
-     */
-    fun closeLastMonthDialog(settledMonth: String) {
-        AllSettings.lastSponsorReportMonth.save(settledMonth)
-        _ui.update { SponsorsOperation.None }
-    }
-
-    private fun checkLastMonthReport(operation: DataOperation) {
-        val lastMonth = operation.dataOrNull()?.lastMonth ?: return
-        if (lastMonth.month == AllSettings.lastSponsorReportMonth.getValue()) return
-
-        if (lastMonth.list.isEmpty()) {
-            AllSettings.lastSponsorReportMonth.save(lastMonth.month)
-        } else {
-            _ui.update { SponsorsOperation.LastMonth }
-        }
     }
 
     private fun isFresh(): Boolean {
@@ -323,27 +300,6 @@ fun SponsorsDialog(
 
     when (ui) {
         SponsorsOperation.None -> {}
-        SponsorsOperation.LastMonth -> {
-            when (val report = data.dataOrNull()?.lastMonth) {
-                is LastMonthSponsors -> {
-                    val effectClock = rememberSponsorEffectClock()
-                    val outsideColor = onCardColor()
-
-                    LastMonthReportDialog(
-                        report = report,
-                        effectClock = effectClock,
-                        outsideColor = outsideColor,
-                        onSupportClick = onSupportClick,
-                        onClose = {
-                            viewModel.closeLastMonthDialog(report.month)
-                        }
-                    )
-                }
-                else -> {
-                    LaunchedEffect(Unit) { viewModel.closeDialog() }
-                }
-            }
-        }
         SponsorsOperation.Show -> {
             val dialogBackground = cardColor(false)
             val outsideColor = onCardColor()
@@ -449,101 +405,6 @@ fun SponsorsDialog(
                                     Text(stringResource(R.string.generic_close))
                                 }
                             }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun LastMonthReportDialog(
-    report: LastMonthSponsors,
-    effectClock: SponsorEffectClock,
-    outsideColor: Color,
-    onSupportClick: () -> Unit,
-    onClose: () -> Unit
-) {
-    Dialog(
-        onDismissRequest = onClose,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
-    ) {
-        BoxWithConstraints(
-            modifier = Modifier
-                .padding(all = 16.dp)
-                .heightIn(max = rememberDialogMaxHeight())
-                .fillMaxHeight()
-                .fillMaxWidth(0.6f),
-            contentAlignment = Alignment.Center
-        ) {
-            Surface(
-                modifier = Modifier
-                    .padding(all = 6.dp)
-                    .fillMaxWidth()
-                    .heightIn(max = (maxHeight - 12.dp).coerceAtMost(rememberDialogMaxHeight())),
-                shape = MaterialTheme.shapes.extraLarge,
-                color = cardColor(false),
-                contentColor = onCardColor(),
-                shadowElevation = 6.dp
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 16.dp, end = 16.dp, top = 16.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.sponsors_last_month_title),
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        val launcherName = remember { launcherName() }
-                        Text(
-                            modifier = Modifier.alpha(0.7f),
-                            text = stringResource(R.string.sponsors_last_month_summary, launcherName),
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-
-                    val state = rememberLazyListState()
-                    LazyColumn(
-                        modifier = Modifier
-                            .fadeEdge(state = state)
-                            .weight(1f, fill = false),
-                        state = state,
-                        contentPadding = PaddingValues(all = 12.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(report.list) { sponsor ->
-                            SponsorItem(
-                                sponsor = sponsor,
-                                effectClock = effectClock,
-                                outsideColor = outsideColor
-                            )
-                        }
-                    }
-
-                    Row(
-                        modifier = Modifier
-                            .padding(bottom = 8.dp)
-                            .padding(horizontal = 12.dp)
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        FilledTonalButton(
-                            modifier = Modifier.weight(0.5f),
-                            onClick = onSupportClick
-                        ) {
-                            Text(stringResource(R.string.about_sponsor))
-                        }
-
-                        Button(
-                            modifier = Modifier.weight(0.5f),
-                            onClick = onClose
-                        ) {
-                            Text(stringResource(R.string.generic_close))
                         }
                     }
                 }

@@ -34,6 +34,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.layout.RowScope
 import com.movtery.zalithlauncher.ui.components.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -440,11 +443,39 @@ private fun CardTexts(
     }
 }
 
+/** Press-scaling button under Liquid Glass; the stock M3 [Button] otherwise */
+@Composable
+private fun LaunchButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    shape: Shape = ButtonDefaults.shape,
+    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
+    content: @Composable RowScope.() -> Unit
+) {
+    if (liquidGlassBackdrop() != null) {
+        ScalingActionButton(
+            onClick = onClick,
+            modifier = modifier,
+            shape = shape,
+            contentPadding = contentPadding,
+            content = content
+        )
+    } else {
+        Button(
+            onClick = onClick,
+            modifier = modifier,
+            shape = shape,
+            contentPadding = contentPadding,
+            content = content
+        )
+    }
+}
+
 /** 带文字的启动按钮 */
 @Composable
 private fun TextLaunchButton(version: Version, modifier: Modifier = Modifier) {
     val onLaunch = LocalHomeCardLauncher.current
-    ScalingActionButton(onClick = { onLaunch(version) }, modifier = modifier) {
+    LaunchButton(onClick = { onLaunch(version) }, modifier = modifier) {
         Icon(
             modifier = Modifier.size(16.dp),
             painter = painterResource(R.drawable.ic_play_arrow_filled),
@@ -461,7 +492,7 @@ private fun TextLaunchButton(version: Version, modifier: Modifier = Modifier) {
 @Composable
 private fun CompactLaunchButton(version: Version, modifier: Modifier = Modifier) {
     val onLaunch = LocalHomeCardLauncher.current
-    ScalingActionButton(
+    LaunchButton(
         onClick = { onLaunch(version) },
         modifier = modifier,
         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
@@ -483,7 +514,7 @@ private fun CompactLaunchButton(version: Version, modifier: Modifier = Modifier)
 @Composable
 private fun IconLaunchButton(version: Version, modifier: Modifier = Modifier) {
     val onLaunch = LocalHomeCardLauncher.current
-    ScalingActionButton(
+    LaunchButton(
         onClick = { onLaunch(version) },
         modifier = modifier,
         shape = CircleShape,

@@ -19,7 +19,6 @@
 package com.movtery.zalithlauncher.ui.screens.content.elements
 
 import com.movtery.zalithlauncher.ui.components.effectiveBackgroundBlur
-import com.movtery.zalithlauncher.ui.components.launcherGlassOn
 import androidx.annotation.DrawableRes
 import com.movtery.zalithlauncher.ui.components.glassRadioColors
 import androidx.compose.animation.Crossfade
@@ -178,14 +177,18 @@ fun GamePathItemLayout(
         }
         NavigationDrawerItem(
         modifier = Modifier.fillMaxWidth(),
-        colors = NavigationDrawerItemDefaults.colors(
-            selectedContainerColor = if (glassBackdrop != null) Color.Transparent else if (launcherGlassOn()) Color.White.copy(alpha = 0.16f) else MaterialTheme.colorScheme.secondaryContainer,
-            unselectedContainerColor = Color.Transparent,
-            selectedTextColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.onSecondaryContainer,
-            unselectedTextColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.onSurface,
-            selectedIconColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.onSecondaryContainer,
-            unselectedIconColor = if (launcherGlassOn()) Color.White else MaterialTheme.colorScheme.onSurface
-        ),
+        colors = if (glassBackdrop != null) {
+            NavigationDrawerItemDefaults.colors(
+                selectedContainerColor = Color.Transparent,
+                unselectedContainerColor = Color.Transparent,
+                selectedTextColor = Color.White,
+                unselectedTextColor = Color.White,
+                selectedIconColor = Color.White,
+                unselectedIconColor = Color.White
+            )
+        } else {
+            NavigationDrawerItemDefaults.colors()
+        },
         label = {
             Column(
                 modifier = Modifier
