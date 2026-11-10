@@ -11,6 +11,8 @@ permissions:
 jobs:
   Build:
     uses: ./.github/workflows/build.yml
+    with:
+      ref: ${{ github.event.release.tag_name }}
     secrets:
       KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
       STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
