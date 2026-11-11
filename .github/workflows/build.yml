@@ -4,20 +4,20 @@ on:
   push:
     branches:
       - main
-      - feature/liquid-glass-2.8.1
+      - RayLauncher
   workflow_dispatch:
     inputs:
       ref:
         description: "Branch, tag or SHA to build (leave empty to build the branch this workflow is run from)"
         required: false
         type: string
-        default: "feature/liquid-glass-2.8.1"
+        default: "RayLauncher"
   workflow_call:
     inputs:
       ref:
         required: false
         type: string
-        default: "feature/liquid-glass-2.8.1"
+        default: "RayLauncher"
     secrets:
       KEY_PASSWORD:
         required: false
