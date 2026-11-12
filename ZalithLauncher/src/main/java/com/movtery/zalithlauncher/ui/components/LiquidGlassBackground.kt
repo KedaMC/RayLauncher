@@ -22,7 +22,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.setting.enums.GlassTier
-import com.movtery.zalithlauncher.ui.theme.ProfileTheme
 
 /**
  * Background opacity (element opacity) used while Liquid Glass is on.
@@ -32,12 +31,11 @@ import com.movtery.zalithlauncher.ui.theme.ProfileTheme
 const val LIQUID_GLASS_BACKGROUND_OPACITY = 20
 
 /**
- * Effective glass tier of the launcher UI: the selected version's theme wins, otherwise the global
- * switch decides ([GlassTier.OFF] when off, else the chosen tier). Reads snapshot state, so it works
- * in composables, draw nodes and snapshotFlow alike.
+ * Effective glass tier of the launcher UI: the global switch decides ([GlassTier.OFF] when off,
+ * else the chosen tier). Reads snapshot state, so it works in composables, draw nodes and
+ * snapshotFlow alike.
  */
 fun launcherGlassTier(): GlassTier {
-    ProfileTheme.glassTier?.let { return it }
     if (!AllSettings.launcherLiquidGlass.state) return GlassTier.OFF
     return AllSettings.launcherGlassTier.state.takeIf { it != GlassTier.OFF } ?: GlassTier.FULL
 }

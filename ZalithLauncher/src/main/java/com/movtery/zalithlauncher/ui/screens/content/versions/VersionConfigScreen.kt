@@ -20,24 +20,7 @@ package com.movtery.zalithlauncher.ui.screens.content.versions
 
 import android.os.Build
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.CancellationException
-import com.movtery.zalithlauncher.ui.theme.profileWallpaperFile
-import com.movtery.zalithlauncher.ui.theme.ProfileTheme
-import com.movtery.zalithlauncher.ui.components.ColorPickerDialog
-import com.movtery.zalithlauncher.setting.enums.GlassTier
-import com.movtery.zalithlauncher.game.version.installed.theme.ProfileThemeIO
-import com.movtery.zalithlauncher.game.version.installed.theme.PROFILE_THEME_EXTENSION
-import com.movtery.zalithlauncher.contract.MediaPickerContract
-import com.movtery.colorpicker.rememberColorPickerController
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.graphics.Color
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.background
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.compose.rememberLauncherForActivityResult
 import android.os.Vibrator
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -200,7 +183,6 @@ fun VersionConfigScreen(
 
         //State, dialogs and launchers of every group live out here; the lazy items below only draw cards
         val versionItems = rememberVersionConfigItems(stateful)
-        val themeItems = rememberProfileThemeItems(version, config, showToast, submitError)
         val gameItems = rememberGameConfigItems(stateful)
         val supportItems = rememberSupportConfigItems(
             stateful = stateful,
@@ -220,10 +202,8 @@ fun VersionConfigScreen(
             val items = ConfigItems(this)
             items.versionItems()
             items.gap("gap_0")
-            items.themeItems()
-            items.gap("gap_1")
             items.gameItems()
-            items.gap("gap_2")
+            items.gap("gap_1")
             items.supportItems()
         }
     }
@@ -434,20 +414,6 @@ private fun rememberGameConfigItems(
             )
         }
 
-        card("version_custom_info", 2) {
-            TextInputSettingsCard(
-                modifier = Modifier.fillMaxWidth(),
-                position = CardPosition.Middle,
-                value = stateful.customInfo,
-                onValueChange = { stateful.customInfo = it },
-                title = stringResource(R.string.settings_game_version_custom_info_title),
-                summary = stringResource(R.string.settings_game_version_custom_info_summary),
-                label = {
-                    Text(text = stringResource(R.string.versions_config_follow_global_if_blank))
-                }
-            )
-        }
-
         card("game_args", 2) {
             TextInputSettingsCard(
                 modifier = Modifier.fillMaxWidth(),
@@ -600,217 +566,6 @@ private fun <E> getIDList(list: List<E>, toIDItem: (E) -> IDItem): List<IDItem> 
         toIDItem(it)
     }.toMutableList().apply {
         add(0, IDItem("", stringResource(R.string.generic_follow_global)))
-    }
-}
-
-/**
- * Per-profile theme: accent color, glass tier and wallpaper that apply to the launcher while this
- * version is selected, plus export/import of the whole theme as one file.
- */
-@Composable
-private fun rememberProfileThemeItems(
-    version: Version,
-    config: VersionConfig,
-    showToast: (AndroidStringText) -> Unit,
-    submitError: (ErrorViewModel.ThrowableMessage) -> Unit
-): ConfigItems.() -> Unit {
-    val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-
-    var accent by remember { mutableStateOf(config.themeAccent) }
-    var tierId by remember { mutableStateOf(config.themeGlassTier?.name ?: "") }
-    var hasWallpaper by remember { mutableStateOf(profileWallpaperFile(version).isFile) }
-    var showColorDialog by remember { mutableStateOf(false) }
-
-    fun saveTheme() {
-        config.saveOrShowError(submitError)
-        ProfileTheme.notifyChanged()
-    }
-
-    fun syncFromConfig() {
-        accent = config.themeAccent
-        tierId = config.themeGlassTier?.name ?: ""
-        hasWallpaper = profileWallpaperFile(version).isFile
-    }
-
-    fun runThemeTask(successText: Int?, block: suspend () -> Unit) {
-        coroutineScope.launch {
-            try {
-                block()
-                syncFromConfig()
-                saveTheme()
-                successText?.let { showToast(androidText(it)) }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Logger.error(TAG, "Profile theme operation failed!", e)
-                syncFromConfig()
-                saveTheme()
-                submitError(
-                    ErrorViewModel.ThrowableMessage(
-                        title = androidText(R.string.versions_config_theme_error),
-                        message = androidText(e.getMessageOrToString())
-                    )
-                )
-            }
-        }
-    }
-
-    val wallpaperPicker = rememberLauncherForActivityResult(
-        contract = MediaPickerContract(allowImages = true, allowVideos = true, allowMultiple = false)
-    ) { result ->
-        result?.firstOrNull()?.let { uri ->
-            runThemeTask(null) { ProfileThemeIO.importWallpaper(context, version, uri) }
-        }
-    }
-    val exportLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("application/octet-stream")
-    ) { uri ->
-        uri?.let {
-            runThemeTask(R.string.versions_config_theme_exported) { ProfileThemeIO.export(context, version, it) }
-        }
-    }
-    val importLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri ->
-        uri?.let {
-            runThemeTask(R.string.versions_config_theme_imported) { ProfileThemeIO.import(context, version, it) }
-        }
-    }
-
-    if (showColorDialog) {
-        val initial = Color(accent ?: MaterialTheme.colorScheme.primary.toArgb())
-        val colorController = rememberColorPickerController(initialColor = initial)
-        ColorPickerDialog(
-            colorController = colorController,
-            showAlpha = false,
-            onCancel = { showColorDialog = false },
-            onConfirm = { picked ->
-                config.themeAccent = picked.copy(alpha = 1f).toArgb()
-                accent = config.themeAccent
-                saveTheme()
-                showColorDialog = false
-            }
-        )
-    }
-
-        val tierItems = listOf(
-            IDItem("", stringResource(R.string.generic_follow_global)),
-            IDItem(GlassTier.OFF.name, stringResource(GlassTier.OFF.textRes)),
-            IDItem(GlassTier.LITE.name, stringResource(GlassTier.LITE.textRes)),
-            IDItem(GlassTier.FULL.name, stringResource(GlassTier.FULL.textRes))
-        )
-
-    return {
-        groupTitle("theme_title", 1, R.string.versions_config_theme_title)
-        card("theme_accent", 1) {
-            SettingsCard(
-                modifier = Modifier.fillMaxWidth(),
-                position = CardPosition.Top,
-                title = stringResource(R.string.versions_config_theme_accent_title),
-                summary = stringResource(R.string.versions_config_theme_accent_summary),
-                onClick = { showColorDialog = true },
-                trailingIcon = {
-                    accent?.let { argb ->
-                        Box(
-                            modifier = Modifier
-                                .size(24.dp)
-                                .background(Color(argb), CircleShape)
-                        )
-                    }
-                }
-            )
-        }
-
-        card("theme_glass", 1) {
-            ListSettingsCard(
-                modifier = Modifier.fillMaxWidth(),
-                position = CardPosition.Middle,
-                items = tierItems,
-                currentId = tierId,
-                defaultId = "",
-                title = stringResource(R.string.versions_config_theme_glass_title),
-                summary = stringResource(R.string.versions_config_theme_glass_summary),
-                getItemText = { it.title },
-                getItemId = { it.id },
-                onValueChange = { item ->
-                    tierId = item.id
-                    config.themeGlassTier = GlassTier.entries.firstOrNull { it.name == item.id }
-                    saveTheme()
-                }
-            )
-        }
-
-        card("theme_wallpaper", 1) {
-            SettingsCard(
-                modifier = Modifier.fillMaxWidth(),
-                position = CardPosition.Middle,
-                title = stringResource(R.string.versions_config_theme_wallpaper_title),
-                summary = stringResource(R.string.versions_config_theme_wallpaper_set),
-                onClick = { wallpaperPicker.launch(Unit) },
-                trailingIcon = {
-                    if (hasWallpaper) {
-                        IconButton(
-                            onClick = {
-                                runThemeTask(null) { ProfileThemeIO.removeWallpaper(version) }
-                            }
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_delete_outlined),
-                                contentDescription = stringResource(R.string.versions_config_theme_wallpaper_clear)
-                            )
-                        }
-                    }
-                }
-            )
-        }
-
-        card("theme_export", 1) {
-            SettingsCard(
-                modifier = Modifier.fillMaxWidth(),
-                position = CardPosition.Middle,
-                title = stringResource(R.string.versions_config_theme_export),
-                summary = stringResource(R.string.versions_config_theme_export_summary),
-                onClick = { exportLauncher.launch("${version.getVersionName()}.$PROFILE_THEME_EXTENSION") }
-            )
-        }
-
-        card("theme_import", 1) {
-            SettingsCard(
-                modifier = Modifier.fillMaxWidth(),
-                position = CardPosition.Middle,
-                title = stringResource(R.string.versions_config_theme_import),
-                summary = stringResource(R.string.versions_config_theme_import_summary),
-                onClick = { importLauncher.launch("*/*") }
-            )
-        }
-
-        card("theme_reset", 1) {
-            SettingsCard(
-                modifier = Modifier.fillMaxWidth(),
-                position = CardPosition.Bottom,
-                title = stringResource(R.string.versions_config_theme_reset),
-                onClick = {
-                    runThemeTask(null) { ProfileThemeIO.reset(version) }
-                }
-            )
-        }
-    }
-}
-
-private fun VersionConfig.saveOrShowError(
-    submitError: (ErrorViewModel.ThrowableMessage) -> Unit
-) {
-    runCatching {
-        saveWithThrowable()
-    }.onFailure { e ->
-        Logger.error(TAG, "Failed to save version config!", e)
-        submitError(
-            ErrorViewModel.ThrowableMessage(
-                title = androidText(R.string.versions_config_failed_to_save),
-                message = androidText(e.getMessageOrToString())
-            )
-        )
     }
 }
 

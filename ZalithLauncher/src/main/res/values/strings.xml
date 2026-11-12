@@ -1852,10 +1852,6 @@
     <string name="settings_game_skip_game_integrity_check_title">Skip Integrity Check</string>
     <!-- Summary of the skip integrity check switch in the Game settings tab and version settings -->
     <string name="settings_game_skip_game_integrity_check_summary">When launching the game, mismatched game files will not be re-downloaded</string>
-    <!-- Text field title in the Game tab and version settings for custom text shown inside the game -->
-    <string name="settings_game_version_custom_info_title">Custom Version Info</string>
-    <!-- Summary of the custom version info field, explaining where the text appears and the [zl_version] tag -->
-    <string name="settings_game_version_custom_info_summary">Custom info is shown at the bottom-left of the main menu and top-left of the F3 debug screen. It may not work for special versions or external account logins. You can add the [zl_version] tag, which will be replaced with the current version number automatically</string>
     <!-- Switch title in the Game settings tab to let the launcher pick a matching Java runtime -->
     <string name="settings_game_auto_pick_java_runtime_title">Auto-Select Java</string>
     <!-- Summary of the auto-select Java switch in the Game settings tab -->
@@ -2146,10 +2142,6 @@
     <string name="settings_launcher_dark_mode_title">Dark Mode</string>
     <!-- Title of the launcher language picker in Launcher settings -->
     <string name="settings_launcher_language">Language</string>
-    <!-- Title of the fullscreen switch in Launcher settings -->
-    <string name="settings_launcher_full_screen_title">Fullscreen Mode</string>
-    <!-- Description of the fullscreen setting in Launcher settings -->
-    <string name="settings_launcher_full_screen_summary">Make the launcher pages fullscreen, ignoring safe areas like notches and punch-holes</string>
     <!-- Title of the animation speed slider in Launcher settings -->
     <string name="settings_launcher_animate_speed_title">Animation Speed</string>
     <!-- Description of the animation speed setting in Launcher settings -->
@@ -3043,8 +3035,6 @@
     <string name="recorder_notification_channel_name">Game recorder</string>
     <string name="recorder_notification_text">Recording game video and sound</string>
     <string name="recorder_notification_title">Recording game</string>
-    <string name="settings_game_glass_tier_summary">Quality of the glass in the game menu panels, separate from the launcher</string>
-    <string name="settings_game_glass_tier_title">In-game glass quality</string>
     <string name="settings_launcher_background_liquid_glass_managed">Managed automatically while Liquid Glass is on (your saved value is kept)</string>
     <string name="settings_launcher_glass_tier_summary">Lite uses a lighter blur and a cheaper backdrop for dialogs. Pick it on weaker devices. Never changes by itself</string>
     <string name="settings_launcher_glass_tier_title">Glass quality</string>
@@ -3056,20 +3046,4 @@
     <string name="settings_launcher_overlay_importing">Importing overlay file</string>
     <string name="settings_launcher_overlay_none">No overlay cards yet</string>
     <string name="settings_launcher_overlay_remove_all">Remove all overlay cards</string>
-    <string name="versions_config_theme_accent_summary">Tap to pick a color for this version. Follows the launcher color when not set</string>
-    <string name="versions_config_theme_accent_title">Accent color</string>
-    <string name="versions_config_theme_error">Theme operation failed</string>
-    <string name="versions_config_theme_export">Export theme</string>
-    <string name="versions_config_theme_export_summary">Save accent color, glass quality and wallpaper as one file</string>
-    <string name="versions_config_theme_exported">Theme exported</string>
-    <string name="versions_config_theme_glass_summary">Off, Lite or Full only for this version</string>
-    <string name="versions_config_theme_glass_title">Glass quality</string>
-    <string name="versions_config_theme_import">Import theme</string>
-    <string name="versions_config_theme_import_summary">Load a theme file into this version</string>
-    <string name="versions_config_theme_imported">Theme imported</string>
-    <string name="versions_config_theme_reset">Reset theme</string>
-    <string name="versions_config_theme_title">Profile theme</string>
-    <string name="versions_config_theme_wallpaper_clear">Remove the wallpaper of this version</string>
-    <string name="versions_config_theme_wallpaper_set">Pick an image or video for this version</string>
-    <string name="versions_config_theme_wallpaper_title">Wallpaper</string>
 </resources>

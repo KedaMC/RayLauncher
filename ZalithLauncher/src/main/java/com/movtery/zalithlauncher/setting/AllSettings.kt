@@ -20,7 +20,6 @@ package com.movtery.zalithlauncher.setting
 
 import androidx.compose.ui.geometry.Offset
 import com.movtery.layer_controller.utils.snap.SnapMode
-import com.movtery.zalithlauncher.BuildKeys
 import com.movtery.zalithlauncher.game.download.addon.platform.Platform
 import com.movtery.zalithlauncher.game.path.GamePathManager
 import com.movtery.zalithlauncher.game.version.installed.GraphicsApi
@@ -110,11 +109,6 @@ object AllSettings : SettingsRegistry() {
      * 不检查游戏完整性
      */
     val skipGameIntegrityCheck = boolSetting("skipGameIntegrityCheck", false)
-
-    /**
-     * 版本自定义信息
-     */
-    val versionCustomInfo = stringSetting("versionCustomInfo", BuildKeys.LAUNCHER_NAME)
 
     /**
      * 启动器的Java环境
@@ -329,11 +323,6 @@ object AllSettings : SettingsRegistry() {
     val launcherLanguage = enumSetting("launcherLanguage", AppLanguage.FOLLOW_SYSTEM)
 
     /**
-     * 启动器部分屏幕全屏
-     */
-    val launcherFullScreen = boolSetting("launcherFullScreen", true)
-
-    /**
      * 持续型节日彩蛋效果
      */
     val launcherFestivalEffects = boolSetting("launcherFestivalEffects", true)
@@ -351,15 +340,8 @@ object AllSettings : SettingsRegistry() {
 
     /**
      * Glass quality used while [launcherLiquidGlass] is on in the launcher (LITE or FULL).
-     * A per-profile theme can override it.
      */
     val launcherGlassTier = enumSetting("launcherGlassTier", GlassTier.FULL)
-
-    /**
-     * Glass quality of the in-game menu panels (LITE or FULL), independent from the launcher tier.
-     * Glass in game is switched on/off with [gameLiquidGlass].
-     */
-    val gameGlassTier = enumSetting("gameGlassTier", GlassTier.FULL)
 
     /**
      * 启用页面切换动画

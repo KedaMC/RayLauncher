@@ -25,7 +25,6 @@ import com.google.gson.annotations.SerializedName
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.game.support.touch_controller.VibrationHandler
 import com.movtery.zalithlauncher.setting.AllSettings
-import com.movtery.zalithlauncher.setting.enums.GlassTier
 import com.movtery.zalithlauncher.utils.GSON
 import com.movtery.zalithlauncher.utils.logging.Logger
 import com.movtery.zalithlauncher.utils.string.getStringNotNull
@@ -89,9 +88,6 @@ class VersionConfig(
     @SerializedName("customPath")
     var customPath: String = ""
         get() = getStringNotNull(field)
-    @SerializedName("customInfo")
-    var customInfo: String = ""
-        get() = getStringNotNull(field)
     @SerializedName("versionSummary")
     var versionSummary: String = ""
         get() = getStringNotNull(field)
@@ -105,13 +101,6 @@ class VersionConfig(
     @SerializedName("touchVibrateKind")
     var touchVibrateKind: VibrationHandler.VibrateKind? = null
 
-    /** Per-profile theme: accent color (ARGB), null follows the launcher theme */
-    @SerializedName("themeAccent")
-    var themeAccent: Int? = null
-    /** Per-profile theme: glass tier, null follows the launcher setting */
-    @SerializedName("themeGlassTier")
-    var themeGlassTier: GlassTier? = null
-
     constructor(
         filePath: File,
         isolationType: SettingState = SettingState.FOLLOW_GLOBAL,
@@ -124,14 +113,11 @@ class VersionConfig(
         graphicsApi: GraphicsApi? = null,
         control: String = "",
         customPath: String = "",
-        customInfo: String = "",
         versionSummary: String = "",
         serverIp: String = "",
         ramAllocation: Int = -1,
         touchVibrateDuration: Int = 100,
         touchVibrateKind: VibrationHandler.VibrateKind? = null,
-        themeAccent: Int? = null,
-        themeGlassTier: GlassTier? = null,
     ) : this(filePath) {
         this.isolationType = isolationType
         this.skipGameIntegrityCheck = skipGameIntegrityCheck
@@ -143,14 +129,11 @@ class VersionConfig(
         this.graphicsApi = graphicsApi
         this.control = control
         this.customPath = customPath
-        this.customInfo = customInfo
         this.versionSummary = versionSummary
         this.serverIp = serverIp
         this.ramAllocation = ramAllocation
         this.touchVibrateDuration = touchVibrateDuration
         this.touchVibrateKind = touchVibrateKind
-        this.themeAccent = themeAccent
-        this.themeGlassTier = themeGlassTier
     }
 
     fun copy(): VersionConfig = VersionConfig(
@@ -165,14 +148,11 @@ class VersionConfig(
         graphicsApi,
         getStringNotNull(control),
         getStringNotNull(customPath),
-        getStringNotNull(customInfo),
         getStringNotNull(versionSummary),
         getStringNotNull(serverIp),
         ramAllocation,
         touchVibrateDuration,
         touchVibrateKind,
-        themeAccent,
-        themeGlassTier,
     )
 
     /**
@@ -189,7 +169,6 @@ class VersionConfig(
                 graphicsApi != other.graphicsApi ||
                 getStringNotNull(control) != getStringNotNull(other.control) ||
                 getStringNotNull(customPath) != getStringNotNull(other.customPath) ||
-                getStringNotNull(customInfo) != getStringNotNull(other.customInfo) ||
                 getStringNotNull(versionSummary) != getStringNotNull(other.versionSummary) ||
                 getStringNotNull(serverIp) != getStringNotNull(other.serverIp) ||
                 ramAllocation != other.ramAllocation ||
@@ -249,15 +228,11 @@ class VersionConfig(
             writeInt(graphicsApi?.ordinal ?: -1)
             writeString(getStringNotNull(control))
             writeString(getStringNotNull(customPath))
-            writeString(getStringNotNull(customInfo))
             writeString(getStringNotNull(versionSummary))
             writeString(getStringNotNull(serverIp))
             writeInt(ramAllocation)
             writeInt(touchVibrateDuration)
             writeInt(touchVibrateKind?.ordinal ?: -1)
-            writeInt(if (themeAccent != null) 1 else 0)
-            writeInt(themeAccent ?: 0)
-            writeInt(themeGlassTier?.ordinal ?: -1)
         }
     }
 
@@ -274,15 +249,11 @@ class VersionConfig(
             val graphicsApi = GraphicsApi.entries.getOrNull(parcel.readInt())
             val control = parcel.readString().orEmpty()
             val customPath = parcel.readString().orEmpty()
-            val customInfo = parcel.readString().orEmpty()
             val versionSummary = parcel.readString().orEmpty()
             val serverIp = parcel.readString().orEmpty()
             val ramAllocation = parcel.readInt()
             val touchVibrateDuration = parcel.readInt()
             val touchVibrateKind = VibrationHandler.VibrateKind.entries.getOrNull(parcel.readInt())
-            val hasThemeAccent = parcel.readInt() == 1
-            val themeAccentValue = parcel.readInt()
-            val themeGlassTier = GlassTier.entries.getOrNull(parcel.readInt())
 
             return VersionConfig(
                 versionPath,
@@ -296,14 +267,11 @@ class VersionConfig(
                 graphicsApi,
                 control,
                 customPath,
-                customInfo,
                 versionSummary,
                 serverIp,
                 ramAllocation,
                 touchVibrateDuration,
                 touchVibrateKind,
-                if (hasThemeAccent) themeAccentValue else null,
-                themeGlassTier,
             )
         }
 

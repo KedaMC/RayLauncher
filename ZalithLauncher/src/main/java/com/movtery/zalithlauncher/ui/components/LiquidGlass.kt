@@ -144,13 +144,13 @@ fun liquidGlassEnabled(): Boolean =
     }
 
 /**
- * Quality of the glass being composed: the in-game tier in game, otherwise the launcher tier
- * (selected version's theme first). Never [GlassTier.OFF]; use [liquidGlassEnabled] for on/off.
+ * Quality of the glass being composed: always [GlassTier.FULL] in game, otherwise the launcher tier.
+ * Never [GlassTier.OFF]; use [liquidGlassEnabled] for on/off.
  */
 @Composable
 @ReadOnlyComposable
 fun liquidGlassTier(): GlassTier {
-    val tier = if (LocalLiquidGlassInGame.current) AllSettings.gameGlassTier.state else launcherGlassTier()
+    val tier = if (LocalLiquidGlassInGame.current) GlassTier.FULL else launcherGlassTier()
     return if (tier == GlassTier.OFF) GlassTier.FULL else tier
 }
 

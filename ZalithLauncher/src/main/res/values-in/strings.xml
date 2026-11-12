@@ -492,7 +492,6 @@
     <string name="settings_control_mouse_control_mode_summary">Pilih metode kontrol mouse virtual: geser layar buat mindahin kursor, atau tap layar buat nunjuk posisi kursor</string>
     <string name="settings_control_mouse_control_mode_slide">Kontrol Geser</string>
     <string name="settings_control_mouse_control_mode_click">Kontrol Sentuh</string>
-    <string name="settings_launcher_full_screen_title">Mode Layar Penuh</string>
     <string name="minecraft_download_downloading_game_files">Mengunduh file\n(%1$d/%2$d, %3$s/%4$s)</string>
     <string name="minecraft_download_failed">Terjadi kesalahan saat mengunduh Minecraft</string>
     <string name="generic_reset">Reset</string>
@@ -579,8 +578,6 @@
     <string name="settings_game_version_isolation_title">Isolasi Versi Secara Global</string>
     <string name="settings_game_skip_game_integrity_check_title">Lewati Pengecekan File</string>
     <string name="settings_game_skip_game_integrity_check_summary">Saat meluncurkan game, file game yang tidak sesuai tidak akan diunduh ulang</string>
-    <string name="settings_game_version_custom_info_title">Info Versi Kustom</string>
-    <string name="settings_game_version_custom_info_summary">Info kustom ditampilkan di kiri bawah menu utama dan kiri atas layar debug F3. Fitur ini mungkin tidak berfungsi untuk versi khusus atau login akun eksternal. Kamu bisa menambahkan tag [zl_version], yang bakal diganti dengan nomor versi saat ini secara otomatis</string>
     <string name="settings_game_auto_pick_java_runtime_title">Pilih Otomatis Java</string>
     <string name="settings_game_auto_pick_java_runtime_summary">Saat Java dibutuhkan, launcher bakal otomatis memilih lingkungan yang sesuai. Jika tidak bisa ditentukan, launcher bakal menggunakan lingkungan Java bawaan</string>
     <string name="settings_game_java_runtime_title">Runtime Java</string>
@@ -608,7 +605,6 @@
     <string name="settings_control_gesture_trigger_mouse_left">Klik Kiri</string>
     <string name="settings_control_gesture_trigger_mouse_right">Klik Kanan</string>
     <string name="settings_control_gesture_long_press_delay_title">Penundaan Gestur Tekan Lama</string>
-    <string name="settings_launcher_full_screen_summary">Buat halaman launcher jadi layar penuh, mengabaikan area aman seperti notch dan punch-hole</string>
     <string name="settings_launcher_liquid_glass_title">Liquid Glass</string>
     <string name="settings_launcher_liquid_glass_summary">Aktifkan atau nonaktifkan efek Liquid Glass pada top bar dan kartu beranda. Butuh latar gambar; refraksi penuh butuh Android 13+</string>
     <string name="settings_launcher_animate_speed_title">Kecepatan animasi</string>
@@ -1464,8 +1460,6 @@
     <string name="glass_tier_full">Full</string>
     <string name="settings_launcher_glass_tier_title">Kualitas glass</string>
     <string name="settings_launcher_glass_tier_summary">Lite memakai blur lebih ringan dan backdrop dialog yang lebih hemat. Pilih di perangkat yang lebih lemah. Tidak pernah berubah sendiri</string>
-    <string name="settings_game_glass_tier_title">Kualitas glass di dalam game</string>
-    <string name="settings_game_glass_tier_summary">Kualitas glass pada panel menu game, terpisah dari launcher</string>
     <string name="settings_launcher_overlay_title">Overlay dekorasi</string>
     <string name="settings_launcher_overlay_import">Tambah kartu overlay</string>
     <string name="settings_launcher_overlay_import_summary">Pilih gambar PNG/WebP/JPG atau video. Muncul sebagai kartu di layar home: tahan lama di sana untuk memindah atau mengubah ukuran, dan pakai tombol hapus untuk menghapusnya. GIF tidak didukung</string>
@@ -1473,23 +1467,6 @@
     <string name="settings_launcher_overlay_remove_all">Hapus semua kartu overlay</string>
     <string name="settings_launcher_overlay_none">Belum ada kartu overlay</string>
     <string name="settings_launcher_overlay_gif_unsupported">GIF tidak didukung. Pilih gambar PNG/WebP/JPG atau video</string>
-    <string name="versions_config_theme_title">Tema profil</string>
-    <string name="versions_config_theme_summary">Diterapkan ke launcher selama versi ini dipilih</string>
-    <string name="versions_config_theme_accent_title">Warna aksen</string>
-    <string name="versions_config_theme_accent_summary">Ketuk untuk memilih warna versi ini. Mengikuti warna launcher jika tidak diatur</string>
-    <string name="versions_config_theme_glass_title">Kualitas glass</string>
-    <string name="versions_config_theme_glass_summary">Mati, Lite, atau Full khusus untuk versi ini</string>
-    <string name="versions_config_theme_wallpaper_title">Wallpaper</string>
-    <string name="versions_config_theme_wallpaper_set">Pilih gambar atau video untuk versi ini</string>
-    <string name="versions_config_theme_wallpaper_clear">Hapus wallpaper versi ini</string>
-    <string name="versions_config_theme_export">Ekspor tema</string>
-    <string name="versions_config_theme_export_summary">Simpan warna aksen, kualitas glass, dan wallpaper dalam satu file</string>
-    <string name="versions_config_theme_import">Impor tema</string>
-    <string name="versions_config_theme_import_summary">Muat file tema ke versi ini</string>
-    <string name="versions_config_theme_reset">Reset tema</string>
-    <string name="versions_config_theme_exported">Tema berhasil diekspor</string>
-    <string name="versions_config_theme_imported">Tema berhasil diimpor</string>
-    <string name="versions_config_theme_error">Operasi tema gagal</string>
     <string name="download_modpack_download_mods_retry">Coba unduh ulang semua mod (%1$d/%2$d, %3$s)</string>
     <string name="game_menu_option_fps_display_mode">Mode Tampilan FPS</string>
     <string name="game_menu_option_fps_display_mode_chart">Grafik</string>

@@ -132,19 +132,10 @@ fun GameSettingsScreen(
             card("skip_integrity_check", 0) {
                 SwitchSettingsCard(
                     modifier = Modifier.fillMaxWidth(),
-                    position = CardPosition.Middle,
+                    position = CardPosition.Bottom,
                     unit = AllSettings.skipGameIntegrityCheck,
                     title = stringResource(R.string.settings_game_skip_game_integrity_check_title),
                     summary = stringResource(R.string.settings_game_skip_game_integrity_check_summary)
-                )
-            }
-            card("version_custom_info", 0) {
-                TextInputSettingsCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    position = CardPosition.Bottom,
-                    unit = AllSettings.versionCustomInfo,
-                    title = stringResource(R.string.settings_game_version_custom_info_title),
-                    summary = stringResource(R.string.settings_game_version_custom_info_summary)
                 )
             }
             groupGap("gap_0")

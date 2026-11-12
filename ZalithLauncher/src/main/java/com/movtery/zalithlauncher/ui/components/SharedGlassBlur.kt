@@ -158,7 +158,7 @@ fun SharedGlassBlurRecorder() {
     var size by remember { mutableStateOf(IntSize.Zero) }
 
     val lite = launcherGlassTier() == GlassTier.LITE
-    val file = background.activeFile
+    val file = background.backgroundFile
     val candidate = background.isValid && background.isImage
 
     LaunchedEffect(file, background.refreshTrigger, candidate, size, lite, density) {

@@ -974,8 +974,6 @@
     <string name="settings_game_version_isolation_summary">默认隔离所有的版本，版本之间的数据互不干扰</string>
     <string name="settings_game_skip_game_integrity_check_title">不检查游戏完整性</string>
     <string name="settings_game_skip_game_integrity_check_summary">启动游戏时，若已存在的游戏文件与实际不匹配，是否进行重新下载</string>
-    <string name="settings_game_version_custom_info_title">自定义版本信息</string>
-    <string name="settings_game_version_custom_info_summary">自定义信息会显示在游戏主菜单左下角和 F3 调试界面左上角。部分特殊版本或使用外置账号登录时可能不生效。您也可以添加 [zl_version] 字段，启动器会自动替换为当前版本号</string>
     <string name="settings_game_auto_pick_java_runtime_title">自动选择 Java 环境</string>
     <string name="settings_game_auto_pick_java_runtime_summary">在需要使用 Java 时，启动器将自动选择合适的环境。若无法判断，将使用默认 Java 环境</string>
     <string name="settings_game_java_runtime_title">游戏 Java 环境</string>
@@ -1121,8 +1119,6 @@
     <string name="settings_gamepad_config_no_items">未创建配置，无法切换</string>
     <string name="settings_launcher_dark_mode_title">深色模式</string>
     <string name="settings_launcher_language">语言</string>
-    <string name="settings_launcher_full_screen_title">页面全屏化</string>
-    <string name="settings_launcher_full_screen_summary">使启动器的页面全屏化，忽略刘海屏、挖孔屏等屏幕的安全区</string>
     <string name="settings_launcher_animate_speed_title">动画速度</string>
     <string name="settings_launcher_animate_speed_summary">调整启动器动画的速度倍率</string>
     <string name="settings_launcher_swap_anim_enabled_title">启用页面切换动画</string>

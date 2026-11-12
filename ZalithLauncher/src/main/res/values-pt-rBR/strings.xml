@@ -728,8 +728,6 @@
     <string name="settings_game_version_isolation_summary">Isola todas as versões para que seus dados não interfiram umas com as outras</string>
     <string name="settings_game_skip_game_integrity_check_title">Ignorar verificação de integridade</string>
     <string name="settings_game_skip_game_integrity_check_summary">Ao iniciar o jogo, arquivos de jogo incompatíveis não serão baixados novamente</string>
-    <string name="settings_game_version_custom_info_title">Informações da Versão Personalizada</string>
-    <string name="settings_game_version_custom_info_summary">As informações personalizadas são exibidas no canto inferior esquerdo do menu principal e no canto superior esquerdo da tela de depuração F3. Pode não funcionar para versões especiais ou logins de contas externas. Você pode adicionar a tag [zl_version], que será substituída automaticamente pelo número da versão atual.</string>
     <string name="settings_game_auto_pick_java_runtime_title">Seleção automática da Runtime</string>
     <string name="settings_game_auto_pick_java_runtime_summary">Quando o Java for necessário, o launcher selecionará automaticamente o ambiente apropriado. Se não for possível determinar, ele usará o ambiente Java padrão.</string>
     <string name="settings_game_java_runtime_title">JRE</string>
@@ -848,8 +846,6 @@
     <string name="settings_gamepad_remapping_finished_saved">Mapeamento do controle salvo com sucesso.\nAgora você pode fechar esta caixa de diálogo!</string>
     <string name="settings_launcher_dark_mode_title">Modo escuro</string>
     <string name="settings_launcher_language">Idioma</string>
-    <string name="settings_launcher_full_screen_title">Modo Tela cheia</string>
-    <string name="settings_launcher_full_screen_summary">Coloque as páginas do launcher em tela cheia, ignorando áreas seguras como entalhes e furos na tela</string>
     <string name="settings_launcher_animate_speed_title">Velocidade da animação</string>
     <string name="settings_launcher_animate_speed_summary">Ajusta o multiplicador de velocidade das animações</string>
     <string name="settings_launcher_log_retention_days_title">Dias de retenção de logs</string>

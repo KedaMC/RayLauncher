@@ -116,7 +116,6 @@ ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
 lunarcalendar = { module = "com.xhinliang:LunarCalendar", version.ref = "lunarcalendar" }
 material = { module = "com.google.android.material:material", version.ref = "material" }
 material-color-utilities = { module = "com.materialkolor:material-color-utilities", version.ref = "materialKolor" }
-materialKolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
 maven-artifact = { module = "org.apache.maven:maven-artifact", version.ref = "mavenArtifact" }
 minidns-hla = { module = "org.minidns:minidns-hla", version.ref = "minidnsHla" }
 mmkv = { module = "com.tencent:mmkv", version.ref = "mmkv" }

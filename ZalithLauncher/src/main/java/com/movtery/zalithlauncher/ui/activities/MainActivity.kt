@@ -58,7 +58,6 @@ import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.ui.AndroidStringText
 import com.movtery.zalithlauncher.ui.androidText
 import com.movtery.zalithlauncher.ui.base.BaseAppCompatActivity
-import com.movtery.zalithlauncher.ui.base.ObserveFullScreenSetting
 import com.movtery.zalithlauncher.ui.buildAppendedText
 import com.movtery.zalithlauncher.ui.components.GlobalDialogHost
 import com.movtery.zalithlauncher.ui.components.GlobalDialogs
@@ -120,7 +119,7 @@ private const val TAG = "MainActivity"
 
 @AndroidEntryPoint
 class MainActivity : BaseAppCompatActivity() {
-    override fun isIgnoreNotch(): Boolean = AllSettings.launcherFullScreen.getValue()
+    override fun isIgnoreNotch(): Boolean = true
 
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
         FestivalTapObserver.observe(event)
@@ -317,8 +316,6 @@ class MainActivity : BaseAppCompatActivity() {
                 backgroundViewModel = backgroundViewModel,
                 festivals = festivals
             ) {
-                ObserveFullScreenSetting(AllSettings.launcherFullScreen.state)
-
                     //Liquid Glass: dialogs blur this whole page (wallpaper + screen UI), recorded only while one is open
                     Box(modifier = Modifier.fillMaxSize().glassPageCapture()) {
                         Background(

@@ -45,7 +45,6 @@ import com.movtery.zalithlauncher.utils.network.ServerAddress
 import com.movtery.zalithlauncher.utils.string.insertJSONValueList
 import com.movtery.zalithlauncher.utils.string.isEmptyOrBlank
 import com.movtery.zalithlauncher.utils.string.isLowerTo
-import com.movtery.zalithlauncher.utils.string.isNotEmptyOrBlank
 import com.movtery.zalithlauncher.utils.string.splitPreservingQuotes
 import com.movtery.zalithlauncher.utils.string.toUnicodeEscaped
 import java.io.File
@@ -388,9 +387,7 @@ class LaunchArgs(
     private fun setLauncherInfo(verArgMap: MutableMap<String, String>) {
         verArgMap["launcher_name"] = BuildKeys.LAUNCHER_NAME
         verArgMap["launcher_version"] = BuildConfig.VERSION_NAME
-        verArgMap["version_type"] = version.getCustomInfo()
-            .takeIf { it.isNotEmptyOrBlank() }
-            ?: gameManifest.type
+        verArgMap["version_type"] = BuildKeys.LAUNCHER_NAME
     }
 
     private fun splitAndFilterEmpty(arg: String): Array<String> {

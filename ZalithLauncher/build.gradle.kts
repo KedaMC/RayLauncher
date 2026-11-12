@@ -350,7 +350,6 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.material)
     implementation(libs.material.color.utilities)
-    implementation(libs.materialKolor)
     implementation(libs.reorderable)
     implementation(libs.richtext.commonmark)
     implementation(libs.richtext.ui)

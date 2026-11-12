@@ -37,7 +37,6 @@ class StatefulVersionConfig(private val config: VersionConfig) {
     var driver by mutableStateOf(config.driver)
     var graphicsApi by mutableStateOf(config.graphicsApi)
     var control by mutableStateOf(config.control)
-    var customInfo by mutableStateOf(config.customInfo)
     var serverIp by mutableStateOf(config.serverIp)
     var ramAllocation by mutableIntStateOf(config.ramAllocation)
     var touchVibrateKind by mutableStateOf(config.touchVibrateKind)
@@ -65,7 +64,6 @@ class StatefulVersionConfig(private val config: VersionConfig) {
         target.driver = driver
         target.graphicsApi = graphicsApi
         target.control = control
-        target.customInfo = customInfo
         target.serverIp = serverIp
         target.ramAllocation = ramAllocation
         target.touchVibrateKind = touchVibrateKind

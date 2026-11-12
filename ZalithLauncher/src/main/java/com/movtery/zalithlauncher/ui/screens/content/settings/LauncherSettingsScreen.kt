@@ -167,14 +167,6 @@ fun LauncherSettingsScreen(
                     SwitchSettingsCard(
                         modifier = Modifier.fillMaxWidth(),
                         position = CardPosition.Middle,
-                        unit = AllSettings.launcherFullScreen,
-                        title = stringResource(R.string.settings_launcher_full_screen_title),
-                        summary = stringResource(R.string.settings_launcher_full_screen_summary)
-                    )
-
-                    SwitchSettingsCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Middle,
                         unit = AllSettings.launcherLiquidGlass,
                         title = stringResource(R.string.settings_launcher_liquid_glass_title),
                         summary = stringResource(R.string.settings_launcher_liquid_glass_summary)
@@ -182,23 +174,13 @@ fun LauncherSettingsScreen(
 
                     ListSettingsCard(
                         modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Middle,
+                        position = CardPosition.Bottom,
                         unit = AllSettings.launcherGlassTier,
                         items = glassTierChoices,
                         title = stringResource(R.string.settings_launcher_glass_tier_title),
                         summary = stringResource(R.string.settings_launcher_glass_tier_summary),
                         getItemText = { stringResource(it.textRes) },
                         enabled = AllSettings.launcherLiquidGlass.state
-                    )
-
-                    ListSettingsCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Bottom,
-                        unit = AllSettings.gameGlassTier,
-                        items = glassTierChoices,
-                        title = stringResource(R.string.settings_game_glass_tier_title),
-                        summary = stringResource(R.string.settings_game_glass_tier_summary),
-                        getItemText = { stringResource(it.textRes) }
                     )
                 }
             }

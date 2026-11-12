@@ -612,7 +612,7 @@ fun Background(
             when {
                 viewModel.isVideo && allowVideo -> {
                     VideoPlayer(
-                        videoUri = Uri.fromFile(viewModel.activeFile),
+                        videoUri = Uri.fromFile(viewModel.backgroundFile),
                         modifier = Modifier.fillMaxSize(),
                         refreshTrigger = viewModel.refreshTrigger,
                         volume = AllSettings.videoBackgroundVolume.state / 100f
@@ -630,7 +630,7 @@ fun Background(
                     } else {
                         BackgroundImage(
                             modifier = Modifier.fillMaxSize(),
-                            imageFile = viewModel.activeFile,
+                            imageFile = viewModel.backgroundFile,
                             refreshTrigger = viewModel.refreshTrigger
                         )
                     }
