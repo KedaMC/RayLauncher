@@ -1559,4 +1559,5 @@
     <string name="guide_joystick_events_lock_text4">请点击按钮编辑触发事件</string>
     <string name="guide_joystick_events_events_text1">可触发的事件与普通按钮一致，自由度很高</string>
     <string name="guide_joystick_events_events_text2">若只想用于控制游戏，编辑“按键”分区的实际键值绑定即可</string>
+    <string name="main_nav_home">主页</string>
 </resources>

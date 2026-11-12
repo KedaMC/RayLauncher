@@ -376,6 +376,42 @@ fun VersionCategoryItem(
     )
 }
 
+/**
+ * Action item shown right after the version category tabs; opens the file manager.
+ * Looks like a tab but is never selected, it is not a category.
+ */
+@Composable
+fun VersionFileManagerItem(
+    modifier: Modifier = Modifier,
+    shape: Shape = MaterialTheme.shapes.large,
+    style: TextStyle = MaterialTheme.typography.labelMedium,
+    onClick: () -> Unit = {}
+) {
+    TextRailItem(
+        modifier = modifier,
+        icon = {
+            Icon(
+                modifier = Modifier.size(18.dp),
+                painter = painterResource(R.drawable.ic_folder_filled),
+                contentDescription = stringResource(R.string.fm_activity_name)
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+        },
+        text = {
+            Text(
+                text = stringResource(R.string.fm_activity_name),
+                style = style,
+                maxLines = 1
+            )
+        },
+        onClick = onClick,
+        selected = false,
+        shape = shape,
+        selectedContentColor = MaterialTheme.colorScheme.onSurface,
+        unselectedContentColor = MaterialTheme.colorScheme.onSurface
+    )
+}
+
 @Composable
 private fun NameEditPathDialog(
     initValue: String = "",

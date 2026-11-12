@@ -1494,4 +1494,5 @@
     <string name="home_server_card_refresh_failed">Gagal memperbarui informasi server</string>
     <string name="settings_renderer_max_refresh_rate_title">Minta Refresh Rate Maksimum</string>
     <string name="settings_renderer_max_refresh_rate_summary">Minta layar beralih ke refresh rate tertinggi yang didukung pada resolusi saat ini untuk menghilangkan batas frame rate pada beberapa perangkat</string>
+    <string name="main_nav_home">Beranda</string>
 </resources>

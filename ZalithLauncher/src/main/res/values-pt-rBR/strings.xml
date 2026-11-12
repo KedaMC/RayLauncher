@@ -1524,4 +1524,5 @@
     <string name="renderer_config_mg_multidraw_unroll">Sorteio Um por Um</string>
     <string name="renderer_config_mg_multidraw_compute">Shader de Computação</string>
     <string name="generic_retry">Tentar novamente</string>
+    <string name="main_nav_home">Início</string>
 </resources>

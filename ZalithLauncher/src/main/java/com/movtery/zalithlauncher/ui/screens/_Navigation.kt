@@ -20,13 +20,17 @@ package com.movtery.zalithlauncher.ui.screens
 
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.core.EaseInOut
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.unit.IntOffset
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.scene.Scene
 import com.movtery.zalithlauncher.setting.AllSettings
@@ -132,5 +136,61 @@ fun <T : Any> rememberTransitionSpec(): AnimatedContentTransitionScope<Scene<T>>
             )
         }
         transform
+    }
+}
+
+/** Duration of the full-page horizontal slide between main pages (ms) */
+const val PAGE_SLIDE_MILLIS = 300
+
+/** Index of a main page in the top navigation (Home, Download, Settings), or -1 for any other screen */
+fun pageIndexOf(key: TitledNavKey?): Int = when (key) {
+    is NormalNavKey.LauncherMain -> 0
+    is NestedNavKey.Download -> 1
+    is NestedNavKey.Settings -> 2
+    else -> -1
+}
+
+/**
+ * Tracks which main page was left and which was entered, to pick the slide direction.
+ * Direction comes from page order, so navigating back plays the reverse slide.
+ */
+class PageSlideTracker {
+    private var current = -2
+    private var previous = -2
+
+    /** Call during composition with the index of the top screen */
+    fun update(index: Int) {
+        if (index == current) return
+        previous = current
+        current = index
+        SwapTimeline.pageSlideActive = direction() != 0
+    }
+
+    /** 1: slide forward (content moves left), -1: backward, 0: not a main page switch */
+    fun direction(): Int =
+        if (previous >= 0 && current >= 0 && previous != current) (if (current > previous) 1 else -1) else 0
+}
+
+/**
+ * Full-page horizontal slide between main pages, falling back to the default swap
+ * transition for every other navigation.
+ */
+@Composable
+fun <T : Any> rememberPageSlideSpec(tracker: PageSlideTracker): AnimatedContentTransitionScope<Scene<T>>.() -> ContentTransform {
+    val fallback = rememberTransitionSpec<T>()
+    return remember(fallback, tracker) {
+        val spec: AnimatedContentTransitionScope<Scene<T>>.() -> ContentTransform = {
+            val dir = tracker.direction()
+            if (dir == 0 || !AllSettings.launcherSwapAnimEnabled.state) {
+                fallback(this)
+            } else {
+                val slide = tween<IntOffset>(durationMillis = PAGE_SLIDE_MILLIS, easing = EaseInOut)
+                ContentTransform(
+                    slideInHorizontally(animationSpec = slide) { full -> dir * full },
+                    slideOutHorizontally(animationSpec = slide) { full -> -dir * full }
+                )
+            }
+        }
+        spec
     }
 }
