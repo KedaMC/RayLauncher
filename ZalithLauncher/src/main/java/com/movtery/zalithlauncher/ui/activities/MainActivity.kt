@@ -219,6 +219,9 @@ class MainActivity : BaseAppCompatActivity() {
             sponsorsViewModel.loadOnStart()
         }
 
+        //Ray: check for a launcher update on start (rate limited inside the view model)
+        launcherUpgradeViewModel.checkOnAppStart()
+
         //错误信息展示
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {

@@ -65,3 +65,9 @@ jobs:
             ./apks/*.apk
             ./mappings/*.txt
           fail_on_unmatched_files: true
+
+  Update-Feed:
+    needs: Upload-to-Release
+    uses: ./.github/workflows/update_feed.yml
+    with:
+      tag: ${{ github.event.release.tag_name }}
