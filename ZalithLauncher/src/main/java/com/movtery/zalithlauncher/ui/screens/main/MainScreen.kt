@@ -391,16 +391,8 @@ private fun <E: TitledNavKey> TopBar(
                 @Composable
                 fun TitleContent() {
                     if (parent == null) {
-                        if (festivals.isEmpty()) {
-                            Text(
-                                modifier = if (titleGlass) Modifier.padding(horizontal = 10.dp, vertical = 5.dp) else Modifier,
-                                text = stringResource(R.string.launcher_unofficial_notice),
-                                style = style,
-                                overflow = TextOverflow.Ellipsis,
-                                softWrap = softWarp,
-                                maxLines = maxLines
-                            )
-                        } else {
+                        //Home shows no title text, except the festival greeting when one is active
+                        if (festivals.isNotEmpty()) {
                             FestivalTitleText(festivals = festivals, style = style, maxLines = maxLines)
                         }
                     } else {
@@ -416,7 +408,9 @@ private fun <E: TitledNavKey> TopBar(
                     }
                 }
 
-                if (titleBackdrop != null) {
+                if (parent == null && festivals.isEmpty()) {
+                    //Nothing to show on Home: no empty glass pill either
+                } else if (titleBackdrop != null) {
                     SharedGlassBlurPage {
                         LiquidGlassSurface(
                             backdrop = titleBackdrop,
