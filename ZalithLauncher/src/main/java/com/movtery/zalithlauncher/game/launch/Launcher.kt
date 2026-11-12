@@ -542,13 +542,18 @@ abstract class Launcher(
             "$javaLibDir/libawt_headless.so",
             "$javaLibDir/libfontmanager.so"
         )
-        preloaded.forEach { ZLBridge.dlopen(it) }
+        //Failed libs are already reported individually by the native dlopen (ERROR level),
+        //so only a single summary line is added when nothing failed
+        var allLoaded = true
+        preloaded.forEach { if (!ZLBridge.dlopen(it)) allLoaded = false }
 
         locateLibs(File(runtimeHome)).forEach { file ->
             if (file.name in SKIPPED_RUNTIME_LIBS) return@forEach
             if (!preloaded.add(file.absolutePath)) return@forEach
-            ZLBridge.dlopen(file.absolutePath)
+            if (!ZLBridge.dlopen(file.absolutePath)) allLoaded = false
         }
+
+        if (allLoaded) LoggerBridge.append("[DEBUG] All DLOPEN calls succeeded")
     }
 
     @CallSuper
