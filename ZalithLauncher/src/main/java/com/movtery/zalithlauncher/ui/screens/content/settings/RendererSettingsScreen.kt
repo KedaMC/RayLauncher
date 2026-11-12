@@ -56,7 +56,6 @@ import androidx.compose.ui.unit.dp
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.game.plugin.driver.Driver
 import com.movtery.zalithlauncher.game.plugin.driver.DriverPluginManager
-import com.movtery.zalithlauncher.game.plugin.Plugin
 import com.movtery.zalithlauncher.game.renderer.ConfigurableRenderer
 import com.movtery.zalithlauncher.game.renderer.RendererInterface
 import com.movtery.zalithlauncher.game.renderer.Renderers
@@ -199,34 +198,6 @@ fun RendererSettingsScreen(
                         onDismissRequest = { showConfigDialog = false }
                     )
                 }
-            }
-
-            card("sfpew_plugin_layer", 0) {
-                val currentRenderer = Renderers.getRenderers()
-                    .find { it.getUniqueIdentifier() == AllSettings.renderer.state }
-                SwitchSettingsCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    position = CardPosition.Middle,
-                    unit = AllSettings.sfpewPluginLayer,
-                    enabled = currentRenderer is Plugin,
-                    title = stringResource(R.string.settings_renderer_sfpew_plugin_layer_title),
-                    summary = stringResource(R.string.settings_renderer_sfpew_plugin_layer_summary)
-                )
-            }
-            card("sfpew_relaxed_context", 0) {
-                val currentRenderer = Renderers.getRenderers()
-                    .find { it.getUniqueIdentifier() == AllSettings.renderer.state }
-                SwitchSettingsCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    position = CardPosition.Middle,
-                    unit = AllSettings.sfpewRelaxedContext,
-                    enabled = currentRenderer?.let { renderer ->
-                        renderer.supportsSfpewByDefault() ||
-                        (renderer is Plugin && AllSettings.sfpewPluginLayer.state)
-                    } == true,
-                    title = stringResource(R.string.renderer_config_sfpew_relaxed_context_title),
-                    summary = stringResource(R.string.renderer_config_sfpew_relaxed_context_desc)
-                )
             }
 
             card("vulkan_driver", 0) {

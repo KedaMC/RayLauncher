@@ -59,13 +59,9 @@ EXTERNAL_API void pojavTerminate() {
 
     switch (pojav_environ->config_renderer) {
         case RENDERER_GL4ES: {
-            EGLBoolean (*terminate_make_current)(EGLDisplay, EGLSurface, EGLSurface, EGLContext) =
-                    sfpew_eglMakeCurrent_p != NULL ? sfpew_eglMakeCurrent_p : eglMakeCurrent_p;
-            terminate_make_current(potatoBridge.eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+            eglMakeCurrent_p(potatoBridge.eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
             eglDestroySurface_p(potatoBridge.eglDisplay, potatoBridge.eglSurface);
-            EGLBoolean (*terminate_destroy_context)(EGLDisplay, EGLContext) =
-                    sfpew_eglDestroyContext_p != NULL ? sfpew_eglDestroyContext_p : eglDestroyContext_p;
-            terminate_destroy_context(potatoBridge.eglDisplay, potatoBridge.eglContext);
+            eglDestroyContext_p(potatoBridge.eglDisplay, potatoBridge.eglContext);
             eglTerminate_p(potatoBridge.eglDisplay);
             eglReleaseThread_p();
 

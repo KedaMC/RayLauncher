@@ -73,9 +73,7 @@ import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.game.control.ControlManager
 import com.movtery.zalithlauncher.game.multirt.RuntimesManager
 import com.movtery.zalithlauncher.game.plugin.driver.DriverPluginManager
-import com.movtery.zalithlauncher.game.plugin.Plugin
 import com.movtery.zalithlauncher.game.renderer.ConfigurableRenderer
-import com.movtery.zalithlauncher.game.version.installed.SettingState
 import com.movtery.zalithlauncher.game.renderer.Renderers
 import com.movtery.zalithlauncher.game.support.touch_controller.VibrationHandler
 import com.movtery.zalithlauncher.game.version.installed.GraphicsApi
@@ -237,10 +235,6 @@ private fun rememberVersionConfigItems(
 ): ConfigItems.() -> Unit {
         val renderers = Renderers.getRenderers()
         val renderersIdList = getIDList(renderers) { IDItem(it.getUniqueIdentifier(), it.getRendererName()) }
-        val effectiveRendererId = stateful.renderer.ifEmpty { AllSettings.renderer.state }
-        val effectiveRenderer = remember(effectiveRendererId) {
-            renderers.find { it.getUniqueIdentifier() == effectiveRendererId }
-        }
         val configurableRenderer = remember(stateful.renderer) {
             if (stateful.renderer.isNotEmpty()) {
                 renderers.filterIsInstance<ConfigurableRenderer>()
@@ -256,12 +250,6 @@ private fun rememberVersionConfigItems(
                 versionFolder = stateful.versionPath,
                 onDismissRequest = { showConfigDialog = false }
             )
-        }
-
-        val sfpewPluginLayerEnabled = when (stateful.sfpewPluginLayer) {
-            SettingState.FOLLOW_GLOBAL -> AllSettings.sfpewPluginLayer.state
-            SettingState.ENABLE -> true
-            SettingState.DISABLE -> false
         }
 
         val drivers = DriverPluginManager.getDriverList()
@@ -338,33 +326,6 @@ private fun rememberVersionConfigItems(
                     }
                 },
                 onValueChange = { stateful.renderer = it.id }
-            )
-        }
-
-        card("sfpew_plugin_layer", 0) {
-            StatefulDropdownMenuFollowGlobal(
-                modifier = Modifier.fillMaxWidth(),
-                position = CardPosition.Middle,
-                currentValue = stateful.sfpewPluginLayer,
-                enabled = effectiveRenderer is Plugin,
-                onValueChange = { stateful.sfpewPluginLayer = it },
-                title = stringResource(R.string.settings_renderer_sfpew_plugin_layer_title),
-                summary = stringResource(R.string.settings_renderer_sfpew_plugin_layer_summary)
-            )
-        }
-
-        card("sfpew_relaxed_context", 0) {
-            StatefulDropdownMenuFollowGlobal(
-                modifier = Modifier.fillMaxWidth(),
-                position = CardPosition.Middle,
-                currentValue = stateful.sfpewRelaxedContext,
-                enabled = effectiveRenderer?.let { renderer ->
-                    renderer.supportsSfpewByDefault() ||
-                    (renderer is Plugin && sfpewPluginLayerEnabled)
-                } == true,
-                onValueChange = { stateful.sfpewRelaxedContext = it },
-                title = stringResource(R.string.renderer_config_sfpew_relaxed_context_title),
-                summary = stringResource(R.string.renderer_config_sfpew_relaxed_context_desc)
             )
         }
 

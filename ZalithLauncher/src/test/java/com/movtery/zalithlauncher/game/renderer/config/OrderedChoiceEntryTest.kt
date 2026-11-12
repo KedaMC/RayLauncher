@@ -106,29 +106,6 @@ class OrderedChoiceEntryTest {
     }
 
     @Test
-    fun mobileGluesSfpewLayerSwitchIsStoredButNotExported() {
-        val store = MemoryRendererConfigStore()
-
-        val default = resolveRendererConfig(
-            rendererId = "renderer",
-            spec = MobileGluesRenderer.configSpec,
-            globalStore = store
-        )
-        assertEquals(true, default.sfpewLayerEnabled)
-        // 开关只属于启动器，不进 config.json，也不产出环境变量
-        assertFalse(default.jsonFields.containsKey("sfpewLayer"))
-        assertFalse(default.environment.containsKey("sfpewLayer"))
-
-        store.putValue("renderer", "sfpewLayer", ConfigScalar.BooleanValue(false))
-        val disabled = resolveRendererConfig(
-            rendererId = "renderer",
-            spec = MobileGluesRenderer.configSpec,
-            globalStore = store
-        )
-        assertEquals(false, disabled.sfpewLayerEnabled)
-    }
-
-    @Test
     fun mobileGluesUsesOfficialBackendSetsAndDefaultOrders() {
         val expected = mapOf(
             "multidrawOrder" to listOf(

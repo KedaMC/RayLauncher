@@ -814,8 +814,6 @@
     <string name="settings_renderer_global_vulkan_driver_title">Vulkan 驅動程式</string>
     <string name="settings_renderer_config_title">渲染器設定</string>
     <string name="settings_renderer_config_reset_message">要將 %s 的所有設定還原為預設值嗎？</string>
-    <string name="renderer_config_mg_sfpew_title">SFPEW 相容層</string>
-    <string name="renderer_config_mg_sfpew_desc">讓渲染器的 EGL 與 OpenGL 呼叫經過 SimpleFPEWrapper 相容層包裝，遊戲出現渲染問題時可嘗試關閉。偵測到部分 FPE 模擬模組時會自動停用</string>
     <string name="renderer_config_mg_count_launch_title">啟動工作階段統計</string>
     <string name="renderer_config_mg_count_launch_desc">僅統計經啟動器啟動的遊戲工作階段，基準測試與工具不計入</string>
     <string name="renderer_config_mg_angle_title">ANGLE 後端</string>
@@ -856,10 +854,6 @@
     <string name="renderer_config_mg_fsr1_quality">品質優先</string>
     <string name="renderer_config_mg_fsr1_balanced">均衡</string>
     <string name="renderer_config_mg_fsr1_performance">效能優先</string>
-    <string name="settings_renderer_sfpew_plugin_layer_title">SFPEW 相容層（渲染器外掛程式）</string>
-    <string name="settings_renderer_sfpew_plugin_layer_summary">為沒有固定管線能力的外部渲染器外掛程式疊加 SimpleFPEWrapper OpenGL 相容層，用於採用舊式 OpenGL 1.x/2.1 渲染的程式</string>
-    <string name="renderer_config_sfpew_relaxed_context_title">寬鬆上下文</string>
-    <string name="renderer_config_sfpew_relaxed_context_desc">假定遊戲每個執行緒終生只使用一個 GL 上下文，跳過每次呼叫的上下文檢查，請確認遊戲的執行緒上下文使用方式，若出現渲染錯誤請關閉此項</string>
     <string name="settings_renderer_from_plugins">來自 %s 外掛程式</string>
     <string name="settings_renderer_resolution_scale_title">遊戲視窗解析度</string>
     <string name="settings_renderer_resolution_scale_summary">數值越低效能越高，數值越高畫質越清晰，請依實際需求調整</string>

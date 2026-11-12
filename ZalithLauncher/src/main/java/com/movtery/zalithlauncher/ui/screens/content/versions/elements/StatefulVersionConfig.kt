@@ -34,8 +34,6 @@ class StatefulVersionConfig(private val config: VersionConfig) {
     var jvmArgs by mutableStateOf(config.jvmArgs)
     var gameArgs by mutableStateOf(config.gameArgs)
     var renderer by mutableStateOf(config.renderer)
-    var sfpewPluginLayer by mutableStateOf(config.sfpewPluginLayer)
-    var sfpewRelaxedContext by mutableStateOf(config.sfpewRelaxedContext)
     var driver by mutableStateOf(config.driver)
     var graphicsApi by mutableStateOf(config.graphicsApi)
     var control by mutableStateOf(config.control)
@@ -64,8 +62,6 @@ class StatefulVersionConfig(private val config: VersionConfig) {
         target.jvmArgs = jvmArgs
         target.gameArgs = gameArgs
         target.renderer = renderer
-        target.sfpewPluginLayer = sfpewPluginLayer
-        target.sfpewRelaxedContext = sfpewRelaxedContext
         target.driver = driver
         target.graphicsApi = graphicsApi
         target.control = control

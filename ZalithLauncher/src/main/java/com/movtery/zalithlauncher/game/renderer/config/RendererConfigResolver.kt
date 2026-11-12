@@ -59,11 +59,6 @@ data class ResolvedRendererConfig(
         }
     }
 
-    /** SFPEW 兼容层开关，渲染器规范未声明该项时为 null */
-    val sfpewLayerEnabled: Boolean? = entries
-        .firstOrNull { it.entry.target is ConfigTarget.SfpewLayer }
-        ?.let { (it.value as? ConfigScalar.BooleanValue)?.value }
-
     /** 显式 JSON 字段 */
     val jsonFields: Map<String, ConfigScalar> = buildMap {
         this@ResolvedRendererConfig.entries.forEach { resolved ->

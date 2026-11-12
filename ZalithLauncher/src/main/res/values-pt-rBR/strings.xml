@@ -1479,8 +1479,6 @@
     <string name="account_microsoft_login_method_system_browser">Navegador do Sistema (Recomendado)</string>
     <string name="account_microsoft_login_method_internal_browser">Navegador Integrado</string>
     <string name="settings_renderer_config_reset_message">Redefinir todas as configurações de %s para seus valores padrão?</string>
-    <string name="renderer_config_mg_sfpew_title">Camada de Compatibilidade SFPEW</string>
-    <string name="renderer_config_mg_sfpew_desc">Faz as chamadas EGL e OpenGL do renderizador passarem pela camada SimpleFPEWrapper; tente desativar se o jogo tiver problemas de renderização. Ela será desativada automaticamente ao detectar certos mods emuladores de FPE</string>
     <string name="renderer_config_mg_count_launch_title">Relatório da Sessão de Inicialização</string>
     <string name="renderer_config_mg_count_launch_desc">Relatar apenas sessões de jogos iniciadas a partir do inicializador, excluindo benchmarks e ferramentas</string>
     <string name="renderer_config_mg_angle_title">Backend ANGLE</string>
@@ -1514,8 +1512,6 @@
     <string name="renderer_config_mg_fsr1_quality">Qualidade</string>
     <string name="renderer_config_mg_fsr1_balanced">Balanceado</string>
     <string name="renderer_config_mg_fsr1_performance">Desempenho</string>
-    <string name="renderer_config_sfpew_relaxed_context_title">Contexto Relaxado</string>
-    <string name="renderer_config_sfpew_relaxed_context_desc">Considerando que cada thread no jogo utiliza apenas um contexto GL durante todo o seu ciclo de vida e que as verificações de contexto são ignoradas em cada chamada, verifique como o jogo utiliza os contextos de thread. Caso ocorram erros de renderização, desative esta opção.</string>
     <string name="settings_launcher_swap_anim_enabled_title">Ativar animação de transição de página</string>
     <string name="settings_launcher_swap_anim_enabled_summary">Se deve reproduzir animações de transição ao trocar de páginas</string>
     <string name="about_sponsors_title">Patrocinadores do Launcher</string>
@@ -1531,7 +1527,5 @@
     <string name="renderer_config_mg_multidraw_native_desc">Corresponde à função equivalente do núcleo GLES ou à função de extensão, quando disponível</string>
     <string name="renderer_config_mg_multidraw_unroll">Sorteio Um por Um</string>
     <string name="renderer_config_mg_multidraw_compute">Shader de Computação</string>
-    <string name="settings_renderer_sfpew_plugin_layer_title">Camada de compatibilidade SFPEW (plugins de renderização)</string>
-    <string name="settings_renderer_sfpew_plugin_layer_summary">Adiciona SimpleFPEWrapper ao renderizador plugins sem suporte a pipeline de função fixa para renderização legado da OpenGL 1.x/2.1</string>
     <string name="generic_retry">Tentar novamente</string>
 </resources>
