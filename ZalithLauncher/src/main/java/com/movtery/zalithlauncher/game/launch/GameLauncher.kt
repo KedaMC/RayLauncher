@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.IntSize
 import com.movtery.zalithlauncher.BuildConfig
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.ZLApplication
+import com.movtery.zalithlauncher.bridge.LoggerBridge
 import com.movtery.zalithlauncher.bridge.LoggerBridge.appendInfo
 import com.movtery.zalithlauncher.bridge.LoggerBridge.appendTitle
 import com.movtery.zalithlauncher.bridge.ZLBridge
@@ -221,14 +222,21 @@ class GameLauncher(
         RendererPluginManager.selectedRendererPlugin?.let { renderer ->
             val libs by renderer.getDlopenLibrary()
             libs.forEach { libPath ->
-                ZLBridge.dlopen(libPath)
+                dlopenLogged(libPath)
             }
         }
 
         val rendererLib = getRendererLibrary() ?: return
-        if (!ZLBridge.dlopen(rendererLib) && !ZLBridge.dlopen(findInLdLibPath(rendererLib))) {
+        if (!dlopenLogged(rendererLib) && !dlopenLogged(findInLdLibPath(rendererLib))) {
             Logger.error(TAG, "Failed to load renderer $rendererLib")
         }
+    }
+
+    //Failures are already logged by the native dlopen, so only successes are logged here
+    private fun dlopenLogged(libPath: String): Boolean {
+        val loaded = ZLBridge.dlopen(libPath)
+        if (loaded) LoggerBridge.append("[DEBUG] DLOPEN: $libPath , success")
+        return loaded
     }
 
     override fun progressFinalUserArgs(args: MutableList<String>, ramAllocation: Int) {
