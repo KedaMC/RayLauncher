@@ -30,6 +30,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -65,8 +66,8 @@ import com.movtery.zalithlauncher.ui.components.LiquidGlassSurface
 import com.movtery.zalithlauncher.ui.components.SharedGlassBlurPage
 import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
 import com.styropyr0.prismal.PrismalBackdrop
-import com.styropyr0.prismal.components.PrismalGlassBottomTab
-import com.styropyr0.prismal.components.PrismalGlassBottomTabs
+import com.styropyr0.prismal.components.PrismalSegmentedControl
+import com.styropyr0.prismal.effects.prismalLens
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -85,6 +86,13 @@ enum class MainPage(
 private val NavItemWidth = 60.dp
 private val NavItemHeight = 32.dp
 private val NavPadding = 4.dp
+
+//Prismal segmented control: horizontal inset of its segments, and the lens it uses while pressed
+private val SegmentedInset = 2.dp
+private val NavTrackColor = Color(0xFF787880).copy(alpha = 0.28f)
+private const val DropletRefractionBand = 0.58f
+private const val DropletRefractionAmount = 0.8f
+private const val DropletChromaticAberration = 0.8f
 private val BlobShape = RoundedCornerShape(percent = 50)
 
 //Water drop physics: the edge moving toward the target is stiff and leaves first, the trailing edge
@@ -107,8 +115,8 @@ private val GlassRimBrush = Brush.linearGradient(
  * @param shown false hides the group (auto-hide on Home)
  */
 /**
- * Main page switcher. On glass it is the Prismal bottom tab bar: a droplet that can be tapped or dragged
- * across the pages. Without glass, or with the swap animation off (Prismal always animates), the
+ * Main page switcher. On glass it is a Prismal segmented control: a water droplet that is always visible
+ * over the selected page and can be tapped or dragged across the pages. Without glass, or with the swap animation off (Prismal always animates), the
  * classic bar is used.
  */
 @Composable
@@ -153,46 +161,85 @@ private fun PrismalNavigationBar(
     )
     val hiddenShiftPx = with(density) { 12.dp.toPx() }
     val pages = MainPage.entries
+    //Invisible text labels: they give the segments their accessibility names, while the icons are
+    //drawn by Ray on top because Prismal segments only take strings
+    val labels = pages.map { stringResource(it.label) }
 
     Box(
-        modifier = modifier
-            .size(width = NavItemWidth * pages.size + NavPadding * 2, height = NavItemHeight + NavPadding * 2)
-            .graphicsLayer {
-                alpha = visibility
-                translationY = -(1f - visibility) * hiddenShiftPx
-            }
-    ) {
-        PrismalGlassBottomTabs(
-            selectedTabIndex = { selectedIndex },
-            onTabSelected = { index -> if (shown) pages.getOrNull(index)?.let(onNavigate) },
-            backdrop = backdrop,
-            tabsCount = pages.size,
-            modifier = Modifier.fillMaxSize(),
-            //Keep the white glass icons instead of recoloring what the droplet sees
-            tintDropletContent = false
-        ) {
-            pages.forEach { page ->
-                PrismalGlassBottomTab(onClick = { if (shown) onNavigate(page) }) {
-                    Icon(
-                        modifier = Modifier.size(22.dp),
-                        painter = painterResource(page.icon),
-                        contentDescription = stringResource(page.label),
-                        tint = Color.White
-                    )
-                }
-            }
+        modifier = modifier.graphicsLayer {
+            alpha = visibility
+            translationY = -(1f - visibility) * hiddenShiftPx
         }
-        //Prismal tabs have no enabled state: while hidden, swallow touches (taps and drags) here
-        if (!shown) {
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .pointerInput(Unit) {
-                        awaitPointerEventScope {
-                            while (true) awaitPointerEvent().changes.forEach { it.consume() }
+    ) {
+        SharedGlassBlurPage {
+            LiquidGlassSurface(
+                backdrop = backdrop,
+                shape = MaterialTheme.shapes.large,
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = LocalContentColor.current,
+                blurRadius = 12.dp
+            ) {
+                Box(modifier = Modifier.padding(NavPadding)) {
+                    PrismalSegmentedControl(
+                        labels = labels,
+                        selectedIndex = selectedIndex,
+                        onSelected = { index -> if (shown) pages.getOrNull(index)?.let(onNavigate) },
+                        backdrop = backdrop,
+                        modifier = Modifier.width(NavItemWidth * pages.size),
+                        textColor = Color.Transparent,
+                        //The resting thumb is opaque white by default, which is what made the bar milky
+                        thumbColor = Color.Transparent,
+                        trackColor = NavTrackColor,
+                        height = NavItemHeight,
+                        //Prismal only refracts while pressed: use the pressed lens all the time so the
+                        //droplet is always a drop of water, not only while it is touched or dragged
+                        dropletEffects = {
+                            val radius = size.minDimension / 2f
+                            prismalLens(
+                                refractionHeight = radius * DropletRefractionBand,
+                                refractionAmount = radius * DropletRefractionAmount,
+                                depthEffect = true,
+                                chromaticAberration = DropletChromaticAberration
+                            )
+                        }
+                    )
+                    //Icons sit above the droplet and take no touches: the control handles tap and drag
+                    Row(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .padding(horizontal = SegmentedInset),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        pages.forEach { page ->
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    modifier = Modifier.size(22.dp),
+                                    painter = painterResource(page.icon),
+                                    contentDescription = null,
+                                    tint = Color.White
+                                )
+                            }
                         }
                     }
-            )
+                    //Prismal segments have no enabled state: while hidden, swallow touches (taps and drags)
+                    if (!shown) {
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .pointerInput(Unit) {
+                                    awaitPointerEventScope {
+                                        while (true) awaitPointerEvent().changes.forEach { it.consume() }
+                                    }
+                                }
+                        )
+                    }
+                }
+            }
         }
     }
 }
