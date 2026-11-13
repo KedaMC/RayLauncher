@@ -844,7 +844,7 @@ fun DropdownMenu(
     modifier: Modifier = Modifier,
     offset: DpOffset = DpOffset(0.dp, 0.dp),
     shape: Shape = MaterialTheme.shapes.extraSmall,
-    shadowElevation: Dp = 3.dp,
+    shadowElevation: Dp = 0.dp,
     properties: PopupProperties = PopupProperties(focusable = true),
     matchAnchorWidth: Boolean = false,
     content: @Composable ColumnScope.() -> Unit

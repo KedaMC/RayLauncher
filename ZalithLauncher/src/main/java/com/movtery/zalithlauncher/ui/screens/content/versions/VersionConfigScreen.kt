@@ -45,6 +45,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import com.movtery.zalithlauncher.ui.components.liquidGlassActive
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -135,7 +137,7 @@ private class ConfigItems(
             Text(
                 modifier = Modifier.padding(all = 8.dp),
                 text = stringResource(titleRes),
-                color = MaterialTheme.colorScheme.primary,
+                color = if (liquidGlassActive()) Color.White else MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.labelLarge
             )
         }

@@ -88,7 +88,7 @@ fun ScalingActionButton(
     enabled: Boolean = true,
     shape: Shape = ButtonDefaults.shape,
     colors: ButtonColors = ButtonDefaults.buttonColors(),
-    elevation: ButtonElevation? = ButtonDefaults.buttonElevation(),
+    elevation: ButtonElevation? = null,
     border: BorderStroke? = null,
     contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
     content: @Composable RowScope.() -> Unit
@@ -360,7 +360,7 @@ fun TooltipIconButton(
             RichTooltip(
                 modifier = Modifier.padding(all = 3.dp),
                 title = { Text(text = tooltipTitle) },
-                shadowElevation = 3.dp
+                shadowElevation = 0.dp
             ) {
                 Text(text = tooltipMessage)
             }

@@ -670,66 +670,73 @@ private fun AccountsLayout(
         actions = actions
     )
 
-    BackgroundCard(
-        modifier = modifier.animated(ctx),
-        shape = MaterialTheme.shapes.extraLarge
-    ) {
-        if (accounts.isNotEmpty()) {
-            val scrollState = rememberLazyListState()
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .nonInteractiveScrollbar(
-                        state = scrollState.scrollIndicatorState!!,
-                        orientation = Orientation.Vertical,
-                    )
-                    .clip(MaterialTheme.shapes.extraLarge),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                state = scrollState,
-            ) {
-                items(accounts, key = { it.uniqueUUID }) { account ->
-                    AccountItem(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 6.dp),
-                        currentAccount = currentAccount,
-                        account = account,
-                        onSelected = { AccountsManager.setCurrentAccount(it) },
-                        openChangeSkinDialog = {
-                            if (!account.isAuthServerAccount()) {
+    //The slot keeps the full height; the glass panel inside only takes the height its content needs
+    Box(modifier = modifier) {
+        BackgroundCard(
+            modifier = Modifier
+                .fillMaxWidth()
+                .animated(ctx),
+            shape = MaterialTheme.shapes.extraLarge
+        ) {
+            if (accounts.isNotEmpty()) {
+                val scrollState = rememberLazyListState()
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .nonInteractiveScrollbar(
+                            state = scrollState.scrollIndicatorState!!,
+                            orientation = Orientation.Vertical,
+                        )
+                        .clip(MaterialTheme.shapes.extraLarge),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                    state = scrollState,
+                ) {
+                    items(accounts, key = { it.uniqueUUID }) { account ->
+                        AccountItem(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 6.dp),
+                            currentAccount = currentAccount,
+                            account = account,
+                            onSelected = { AccountsManager.setCurrentAccount(it) },
+                            openChangeSkinDialog = {
+                                if (!account.isAuthServerAccount()) {
+                                    actions.onIntent(
+                                        AccountManageIntent.UpdateAccountSkinOp(
+                                            AccountSkinOperation.ChangeSkin(account)
+                                        )
+                                    )
+                                }
+                            },
+                            onRefreshClick = {
                                 actions.onIntent(
-                                    AccountManageIntent.UpdateAccountSkinOp(
-                                        AccountSkinOperation.ChangeSkin(account)
+                                    AccountManageIntent.RefreshAccount(
+                                        account
+                                    )
+                                )
+                            },
+                            onCopyUUID = {
+                                copyText(COPY_LABEL_ACCOUNT_UUID, account.profileId, context, true)
+                            },
+                            onDeleteClick = {
+                                actions.onIntent(
+                                    AccountManageIntent.UpdateAccountOp(
+                                        AccountOperation.Delete(account)
                                     )
                                 )
                             }
-                        },
-                        onRefreshClick = {
-                            actions.onIntent(
-                                AccountManageIntent.RefreshAccount(
-                                    account
-                                )
-                            )
-                        },
-                        onCopyUUID = {
-                            copyText(COPY_LABEL_ACCOUNT_UUID, account.profileId, context, true)
-                        },
-                        onDeleteClick = {
-                            actions.onIntent(
-                                AccountManageIntent.UpdateAccountOp(
-                                    AccountOperation.Delete(account)
-                                )
-                            )
-                        }
-                    )
+                        )
+                    }
                 }
-            }
-        } else {
-            Box(modifier = Modifier.fillMaxSize()) {
-                ScalingLabel(
-                    modifier = Modifier.align(Alignment.Center),
-                    text = stringResource(R.string.account_no_account)
-                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    ScalingLabel(text = stringResource(R.string.account_no_account))
+                }
             }
         }
     }

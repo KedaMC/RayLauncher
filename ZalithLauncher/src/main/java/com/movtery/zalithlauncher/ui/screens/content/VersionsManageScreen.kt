@@ -533,7 +533,7 @@ private fun VersionsLayout(
                 derivedStateOf { 1f - topAppBarState.collapsedFraction }
             }
             //背景可见时不使用阴影，因为卡片会半透明化
-            val withShadow = !backgroundVisible()
+            val withShadow = false
 
             //悬浮操作栏的阴影在图层块内读取滚动比例，滚动时只更新图层不重组
             val barShape = MaterialTheme.shapes.large
