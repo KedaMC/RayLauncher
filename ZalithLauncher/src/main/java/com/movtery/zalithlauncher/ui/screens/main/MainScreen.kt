@@ -384,7 +384,7 @@ private fun <E: TitledNavKey> TopBar(
             Crossfade(
                 modifier = Modifier.constrainAs(title) {
                     centerVerticallyTo(parent)
-                    start.linkTo(backCenter.end, margin = if (titleGlass && inLauncherScreen) 12.dp else 16.dp)
+                    start.linkTo(backCenter.end, margin = 16.dp)
                     // Left-aligned at a fixed start point, never running under the centered navigation
                     end.linkTo(navGroup.start, margin = 8.dp)
                     width = Dimension.preferredWrapContent
@@ -395,7 +395,10 @@ private fun <E: TitledNavKey> TopBar(
                 val style = MaterialTheme.typography.titleMedium
                 val softWarp = false
                 val maxLines = 1
-                val titleBackdrop = if (inLauncherScreen) liquidGlassBackdrop() else null
+                //Only the Home festival greeting sits on a glass pill. Decide it from the content being drawn
+                //(parent == null), not from the live page: while Crossfade fades the old page title out,
+                //the live page is already Home and the fading title would be wrapped in glass.
+                val titleBackdrop = if (parent == null) liquidGlassBackdrop() else null
 
                 @Composable
                 fun TitleContent() {
