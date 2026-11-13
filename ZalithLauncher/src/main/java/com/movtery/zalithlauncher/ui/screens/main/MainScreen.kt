@@ -184,7 +184,7 @@ fun MainScreen(
     //Which main page the top navigation highlights: the topmost main page in the stack
     val mainBackStack = screenBackStackModel.mainScreen.backStack
     val navIndex = mainBackStack.lastOrNull { pageIndexOf(it) >= 0 }?.let { pageIndexOf(it) } ?: 0
-    val autoHideEnabled = mainBackStack.lastOrNull().let { it == null || it is NormalNavKey.LauncherMain }
+    val autoHideEnabled = mainBackStack.lastOrNull().let { it == null || pageIndexOf(it) == 0 }
 
     //Auto-hide of the navigation: Home only. Shown on open, hidden after 3s without touch,
     //shown again on touch, never hidden while a page slide runs
@@ -255,7 +255,16 @@ fun MainScreen(
                     navShown = navShown,
                     onNavigate = { page ->
                         when (page) {
-                            MainPage.HOME -> if (!inLauncherScreen) toMainScreen()
+                            MainPage.HOME -> if (pageIndexOf(mainBackStack.lastOrNull()) != 0) {
+                                //Back to the Home group page that was open last (Home Screen, Version List,
+                                //Account list or Manage version): drop everything stacked above it
+                                val lastHome = mainBackStack.indexOfLast { pageIndexOf(it) == 0 }
+                                if (lastHome >= 0) {
+                                    repeat(mainBackStack.size - lastHome - 1) { mainBackStack.removeLastOrNull() }
+                                } else {
+                                    toMainScreen()
+                                }
+                            }
                             MainPage.DOWNLOAD -> if (mainScreenKey !is NestedNavKey.Download) {
                                 screenBackStackModel.navigateToDownload()
                             }
@@ -521,9 +530,8 @@ private fun NavigationUI(
     val currentKey = backStack.lastOrNull()
 
     //Direction of the full-page slide follows page order, so Back plays the reverse
-    val topPageIndex = pageIndexOf(currentKey)
-    slideTracker.update(topPageIndex)
-    LaunchedEffect(topPageIndex) {
+    slideTracker.update(currentKey)
+    LaunchedEffect(currentKey) {
         if (slideTracker.direction() != 0) {
             delay(PAGE_SLIDE_MILLIS + 80L)
             SwapTimeline.pageSlideActive = false

@@ -20,7 +20,7 @@ package com.movtery.zalithlauncher.ui.screens
 
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
-import androidx.compose.animation.core.EaseInOut
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
@@ -140,11 +140,21 @@ fun <T : Any> rememberTransitionSpec(): AnimatedContentTransitionScope<Scene<T>>
 }
 
 /** Duration of the full-page horizontal slide between main pages (ms) */
-const val PAGE_SLIDE_MILLIS = 300
+const val PAGE_SLIDE_MILLIS = 600
 
-/** Index of a main page in the top navigation (Home, Download, Settings), or -1 for any other screen */
+/** Ease Out Quint: fast at the start, slowing down gradually until it stops smoothly */
+val EaseOutQuint = CubicBezierEasing(0.22f, 1f, 0.36f, 1f)
+
+/**
+ * Index of a main page in the top navigation, or -1 for any other screen.
+ * 0 is the Home group: Home Screen, Version List, Account list and Manage version.
+ * Moving inside the group is a normal swap; only moving between groups slides.
+ */
 fun pageIndexOf(key: TitledNavKey?): Int = when (key) {
-    is NormalNavKey.LauncherMain -> 0
+    is NormalNavKey.LauncherMain,
+    is NormalNavKey.VersionsManager,
+    is NormalNavKey.AccountManager,
+    is NestedNavKey.VersionSettings -> 0
     is NestedNavKey.Download -> 1
     is NestedNavKey.Settings -> 2
     else -> -1
@@ -155,20 +165,26 @@ fun pageIndexOf(key: TitledNavKey?): Int = when (key) {
  * Direction comes from page order, so navigating back plays the reverse slide.
  */
 class PageSlideTracker {
-    private var current = -2
-    private var previous = -2
+    private var currentKey: Any? = null
+    private var currentIndex = -2
+    private var direction = 0
 
-    /** Call during composition with the index of the top screen */
-    fun update(index: Int) {
-        if (index == current) return
-        previous = current
-        current = index
-        SwapTimeline.pageSlideActive = direction() != 0
+    /** Call during composition with the top screen of the main back stack */
+    fun update(key: TitledNavKey?) {
+        if (key == currentKey) return
+        val newIndex = pageIndexOf(key)
+        direction = if (currentIndex >= 0 && newIndex >= 0 && currentIndex != newIndex) {
+            if (newIndex > currentIndex) 1 else -1
+        } else {
+            0
+        }
+        currentKey = key
+        currentIndex = newIndex
+        SwapTimeline.pageSlideActive = direction != 0
     }
 
-    /** 1: slide forward (content moves left), -1: backward, 0: not a main page switch */
-    fun direction(): Int =
-        if (previous >= 0 && current >= 0 && previous != current) (if (current > previous) 1 else -1) else 0
+    /** 1: slide forward (content moves left), -1: backward, 0: not a switch between main pages */
+    fun direction(): Int = direction
 }
 
 /**
@@ -184,7 +200,7 @@ fun <T : Any> rememberPageSlideSpec(tracker: PageSlideTracker): AnimatedContentT
             if (dir == 0 || !AllSettings.launcherSwapAnimEnabled.state) {
                 fallback(this)
             } else {
-                val slide = tween<IntOffset>(durationMillis = PAGE_SLIDE_MILLIS, easing = EaseInOut)
+                val slide = tween<IntOffset>(durationMillis = PAGE_SLIDE_MILLIS, easing = EaseOutQuint)
                 ContentTransform(
                     slideInHorizontally(animationSpec = slide) { full -> dir * full },
                     slideOutHorizontally(animationSpec = slide) { full -> -dir * full }
