@@ -111,7 +111,6 @@ import androidx.compose.ui.unit.dp
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.setting.enums.GlassTier
 import com.movtery.zalithlauncher.viewmodel.LocalBackgroundViewModel
-import com.styropyr0.prismal.PrismalGlassSurface
 import com.styropyr0.prismal.sources.PrismalGlassLayer
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -559,7 +558,8 @@ fun LiquidGlassSurface(
     //On opted-in pages a still wallpaper is blurred once for everybody: sample that and skip the live blur
     val sharedLayer = sharedGlassLayerFor(backdrop, effectiveBlur.value)
 
-    PrismalGlassSurface(
+    //PrismalGlassSurface always draws its built-in drop shadow, so use the shadowless copy
+    FlatPrismalGlassSurface(
         backdrop = sharedLayer ?: backdrop,
         modifier = modifier,
         shape = shapeProvider,
