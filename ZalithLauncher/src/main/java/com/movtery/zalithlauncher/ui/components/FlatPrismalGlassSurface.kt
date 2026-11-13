@@ -47,7 +47,7 @@ import kotlin.math.sin
 import kotlin.math.tanh
 
 /**
- * Same as PrismalGlassSurface (PrismalAGSL v1.0.6), but without the library's built-in depth shadow.
+ * Same as PrismalGlassSurface (PrismalAGSL v1.0.7), but without the library's built-in depth shadow.
  *
  * PrismalGlassSurface calls drawPrismalGlass() and never passes depthShadow, so the library default
  * (black 10%, 24dp blur, 4dp offset) is drawn around every glass panel and cannot be turned off from

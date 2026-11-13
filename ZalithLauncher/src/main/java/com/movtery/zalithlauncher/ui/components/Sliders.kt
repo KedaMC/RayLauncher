@@ -41,8 +41,13 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSliderState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
@@ -53,6 +58,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.movtery.zalithlauncher.R
+import com.movtery.zalithlauncher.setting.enums.GlassTier
+import com.styropyr0.prismal.PrismalBackdrop
+import com.styropyr0.prismal.components.PrismalGlassSlider
+import kotlinx.coroutines.delay
 import com.movtery.zalithlauncher.ui.screens.content.elements.DisabledAlpha
 import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
 import com.movtery.zalithlauncher.ui.theme.itemColor
@@ -108,8 +117,23 @@ fun SimpleTextSlider(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
+        val prismalBackdrop = liquidGlassBackdrop()
+        //Continuous sliders on the FULL tier use the Prismal glass slider. Stepped sliders and disabled
+        //ones keep the Material slider (Prismal has no steps or enabled state).
+        val usePrismal = prismalBackdrop != null && enabled && steps == 0 &&
+                liquidGlassTier() == GlassTier.FULL
         GlassSliderTrack(modifier = Modifier.weight(1f)) {
-            if (shorter) {
+            if (usePrismal && prismalBackdrop != null) {
+                PrismalValueSlider(
+                    value = value,
+                    onValueChange = { changeValue(it, false) },
+                    onValueChangeFinished = onValueChangeFinished,
+                    valueRange = valueRange,
+                    toInt = toInt,
+                    backdrop = prismalBackdrop,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            } else if (shorter) {
                 IndicatorSlider(
                     value = value,
                     enabled = enabled,
@@ -230,6 +254,51 @@ fun glassSliderColors(): SliderColors {
         disabledInactiveTickColor = Color.White.copy(alpha = 0.3f)
     )
 }
+
+/**
+ * [PrismalGlassSlider] with the launcher's slider contract. Prismal has no "drag finished" callback, so
+ * [onValueChangeFinished] fires once the value has been still for [FINISH_DEBOUNCE_MS], and when the
+ * slider leaves the composition with a pending change, so nothing is lost on navigating away.
+ */
+@Composable
+private fun PrismalValueSlider(
+    value: Float,
+    onValueChange: (Float) -> Unit,
+    onValueChangeFinished: (() -> Unit)?,
+    valueRange: ClosedFloatingPointRange<Float>,
+    toInt: Boolean,
+    backdrop: PrismalBackdrop,
+    modifier: Modifier = Modifier
+) {
+    val currentValue by rememberUpdatedState(value)
+    val currentFinished by rememberUpdatedState(onValueChangeFinished)
+    var pending by remember { mutableStateOf(false) }
+
+    LaunchedEffect(value, pending) {
+        if (pending) {
+            delay(FINISH_DEBOUNCE_MS)
+            pending = false
+            currentFinished?.invoke()
+        }
+    }
+    DisposableEffect(Unit) {
+        onDispose { if (pending) currentFinished?.invoke() }
+    }
+
+    PrismalGlassSlider(
+        value = { currentValue },
+        onValueChange = {
+            pending = true
+            onValueChange(it)
+        },
+        valueRange = valueRange,
+        visibilityThreshold = if (toInt) 0.5f else (valueRange.endInclusive - valueRange.start) / 500f,
+        backdrop = backdrop,
+        modifier = modifier
+    )
+}
+
+private const val FINISH_DEBOUNCE_MS = 350L
 
 /**
  * Holder of the slider. The slider sits directly on the card's glass: there is no extra box behind its
