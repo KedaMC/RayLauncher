@@ -46,7 +46,6 @@ import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntSize
-import com.movtery.zalithlauncher.setting.enums.GlassTier
 import com.movtery.zalithlauncher.utils.image.isGifFile
 import com.movtery.zalithlauncher.viewmodel.LocalBackgroundViewModel
 import com.styropyr0.prismal.sources.PrismalGlassLayer
@@ -157,12 +156,11 @@ fun SharedGlassBlurRecorder() {
     val density = LocalDensity.current.density
     var size by remember { mutableStateOf(IntSize.Zero) }
 
-    val lite = launcherGlassTier() == GlassTier.LITE
     val file = background.backgroundFile
     val candidate = background.isValid && background.isImage
 
-    LaunchedEffect(file, background.refreshTrigger, candidate, size, lite, density) {
-        val radii = SHARED_BLUR_RADII_DP.map { if (lite) it * LITE_BLUR_FACTOR else it }
+    LaunchedEffect(file, background.refreshTrigger, candidate, size, density) {
+        val radii = SHARED_BLUR_RADII_DP
         shared.slots.forEachIndexed { i, slot -> slot.publish(null, radii[i]) }
         if (!candidate || size.width <= 0 || size.height <= 0) return@LaunchedEffect
         val images = withContext(Dispatchers.IO) {

@@ -109,7 +109,6 @@ import com.styropyr0.prismal.PrismalBackdrop
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.movtery.zalithlauncher.setting.AllSettings
-import com.movtery.zalithlauncher.setting.enums.GlassTier
 import com.movtery.zalithlauncher.viewmodel.LocalBackgroundViewModel
 import com.styropyr0.prismal.sources.PrismalGlassLayer
 import kotlinx.coroutines.Job
@@ -141,17 +140,6 @@ fun liquidGlassEnabled(): Boolean =
     } else {
         launcherGlassOn()
     }
-
-/**
- * Quality of the glass being composed: always [GlassTier.FULL] in game, otherwise the launcher tier.
- * Never [GlassTier.OFF]; use [liquidGlassEnabled] for on/off.
- */
-@Composable
-@ReadOnlyComposable
-fun liquidGlassTier(): GlassTier {
-    val tier = if (LocalLiquidGlassInGame.current) GlassTier.FULL else launcherGlassTier()
-    return if (tier == GlassTier.OFF) GlassTier.FULL else tier
-}
 
 /**
  * What glass surfaces actually sample. Normally this is [LocalLiquidGlassBackdrop] itself; inside a
@@ -303,13 +291,6 @@ private const val SNAPSHOT_DOWNSCALE = 4
 /** At most ~30 snapshots per second. */
 private const val SNAPSHOT_MIN_INTERVAL_NANOS = 30_000_000L
 
-/** Lite tier: 1/8 size and at most ~15 snapshots per second. */
-private const val LITE_SNAPSHOT_DOWNSCALE = 8
-private const val LITE_SNAPSHOT_MIN_INTERVAL_NANOS = 66_000_000L
-
-/** Lite tier uses half of the requested blur radius. */
-internal const val LITE_BLUR_FACTOR = 0.5f
-
 private tailrec fun Context.findHostWindow(): Window? = when (this) {
     is Activity -> window
     is ContextWrapper -> baseContext.findHostWindow()
@@ -417,14 +398,13 @@ private fun rememberGlassWindowSampler(): DialogWindowBackdrop? {
     val background = LocalBackgroundViewModel.current
     val videoBehindDialog = background != null && background.isValid && background.isVideo
     val hostWindow = LocalContext.current.findHostWindow()
-    val lite = liquidGlassTier() == GlassTier.LITE
     if (videoBehindDialog && hostWindow != null) {
-        LaunchedEffect(sampler, hostWindow, lite) {
+        LaunchedEffect(sampler, hostWindow) {
             captureWindowSnapshots(
                 window = hostWindow,
                 sampler = sampler,
-                downscale = if (lite) LITE_SNAPSHOT_DOWNSCALE else SNAPSHOT_DOWNSCALE,
-                minIntervalNanos = if (lite) LITE_SNAPSHOT_MIN_INTERVAL_NANOS else SNAPSHOT_MIN_INTERVAL_NANOS
+                downscale = SNAPSHOT_DOWNSCALE,
+                minIntervalNanos = SNAPSHOT_MIN_INTERVAL_NANOS
             )
         }
     }
@@ -554,9 +534,8 @@ fun LiquidGlassSurface(
     //A new lambda every recomposition makes Prismal think the shape changed and rebuild its effects
     val shapeProvider: () -> Shape = remember(shape) { { shape } }
 
-    val effectiveBlur = if (liquidGlassTier() == GlassTier.LITE) blurRadius * LITE_BLUR_FACTOR else blurRadius
     //On opted-in pages a still wallpaper is blurred once for everybody: sample that and skip the live blur
-    val sharedLayer = sharedGlassLayerFor(backdrop, effectiveBlur.value)
+    val sharedLayer = sharedGlassLayerFor(backdrop, blurRadius.value)
 
     //PrismalGlassSurface always draws its built-in drop shadow, so use the shadowless copy
     FlatPrismalGlassSurface(
@@ -564,7 +543,7 @@ fun LiquidGlassSurface(
         modifier = modifier,
         shape = shapeProvider,
         onClick = stableOnClick,
-        blurRadius = if (sharedLayer != null) 0.dp else effectiveBlur,
+        blurRadius = if (sharedLayer != null) 0.dp else blurRadius,
         surfaceColor = if (containerColor.isSpecified) {
             glassTint(containerColor).copy(alpha = GLASS_SURFACE_ALPHA)
         } else {

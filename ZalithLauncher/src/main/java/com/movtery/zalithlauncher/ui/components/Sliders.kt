@@ -58,7 +58,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.movtery.zalithlauncher.R
-import com.movtery.zalithlauncher.setting.enums.GlassTier
 import com.styropyr0.prismal.PrismalBackdrop
 import com.styropyr0.prismal.components.PrismalGlassSlider
 import kotlinx.coroutines.delay
@@ -118,10 +117,9 @@ fun SimpleTextSlider(
         verticalAlignment = Alignment.CenterVertically
     ) {
         val prismalBackdrop = liquidGlassBackdrop()
-        //Continuous sliders on the FULL tier use the Prismal glass slider. Stepped sliders and disabled
+        //Continuous sliders on glass use the Prismal glass slider. Stepped sliders and disabled
         //ones keep the Material slider (Prismal has no steps or enabled state).
-        val usePrismal = prismalBackdrop != null && enabled && steps == 0 &&
-                liquidGlassTier() == GlassTier.FULL
+        val usePrismal = prismalBackdrop != null && enabled && steps == 0
         GlassSliderTrack(modifier = Modifier.weight(1f)) {
             if (usePrismal && prismalBackdrop != null) {
                 PrismalValueSlider(

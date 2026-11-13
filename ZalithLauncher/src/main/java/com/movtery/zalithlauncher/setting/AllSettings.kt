@@ -29,7 +29,6 @@ import com.movtery.zalithlauncher.setting.enums.BackgroundBlur
 import com.movtery.zalithlauncher.setting.enums.DarkMode
 import com.movtery.zalithlauncher.setting.enums.FpsDisplayMode
 import com.movtery.zalithlauncher.setting.enums.GamepadInputMode
-import com.movtery.zalithlauncher.setting.enums.GlassTier
 import com.movtery.zalithlauncher.setting.enums.GestureActionType
 import com.movtery.zalithlauncher.setting.enums.MirrorSourceType
 import com.movtery.zalithlauncher.setting.enums.MouseControlMode
@@ -341,7 +340,6 @@ object AllSettings : SettingsRegistry() {
     /**
      * Glass quality used while [launcherLiquidGlass] is on in the launcher (LITE or FULL).
      */
-    val launcherGlassTier = enumSetting("launcherGlassTier", GlassTier.FULL)
 
     /**
      * 启用页面切换动画

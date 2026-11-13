@@ -50,6 +50,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -63,6 +64,9 @@ import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.ui.components.LiquidGlassSurface
 import com.movtery.zalithlauncher.ui.components.SharedGlassBlurPage
 import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
+import com.styropyr0.prismal.PrismalBackdrop
+import com.styropyr0.prismal.components.PrismalGlassBottomTab
+import com.styropyr0.prismal.components.PrismalGlassBottomTabs
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -102,8 +106,99 @@ private val GlassRimBrush = Brush.linearGradient(
  * The indicator travels to the target button and stretches like a water drop while the page slides.
  * @param shown false hides the group (auto-hide on Home)
  */
+/**
+ * Main page switcher. On glass it is the Prismal bottom tab bar: a droplet that can be tapped or dragged
+ * across the pages. Without glass, or with the swap animation off (Prismal always animates), the
+ * classic bar is used.
+ */
 @Composable
 fun MainNavigationBar(
+    selectedIndex: Int,
+    shown: Boolean,
+    onNavigate: (MainPage) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val backdrop = liquidGlassBackdrop()
+    if (backdrop != null && AllSettings.launcherSwapAnimEnabled.state) {
+        PrismalNavigationBar(
+            backdrop = backdrop,
+            selectedIndex = selectedIndex,
+            shown = shown,
+            onNavigate = onNavigate,
+            modifier = modifier
+        )
+    } else {
+        ClassicNavigationBar(
+            selectedIndex = selectedIndex,
+            shown = shown,
+            onNavigate = onNavigate,
+            modifier = modifier
+        )
+    }
+}
+
+@Composable
+private fun PrismalNavigationBar(
+    backdrop: PrismalBackdrop,
+    selectedIndex: Int,
+    shown: Boolean,
+    onNavigate: (MainPage) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val density = LocalDensity.current
+    val visibility by animateFloatAsState(
+        targetValue = if (shown) 1f else 0f,
+        animationSpec = tween(durationMillis = 220),
+        label = "NavBarVisibility"
+    )
+    val hiddenShiftPx = with(density) { 12.dp.toPx() }
+    val pages = MainPage.entries
+
+    Box(
+        modifier = modifier
+            .size(width = NavItemWidth * pages.size + NavPadding * 2, height = NavItemHeight + NavPadding * 2)
+            .graphicsLayer {
+                alpha = visibility
+                translationY = -(1f - visibility) * hiddenShiftPx
+            }
+    ) {
+        PrismalGlassBottomTabs(
+            selectedTabIndex = { selectedIndex },
+            onTabSelected = { index -> if (shown) pages.getOrNull(index)?.let(onNavigate) },
+            backdrop = backdrop,
+            tabsCount = pages.size,
+            modifier = Modifier.fillMaxSize(),
+            //Keep the white glass icons instead of recoloring what the droplet sees
+            tintDropletContent = false
+        ) {
+            pages.forEach { page ->
+                PrismalGlassBottomTab(onClick = { if (shown) onNavigate(page) }) {
+                    Icon(
+                        modifier = Modifier.size(22.dp),
+                        painter = painterResource(page.icon),
+                        contentDescription = stringResource(page.label),
+                        tint = Color.White
+                    )
+                }
+            }
+        }
+        //Prismal tabs have no enabled state: while hidden, swallow touches (taps and drags) here
+        if (!shown) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .pointerInput(Unit) {
+                        awaitPointerEventScope {
+                            while (true) awaitPointerEvent().changes.forEach { it.consume() }
+                        }
+                    }
+            )
+        }
+    }
+}
+
+@Composable
+private fun ClassicNavigationBar(
     selectedIndex: Int,
     shown: Boolean,
     onNavigate: (MainPage) -> Unit,

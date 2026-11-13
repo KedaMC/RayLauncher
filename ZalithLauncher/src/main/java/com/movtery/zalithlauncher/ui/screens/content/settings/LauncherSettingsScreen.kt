@@ -22,7 +22,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
 import com.movtery.zalithlauncher.ui.screens.content.home.overlay.OverlayCardManager
-import com.movtery.zalithlauncher.setting.enums.GlassTier
 import com.movtery.zalithlauncher.ui.components.launcherGlassOn
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.AnimatedVisibility
@@ -166,22 +165,12 @@ fun LauncherSettingsScreen(
 
                     SwitchSettingsCard(
                         modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Middle,
+                        position = CardPosition.Bottom,
                         unit = AllSettings.launcherLiquidGlass,
                         title = stringResource(R.string.settings_launcher_liquid_glass_title),
                         summary = stringResource(R.string.settings_launcher_liquid_glass_summary)
                     )
 
-                    ListSettingsCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Bottom,
-                        unit = AllSettings.launcherGlassTier,
-                        items = glassTierChoices,
-                        title = stringResource(R.string.settings_launcher_glass_tier_title),
-                        summary = stringResource(R.string.settings_launcher_glass_tier_summary),
-                        getItemText = { stringResource(it.textRes) },
-                        enabled = AllSettings.launcherLiquidGlass.state
-                    )
                 }
             }
 
@@ -395,9 +384,6 @@ fun LauncherSettingsScreen(
         }
     }
 }
-
-/** Glass tiers the user can choose in settings; [GlassTier.OFF] is the Liquid Glass switch itself. */
-private val glassTierChoices = listOf(GlassTier.LITE, GlassTier.FULL)
 
 @Composable
 private fun OverlaySettings(

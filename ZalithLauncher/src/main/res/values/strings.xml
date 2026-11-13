@@ -3029,15 +3029,11 @@
     <string name="game_menu_recorder_status_recording">Recording</string>
     <string name="game_menu_recorder_stop">Stop and Save</string>
     <string name="game_menu_recorder_stopped">Recording stopped, saving video…</string>
-    <string name="glass_tier_full">Full</string>
-    <string name="glass_tier_lite">Lite</string>
     <string name="launcher_unofficial_notice">RayLauncher (Unofficial Modified Version)</string>
     <string name="recorder_notification_channel_name">Game recorder</string>
     <string name="recorder_notification_text">Recording game video and sound</string>
     <string name="recorder_notification_title">Recording game</string>
     <string name="settings_launcher_background_liquid_glass_managed">Managed automatically while Liquid Glass is on (your saved value is kept)</string>
-    <string name="settings_launcher_glass_tier_summary">Lite uses a lighter blur and a cheaper backdrop for dialogs. Pick it on weaker devices. Never changes by itself</string>
-    <string name="settings_launcher_glass_tier_title">Glass quality</string>
     <string name="settings_launcher_liquid_glass_summary">Enable or disable the Liquid Glass effect on the top bar and home cards. Works with an image background; full refraction needs Android 13+</string>
     <string name="settings_launcher_liquid_glass_title">Liquid Glass</string>
     <string name="settings_launcher_overlay_gif_unsupported">GIF is not supported. Pick a PNG/WebP/JPG image or a video</string>
