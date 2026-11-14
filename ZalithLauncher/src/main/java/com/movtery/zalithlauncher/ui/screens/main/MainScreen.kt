@@ -380,15 +380,23 @@ private fun <E: TitledNavKey> TopBar(
             }
             val parentRes = mainScreenKey?.title
             val childRes = (mainScreenKey as? BackStackNavKey<*>)?.currentKey?.title
+            //The page title is plain text on the page background. White only works where the glass veil
+            //over a wallpaper darkens it; without a wallpaper use the theme's content color so it stays readable
+            val titleColor = if (liquidGlassActive() && LocalBackgroundViewModel.current?.isValid == true) {
+                Color.White
+            } else {
+                contentColor
+            }
 
             Crossfade(
                 modifier = Modifier.constrainAs(title) {
                     centerVerticallyTo(parent)
                     start.linkTo(backCenter.end, margin = 16.dp)
-                    // Left-aligned at a fixed start point, never running under the centered navigation
+                    // Left-aligned at a fixed start point, never running under the centered navigation.
+                    // The title area always fills the space between the Back button and the navigation,
+                    // so it can never collapse to zero width
                     end.linkTo(navGroup.start, margin = 8.dp)
-                    width = Dimension.preferredWrapContent
-                    horizontalBias = 0f
+                    width = Dimension.fillToConstraints
                 },
                 targetState = parentRes to childRes
             ) { (parent, child) ->
@@ -409,14 +417,16 @@ private fun <E: TitledNavKey> TopBar(
                         }
                     } else {
                         val titleText = if (child != null) androidText(parent, androidText(" - "), child) else parent
-                        AndroidStringText(
-                            modifier = if (titleGlass) Modifier.padding(horizontal = 10.dp, vertical = 5.dp) else Modifier,
-                            text = titleText,
-                            style = style,
-                            overflow = if (titleGlass) TextOverflow.Ellipsis else TextOverflow.Clip,
-                            softWrap = softWarp,
-                            maxLines = maxLines
-                        )
+                        CompositionLocalProvider(LocalContentColor provides titleColor) {
+                            AndroidStringText(
+                                modifier = if (titleGlass) Modifier.padding(horizontal = 10.dp, vertical = 5.dp) else Modifier,
+                                text = titleText,
+                                style = style,
+                                overflow = TextOverflow.Ellipsis,
+                                softWrap = softWarp,
+                                maxLines = maxLines
+                            )
+                        }
                     }
                 }
 
