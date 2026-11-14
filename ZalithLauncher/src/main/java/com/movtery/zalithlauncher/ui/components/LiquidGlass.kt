@@ -27,7 +27,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.platform.LocalWindowInfo
+import kotlin.math.roundToInt
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -783,6 +787,12 @@ fun LiquidGlassBar(
 }
 
 
+/** Below this much room under the anchor, a glass menu opens above it instead (if there is more room). */
+private val MIN_MENU_ROOM = 140.dp
+
+/** Smallest height a glass menu is squeezed to when the anchor leaves almost no room on either side. */
+private val MIN_MENU_HEIGHT = 96.dp
+
 /** Places a menu popup under its anchor, flipping above or clamping when it would leave the window. */
 private class GlassMenuPositionProvider(private val offset: IntOffset) : PopupPositionProvider {
     override fun calculatePosition(
@@ -872,19 +882,43 @@ private fun GlassDropdownPopup(
     val sampler = rememberGlassWindowSampler() ?: return
     val density = LocalDensity.current
 
-    //The popup is anchored to its parent layout; read that width for menus that match their field
+    //The popup is anchored to its parent layout; read its width (for menus that match their field)
+    //and its bounds in the window (to cap the menu height to the room next to the anchor)
     var anchorWidthPx by remember { mutableIntStateOf(0) }
-    if (matchAnchorWidth) {
-        Layout(
-            content = {},
-            modifier = Modifier.onGloballyPositioned { anchorWidthPx = it.parentLayoutCoordinates?.size?.width ?: 0 }
-        ) { _, _ -> layout(0, 0) {} }
-    }
+    var anchorBounds by remember { mutableStateOf<IntRect?>(null) }
+    Layout(
+        content = {},
+        modifier = Modifier.onGloballyPositioned { coordinates ->
+            val parent = coordinates.parentLayoutCoordinates
+            anchorWidthPx = parent?.size?.width ?: 0
+            anchorBounds = parent?.boundsInWindow()?.let { rect ->
+                IntRect(rect.left.roundToInt(), rect.top.roundToInt(), rect.right.roundToInt(), rect.bottom.roundToInt())
+            }
+        }
+    ) { _, _ -> layout(0, 0) {} }
     val widthModifier = if (matchAnchorWidth && anchorWidthPx > 0) {
         Modifier.width(with(density) { anchorWidthPx.toDp() })
     } else {
         Modifier.sizeIn(minWidth = 112.dp, maxWidth = 280.dp)
     }
+
+    //Like Material3's menus: never taller than the room below the anchor (or above it when there is
+    //too little below), the rest scrolls. An uncapped menu with many items was taller than the window,
+    //got clamped to the top edge and covered everything, including the field it belongs to.
+    val windowHeightPx = LocalWindowInfo.current.containerSize.height
+    val maxHeightPx = with(density) {
+        val margin = 8.dp.roundToPx()
+        val bounds = anchorBounds
+        val room = if (bounds == null) {
+            windowHeightPx - 2 * margin
+        } else {
+            val below = windowHeightPx - bounds.bottom - margin
+            val above = bounds.top - margin
+            if (below >= MIN_MENU_ROOM.roundToPx() || below >= above) below else above
+        }
+        room.coerceAtLeast(MIN_MENU_HEIGHT.roundToPx())
+    }
+    val heightModifier = Modifier.heightIn(max = with(density) { maxHeightPx.toDp() })
     val layoutDirection = LocalLayoutDirection.current
     val positionProvider = remember(offset, density, layoutDirection) {
         with(density) {
@@ -904,7 +938,8 @@ private fun GlassDropdownPopup(
                 modifier = Modifier
                     .glassPopTransform(progress, TransformOrigin(0f, 0f))
                     .then(modifier)
-                    .then(widthModifier),
+                    .then(widthModifier)
+                    .then(heightModifier),
                 containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = Color.White
             ) {
