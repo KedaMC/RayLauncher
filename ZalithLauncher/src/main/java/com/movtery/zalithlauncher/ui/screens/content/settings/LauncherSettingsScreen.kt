@@ -19,6 +19,21 @@
 package com.movtery.zalithlauncher.ui.screens.content.settings
 
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import android.Manifest
+import android.content.Intent
+import android.provider.Settings
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.DisposableEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.movtery.zalithlauncher.music.LocalMusicLibrary
+import com.movtery.zalithlauncher.music.MusicManager
+import com.movtery.zalithlauncher.music.hasMusicNotificationAccess
+import com.movtery.zalithlauncher.music.hasRecordAudioPermission
+import com.movtery.zalithlauncher.setting.enums.MusicSourceType
+import com.movtery.zalithlauncher.ui.screens.content.home.music.MusicCardManager
+import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.EnumSettingsCard
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
 import com.movtery.zalithlauncher.ui.screens.content.home.overlay.OverlayCardManager
@@ -278,6 +293,15 @@ fun LauncherSettingsScreen(
                 )
             }
 
+            //Music card (added below the overlay card, configured here)
+            animatedItem { ctx ->
+                MusicSettings(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animated(ctx)
+                )
+            }
+
             //动画设置板块
             animatedItem { ctx ->
                 SettingsCardColumn(
@@ -440,6 +464,131 @@ private fun OverlaySettings(
             summary = if (cards.isEmpty()) stringResource(R.string.settings_launcher_overlay_none) else null,
             enabled = cards.isNotEmpty(),
             onClick = { OverlayCardManager.removeAll() }
+        )
+    }
+}
+
+@Composable
+private fun MusicSettings(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    val cardId by MusicCardManager.cardId.collectAsStateWithLifecycle()
+    val tracks by LocalMusicLibrary.tracks.collectAsStateWithLifecycle()
+    val hasCard = cardId != null
+    val source = AllSettings.musicCardSource.state
+
+    //Permissions are granted outside of the app, so they are read again when the user comes back
+    var notificationAccess by remember { mutableStateOf(hasMusicNotificationAccess(context)) }
+    var recordAudio by remember { mutableStateOf(hasRecordAudioPermission(context)) }
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                notificationAccess = hasMusicNotificationAccess(context)
+                recordAudio = hasRecordAudioPermission(context)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    val audioPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenMultipleDocuments()
+    ) { uris ->
+        if (uris.isNotEmpty()) {
+            scope.launch { LocalMusicLibrary.importUris(context, uris) }
+        }
+    }
+    val recordAudioLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        recordAudio = granted
+        MusicManager.refresh()
+    }
+
+    SettingsCardColumn(modifier = modifier) {
+        SettingsCard(
+            modifier = Modifier.fillMaxWidth(),
+            position = CardPosition.Top,
+            title = stringResource(R.string.settings_launcher_music_add),
+            summary = stringResource(
+                if (hasCard) R.string.settings_launcher_music_added else R.string.settings_launcher_music_add_summary
+            ),
+            enabled = !hasCard,
+            onClick = { MusicCardManager.addCard() }
+        )
+
+        EnumSettingsCard(
+            modifier = Modifier.fillMaxWidth(),
+            position = CardPosition.Middle,
+            unit = AllSettings.musicCardSource,
+            entries = MusicSourceType.entries,
+            title = stringResource(R.string.settings_launcher_music_source),
+            summary = stringResource(R.string.settings_launcher_music_source_summary),
+            getRadioText = { stringResource(it.textRes) },
+            getRadioEnable = { hasCard }
+        )
+
+        when (source) {
+            MusicSourceType.LOCAL -> {
+                SettingsCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    position = CardPosition.Middle,
+                    title = stringResource(R.string.settings_launcher_music_import),
+                    summary = stringResource(R.string.settings_launcher_music_import_summary),
+                    enabled = hasCard,
+                    onClick = { audioPicker.launch(arrayOf("audio/*")) }
+                )
+                SettingsCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    position = CardPosition.Middle,
+                    title = stringResource(R.string.settings_launcher_music_clear),
+                    summary = if (tracks.isEmpty()) {
+                        stringResource(R.string.settings_launcher_music_none)
+                    } else {
+                        stringResource(R.string.settings_launcher_music_count, tracks.size)
+                    },
+                    enabled = hasCard && tracks.isNotEmpty(),
+                    onClick = { LocalMusicLibrary.clear(context) }
+                )
+            }
+            MusicSourceType.BACKGROUND -> {
+                SettingsCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    position = CardPosition.Middle,
+                    title = stringResource(R.string.settings_launcher_music_access),
+                    summary = stringResource(
+                        if (notificationAccess) R.string.settings_launcher_music_access_granted
+                        else R.string.settings_launcher_music_access_summary
+                    ),
+                    enabled = hasCard,
+                    onClick = {
+                        runCatching {
+                            context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+                        }
+                    }
+                )
+                SettingsCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    position = CardPosition.Middle,
+                    title = stringResource(R.string.settings_launcher_music_visualizer_permission),
+                    summary = stringResource(
+                        if (recordAudio) R.string.settings_launcher_music_visualizer_permission_granted
+                        else R.string.settings_launcher_music_visualizer_permission_summary
+                    ),
+                    enabled = hasCard && !recordAudio,
+                    onClick = { recordAudioLauncher.launch(Manifest.permission.RECORD_AUDIO) }
+                )
+            }
+        }
+
+        SettingsCard(
+            modifier = Modifier.fillMaxWidth(),
+            position = CardPosition.Bottom,
+            title = stringResource(R.string.settings_launcher_music_remove),
+            enabled = hasCard,
+            onClick = { MusicCardManager.removeCard() }
         )
     }
 }

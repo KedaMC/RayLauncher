@@ -33,6 +33,7 @@ import com.movtery.zalithlauncher.setting.enums.GestureActionType
 import com.movtery.zalithlauncher.setting.enums.MirrorSourceType
 import com.movtery.zalithlauncher.setting.enums.MouseControlMode
 import com.movtery.zalithlauncher.setting.enums.MouseTouchBlockMode
+import com.movtery.zalithlauncher.setting.enums.MusicSourceType
 import com.movtery.zalithlauncher.setting.enums.ResolutionRule
 import com.movtery.zalithlauncher.ui.control.HotbarRule
 import com.movtery.zalithlauncher.ui.control.gamepad.JoystickMode
@@ -355,6 +356,11 @@ object AllSettings : SettingsRegistry() {
      * 主界面操作菜单的停泊侧
      */
     val launcherActionMenuSide = enumSetting("launcherActionMenuSide", ActionMenuSide.END)
+
+    /**
+     * Music Card source: local files or music from other apps
+     */
+    val musicCardSource = enumSetting("musicCardSource", MusicSourceType.LOCAL)
 
     /**
      * 启动器背景元素不透明度

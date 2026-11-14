@@ -73,6 +73,7 @@ import com.movtery.cardgrid.ui.CardGridAutoScroll
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.ui.screens.content.elements.backgroundGlass
+import com.movtery.zalithlauncher.ui.screens.content.home.music.MusicCardManager
 import com.movtery.zalithlauncher.ui.screens.content.home.overlay.OverlayCardManager
 import com.movtery.zalithlauncher.ui.screens.content.home.server.ServerCardManager
 import com.movtery.zalithlauncher.ui.screens.content.home.server.ServerCardSettingsHost
@@ -147,6 +148,7 @@ fun HomeGrid(
             VersionCardManager.removeCard(cardId)
             ServerCardManager.removeCard(cardId)
             OverlayCardManager.removeCard(cardId)
+            MusicCardManager.removeCard(cardId)
         }
     }
 
@@ -175,6 +177,20 @@ fun HomeGrid(
                 state.cards
                     .filter { it.type.typeId == HomeCards.OVERLAY_CARD_TYPE_ID }
                     .filter { card -> records.none { it.cardId == card.id } }
+                    .forEach { state.removeCard(it.id) }
+            }
+    }
+
+    // Music card: add it to the grid while its record exists, drop it from the grid when the record is gone
+    LaunchedEffect(Unit) {
+        snapshotFlow { state.cards.size }
+            .combine(MusicCardManager.cardId) { _, id -> id }
+            .collect { id ->
+                if (id != null && state.cards.none { it.id == id }) {
+                    state.addCard(HomeCards.musicCardType(), id)
+                }
+                state.cards
+                    .filter { it.type.typeId == HomeCards.MUSIC_CARD_TYPE_ID && it.id != id }
                     .forEach { state.removeCard(it.id) }
             }
     }

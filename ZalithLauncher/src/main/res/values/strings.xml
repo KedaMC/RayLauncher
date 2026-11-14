@@ -3043,4 +3043,41 @@
     <string name="settings_launcher_overlay_none">No overlay cards yet</string>
     <string name="settings_launcher_overlay_remove_all">Remove all overlay cards</string>
     <string name="main_nav_home">Home</string>
+
+    <!-- Music card (home screen) -->
+    <string name="music_listener_label">RayLauncher music card</string>
+    <string name="music_source_local">Local Music</string>
+    <string name="music_source_background">Background Music</string>
+    <string name="music_card_now_playing">NOW PLAYING</string>
+    <string name="music_card_unknown_title">Unknown title</string>
+    <string name="music_card_empty_title">No music yet</string>
+    <string name="music_card_empty_summary">Import audio files in Settings → Launcher → Music card</string>
+    <string name="music_card_access_title">Notification access needed</string>
+    <string name="music_card_access_summary">Allow RayLauncher to read the music other apps are playing</string>
+    <string name="music_card_access_grant">Grant access</string>
+    <string name="music_card_no_session_title">Nothing is playing</string>
+    <string name="music_card_no_session_summary">Start music in another app and it shows up here</string>
+    <string name="music_card_repeat">Repeat</string>
+    <string name="music_card_previous">Previous</string>
+    <string name="music_card_play">Play</string>
+    <string name="music_card_pause">Pause</string>
+    <string name="music_card_next">Next</string>
+    <!-- Settings -> Launcher: music card -->
+    <string name="settings_launcher_music_add">Add music card</string>
+    <string name="settings_launcher_music_add_summary">Adds a music player card to the home screen. Long-press it there to move or resize it</string>
+    <string name="settings_launcher_music_added">The music card is on the home screen</string>
+    <string name="settings_launcher_music_source">Music source</string>
+    <string name="settings_launcher_music_source_summary">Local Music plays imported files inside the launcher. Background Music shows and controls what other apps are playing</string>
+    <string name="settings_launcher_music_import">Import music</string>
+    <string name="settings_launcher_music_import_summary">Pick audio files from your device. Title, artist, album and artwork are read from the files</string>
+    <string name="settings_launcher_music_clear">Clear imported music</string>
+    <string name="settings_launcher_music_none">No music imported yet</string>
+    <string name="settings_launcher_music_count">%d tracks imported</string>
+    <string name="settings_launcher_music_access">Notification access</string>
+    <string name="settings_launcher_music_access_summary">Required to read the music of other apps. Tap to open the system settings and allow RayLauncher</string>
+    <string name="settings_launcher_music_access_granted">Allowed. Tap to open the system settings</string>
+    <string name="settings_launcher_music_visualizer_permission">Visualizer permission</string>
+    <string name="settings_launcher_music_visualizer_permission_summary">Lets the visualizer follow the audio of other apps (microphone permission, no audio is recorded). Without it the visualizer stays static</string>
+    <string name="settings_launcher_music_visualizer_permission_granted">Allowed</string>
+    <string name="settings_launcher_music_remove">Remove music card</string>
 </resources>

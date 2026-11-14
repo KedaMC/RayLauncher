@@ -156,6 +156,16 @@
             android:foregroundServiceType="mediaProjection" />
 
         <service
+            android:name=".music.MusicNotificationListener"
+            android:exported="true"
+            android:label="@string/music_listener_label"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
+        <service
             android:name=".keepalive.TaskKeepAliveService"
             android:enabled="true"
             android:exported="false"
@@ -222,6 +232,9 @@
         </intent>
         <intent>
             <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+        <intent>
+            <action android:name="android.media.browse.MediaBrowserService" />
         </intent>
     </queries>
 </manifest>

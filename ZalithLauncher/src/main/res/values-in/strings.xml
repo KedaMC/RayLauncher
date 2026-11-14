@@ -1491,4 +1491,40 @@
     <string name="settings_renderer_max_refresh_rate_title">Minta Refresh Rate Maksimum</string>
     <string name="settings_renderer_max_refresh_rate_summary">Minta layar beralih ke refresh rate tertinggi yang didukung pada resolusi saat ini untuk menghilangkan batas frame rate pada beberapa perangkat</string>
     <string name="main_nav_home">Beranda</string>
+
+    <!-- Music card (home screen) -->
+    <string name="music_listener_label">Kartu musik RayLauncher</string>
+    <string name="music_source_local">Musik Lokal</string>
+    <string name="music_source_background">Musik Latar Belakang</string>
+    <string name="music_card_now_playing">SEDANG DIPUTAR</string>
+    <string name="music_card_unknown_title">Judul tidak diketahui</string>
+    <string name="music_card_empty_title">Belum ada musik</string>
+    <string name="music_card_empty_summary">Impor file audio di Pengaturan → Launcher → Kartu musik</string>
+    <string name="music_card_access_title">Perlu akses notifikasi</string>
+    <string name="music_card_access_summary">Izinkan RayLauncher membaca musik yang diputar aplikasi lain</string>
+    <string name="music_card_access_grant">Beri akses</string>
+    <string name="music_card_no_session_title">Tidak ada musik diputar</string>
+    <string name="music_card_no_session_summary">Putar musik di aplikasi lain dan akan muncul di sini</string>
+    <string name="music_card_repeat">Ulangi</string>
+    <string name="music_card_previous">Sebelumnya</string>
+    <string name="music_card_play">Putar</string>
+    <string name="music_card_pause">Jeda</string>
+    <string name="music_card_next">Berikutnya</string>
+    <string name="settings_launcher_music_add">Tambah kartu musik</string>
+    <string name="settings_launcher_music_add_summary">Menambahkan kartu pemutar musik ke layar utama. Tekan lama di sana untuk memindah atau mengubah ukuran</string>
+    <string name="settings_launcher_music_added">Kartu musik sudah ada di layar utama</string>
+    <string name="settings_launcher_music_source">Sumber musik</string>
+    <string name="settings_launcher_music_source_summary">Musik Lokal memutar file hasil impor di dalam launcher. Musik Latar Belakang menampilkan dan mengontrol musik dari aplikasi lain</string>
+    <string name="settings_launcher_music_import">Impor musik</string>
+    <string name="settings_launcher_music_import_summary">Pilih file audio dari perangkat. Judul, artis, album, dan sampul dibaca dari file</string>
+    <string name="settings_launcher_music_clear">Hapus musik yang diimpor</string>
+    <string name="settings_launcher_music_none">Belum ada musik yang diimpor</string>
+    <string name="settings_launcher_music_count">%d lagu diimpor</string>
+    <string name="settings_launcher_music_access">Akses notifikasi</string>
+    <string name="settings_launcher_music_access_summary">Diperlukan untuk membaca musik aplikasi lain. Ketuk untuk membuka pengaturan sistem dan izinkan RayLauncher</string>
+    <string name="settings_launcher_music_access_granted">Diizinkan. Ketuk untuk membuka pengaturan sistem</string>
+    <string name="settings_launcher_music_visualizer_permission">Izin visualizer</string>
+    <string name="settings_launcher_music_visualizer_permission_summary">Agar visualizer mengikuti audio aplikasi lain (izin mikrofon, tidak ada audio yang direkam). Tanpa izin ini visualizer tetap statis</string>
+    <string name="settings_launcher_music_visualizer_permission_granted">Diizinkan</string>
+    <string name="settings_launcher_music_remove">Hapus kartu musik</string>
 </resources>
