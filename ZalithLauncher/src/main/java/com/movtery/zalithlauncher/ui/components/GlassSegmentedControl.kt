@@ -81,12 +81,17 @@ import kotlin.math.sqrt
 //Based on PrismalSegmentedControl from PrismalAGSL v1.0.7 (MIT License, Copyright (c) 2026 Saurav Sajeev).
 //Changes: segments take composable content (icons) instead of text, and that content is recorded into the
 //layer the droplet samples, so the lens refracts it. No track and no resting thumb are drawn, and the
-//lens is always at full strength, so the droplet is a drop of water even when it is not touched.
+//lens always refracts the page at the rim, and reaches the segment content only while the droplet is
+//touched, dragged or moving to another segment.
 
 private val SegmentedHorizontalInset = 2.dp
 private const val SegmentedDropletPressedScale = 1.14f
 private const val SegmentedDropletMaxAspect = 2.2f
 private const val SegmentedRefractionBand = 0.58f
+private const val SegmentedRestingRefractionBand = 0.22f
+
+/** Droplet stretch (a smoothed speed) at which a moving droplet has the full refraction band. */
+private const val SegmentedMotionLensStretch = 0.08f
 private const val SegmentedRefractionAmount = 0.8f
 private const val SegmentedStretchReferenceSpeedDp = 1600f
 private const val SegmentedStretchWidth = 0.3f
@@ -299,8 +304,17 @@ fun GlassSegmentedControl(
                     shape = { SegmentedDropletShape },
                     effects = {
                         val radius = size.minDimension / 2f
+                        //At rest the refracting band stays on the rim, outside the icon, so the lens copy of
+                        //the icon coincides with the real one (no bright edges above and below it). Touching
+                        //or dragging the droplet, or the droplet moving to another page, widens the band over
+                        //the icon; it narrows again as the droplet settles.
+                        val activity = maxOf(
+                            lensMotion.pressProgress,
+                            (abs(dropletStretch.floatValue) / SegmentedMotionLensStretch).fastCoerceIn(0f, 1f)
+                        )
+                        val band = lerp(SegmentedRestingRefractionBand, SegmentedRefractionBand, activity)
                         prismalLens(
-                            refractionHeight = radius * SegmentedRefractionBand,
+                            refractionHeight = radius * band,
                             refractionAmount = radius * SegmentedRefractionAmount,
                             depthEffect = true,
                             chromaticAberration = chromaticAberration
