@@ -182,7 +182,10 @@ internal class ExternalSpectrumCapture {
                 false,
                 true
             )
-            created.setEnabled(true)
+            if (created.setEnabled(true) != Visualizer.SUCCESS) {
+                created.release()
+                error("The system visualizer could not be enabled")
+            }
             visualizer = created
             true
         } catch (e: Throwable) {
@@ -206,6 +209,7 @@ internal class ExternalSpectrumCapture {
         val binHz = (samplingRateMilliHz / 1000f) / n
         if (binHz <= 0f) return
         val maxBin = n / 2 - 1
+        var anySignal = false
         for (band in 0 until AudioSpectrumBus.BANDS) {
             val from = max(1, (SpectrumBands.edgesHz[band] / binHz).toInt())
             val to = min(maxBin, max(from, (SpectrumBands.edgesHz[band + 1] / binHz).toInt()))
@@ -214,10 +218,12 @@ internal class ExternalSpectrumCapture {
                 val magnitude = hypot(fft[2 * bin].toFloat(), fft[2 * bin + 1].toFloat())
                 if (magnitude > peak) peak = magnitude
             }
+            if (peak > 0f) anySignal = true
             //The system FFT is 8 bit: roughly 90 is a very loud bin
             val db = 20f * log10(peak / 90f + 1e-4f)
             levels[band] = ((db + 36f + band * 1.5f) / 36f).coerceIn(0f, 1f)
         }
-        AudioSpectrumBus.publish(levels.copyOf())
+        //A device that hands out only zeros has no usable data: keep the static pattern
+        if (anySignal) AudioSpectrumBus.publish(levels.copyOf())
     }
 }

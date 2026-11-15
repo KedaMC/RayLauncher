@@ -18,9 +18,13 @@
 
 package com.movtery.zalithlauncher.ui.screens.content.home.music
 
+import android.Manifest
 import android.content.Intent
 import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -47,6 +51,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -85,8 +90,11 @@ import com.movtery.zalithlauncher.music.MusicManager
 import com.movtery.zalithlauncher.music.MusicRepeat
 import com.movtery.zalithlauncher.music.MusicState
 import com.movtery.zalithlauncher.music.MusicStatus
+import com.movtery.zalithlauncher.music.hasRecordAudioPermission
 import com.movtery.zalithlauncher.setting.enums.MusicSourceType
 import com.movtery.zalithlauncher.ui.components.IconButton
+import com.movtery.zalithlauncher.ui.components.LiquidGlassSurface
+import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
 import com.movtery.zalithlauncher.ui.components.MarqueeText
 import kotlinx.coroutines.delay
 
@@ -123,41 +131,79 @@ fun CardState.MusicCardContent() {
     }
 
     val music by MusicManager.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.SpaceBetween
+    //The visualizer of other apps' music needs the microphone permission: tapping it asks for it
+    var permissionTick by remember { mutableIntStateOf(0) }
+    val recordAudio = remember(permissionTick, music.status, music.isPlaying) { hasRecordAudioPermission(context) }
+    val recordAudioLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
     ) {
-        Text(
-            text = stringResource(R.string.music_card_now_playing),
-            style = MaterialTheme.typography.labelMedium,
-            letterSpacing = 1.2.sp,
-            color = MaterialTheme.colorScheme.primary
-        )
+        permissionTick++
+        MusicManager.refresh()
+    }
+    val needsAudioPermission = music.source == MusicSourceType.BACKGROUND &&
+            music.status == MusicStatus.READY && !recordAudio
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            MusicArtworkView(music = music)
-            TrackInfo(
-                modifier = Modifier.weight(1f),
-                music = music
-            )
-            MusicVisualizer(
-                modifier = Modifier
-                    .width(54.dp)
-                    .height(88.dp),
-                playing = music.isPlaying,
-                color = MaterialTheme.colorScheme.primary
-            )
+    //Liquid Glass: same surface the other home cards draw behind their content
+    val glassBackdrop = liquidGlassBackdrop()
+    Box(modifier = Modifier.fillMaxSize()) {
+        if (glassBackdrop != null) {
+            LiquidGlassSurface(
+                backdrop = glassBackdrop,
+                shape = MaterialTheme.shapes.large,
+                modifier = Modifier.fillMaxSize(),
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                blurRadius = 10.dp
+            ) {}
         }
 
-        MusicProgress(music = music)
-        MusicControls(music = music)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = stringResource(R.string.music_card_now_playing),
+                style = MaterialTheme.typography.labelMedium,
+                letterSpacing = 1.2.sp,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                MusicArtworkView(music = music)
+                TrackInfo(
+                    modifier = Modifier.weight(1f),
+                    music = music
+                )
+                MusicVisualizer(
+                    modifier = Modifier
+                        .width(54.dp)
+                        .height(88.dp)
+                        .then(
+                            if (needsAudioPermission) {
+                                Modifier.clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null
+                                ) { recordAudioLauncher.launch(Manifest.permission.RECORD_AUDIO) }
+                            } else {
+                                Modifier
+                            }
+                        ),
+                    playing = music.isPlaying,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            MusicProgress(music = music)
+            MusicControls(music = music)
+        }
     }
 }
 
