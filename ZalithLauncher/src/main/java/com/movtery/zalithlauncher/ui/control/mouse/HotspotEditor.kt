@@ -29,12 +29,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -48,6 +45,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -101,13 +101,11 @@ fun MouseHotspotEditorDialog(
                 color = cardColor(false),
                 contentColor = onCardColor(),
             ) {
-                Row(
-                    modifier = Modifier
-                        .height(IntrinsicSize.Min)
-                        .padding(all = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                HotspotEditorLayout(
+                    modifier = Modifier.padding(all = 12.dp)
                 ) {
                     MouseHotspotPreview(
+                        modifier = Modifier.layoutId(HotspotSlot.Preview),
                         xPercent = hotspot.state.xPercent,
                         yPercent = hotspot.state.yPercent,
                         cursorShape = cursorShape,
@@ -116,13 +114,13 @@ fun MouseHotspotEditorDialog(
 
                     VerticalDivider(
                         modifier = Modifier
-                            .fillMaxHeight(0.5f)
+                            .layoutId(HotspotSlot.Divider)
                             .padding(horizontal = 12.dp),
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                     )
 
                     Column(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.layoutId(HotspotSlot.Content),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         //X坐标
@@ -163,6 +161,59 @@ fun MouseHotspotEditorDialog(
                     }
                 }
             }
+        }
+    }
+}
+
+private enum class HotspotSlot { Preview, Divider, Content }
+
+/**
+ * Preview | divider | sliders row. Replaces `Row(Modifier.height(IntrinsicSize.Min))`, which
+ * crashes because the slider content is built on SubcomposeLayout and cannot answer intrinsic
+ * queries. Children are measured directly instead: the row height is the taller of preview and
+ * content, and the divider takes half of that height.
+ */
+@Composable
+private fun HotspotEditorLayout(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    Layout(
+        modifier = modifier,
+        content = content
+    ) { measurables, constraints ->
+        val previewM = measurables.first { it.layoutId == HotspotSlot.Preview }
+        val dividerM = measurables.first { it.layoutId == HotspotSlot.Divider }
+        val contentM = measurables.first { it.layoutId == HotspotSlot.Content }
+
+        val loose = constraints.copy(minWidth = 0, minHeight = 0)
+        val preview = previewM.measure(loose)
+        val dividerWidth = dividerM.minIntrinsicWidth(constraints.maxHeight)
+            .coerceAtMost(constraints.maxWidth)
+        val contentMaxWidth = (constraints.maxWidth - preview.width - dividerWidth).coerceAtLeast(0)
+        val contentPlaceable = contentM.measure(
+            loose.copy(
+                minWidth = if (constraints.hasBoundedWidth) contentMaxWidth else 0,
+                maxWidth = if (constraints.hasBoundedWidth) contentMaxWidth else Constraints.Infinity
+            )
+        )
+
+        val height = maxOf(preview.height, contentPlaceable.height)
+            .coerceIn(constraints.minHeight, constraints.maxHeight)
+        val divider = dividerM.measure(
+            Constraints.fixed(dividerWidth, (height * 0.5f).toInt())
+        )
+
+        val width = (preview.width + divider.width + contentPlaceable.width)
+            .coerceIn(constraints.minWidth, constraints.maxWidth)
+
+        layout(width, height) {
+            preview.placeRelative(0, (height - preview.height) / 2)
+            divider.placeRelative(preview.width, (height - divider.height) / 2)
+            contentPlaceable.placeRelative(
+                preview.width + divider.width,
+                (height - contentPlaceable.height) / 2
+            )
         }
     }
 }
