@@ -1496,7 +1496,6 @@
     <string name="music_listener_label">Kartu musik RayLauncher</string>
     <string name="music_source_local">Musik Lokal</string>
     <string name="music_source_background">Musik Latar Belakang</string>
-    <string name="music_card_now_playing">SEDANG DIPUTAR</string>
     <string name="music_card_unknown_title">Judul tidak diketahui</string>
     <string name="music_card_empty_title">Belum ada musik</string>
     <string name="music_card_empty_summary">Impor file audio di Pengaturan → Launcher → Kartu musik</string>

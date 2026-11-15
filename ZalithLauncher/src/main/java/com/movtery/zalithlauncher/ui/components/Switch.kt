@@ -45,7 +45,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.setting.AllSettings
-import com.styropyr0.prismal.components.PrismalGlassToggle
 
 @Composable
 fun DefaultSwitch(
@@ -58,19 +57,6 @@ fun DefaultSwitch(
 ) {
     val glassEnabled = liquidGlassBackdrop() != null
     val backdrop = liquidGlassBackdrop()
-
-    //Enabled: the Prismal toggle (draggable, refracting thumb). A disabled switch keeps the flat glass
-    //switch below, where a glass layer per control costs too much GPU.
-    if (backdrop != null && enabled) {
-        PrismalGlassToggle(
-            selected = { checked },
-            onSelect = onCheckedChange,
-            backdrop = backdrop,
-            modifier = modifier
-        )
-        return
-    }
-
     val glassColors = if (glassEnabled) {
         SwitchDefaults.colors(
             checkedThumbColor = Color.White,

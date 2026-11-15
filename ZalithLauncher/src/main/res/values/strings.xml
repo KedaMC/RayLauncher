@@ -3048,7 +3048,6 @@
     <string name="music_listener_label">RayLauncher music card</string>
     <string name="music_source_local">Local Music</string>
     <string name="music_source_background">Background Music</string>
-    <string name="music_card_now_playing">NOW PLAYING</string>
     <string name="music_card_unknown_title">Unknown title</string>
     <string name="music_card_empty_title">No music yet</string>
     <string name="music_card_empty_summary">Import audio files in Settings → Launcher → Music card</string>

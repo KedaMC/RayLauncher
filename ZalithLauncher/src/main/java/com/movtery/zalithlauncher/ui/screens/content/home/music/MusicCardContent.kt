@@ -73,7 +73,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -165,13 +164,6 @@ fun CardState.MusicCardContent() {
                 .padding(horizontal = 20.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
-                text = stringResource(R.string.music_card_now_playing),
-                style = MaterialTheme.typography.labelMedium,
-                letterSpacing = 1.2.sp,
-                color = MaterialTheme.colorScheme.primary
-            )
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
