@@ -451,7 +451,7 @@ private fun SeekBar(
     onCancel: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val accent = MaterialTheme.colorScheme.primary
+    val accent = mediaAccent
     val track = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
     var latest by remember { mutableStateOf(0f) }
 
@@ -496,7 +496,7 @@ private fun SeekBar(
 
 @Composable
 private fun MusicControls(music: MusicState) {
-    val accent = MaterialTheme.colorScheme.primary
+    val accent = mediaAccent
     val ready = music.status == MusicStatus.READY
     //Local music always has a playlist to start; other apps decide what they allow
     val canPlay = music.canPlayPause
@@ -540,7 +540,7 @@ private fun MusicControls(music: MusicState) {
             enabled = ready && canPlay,
             colors = IconButtonDefaults.iconButtonColors(
                 containerColor = accent,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
+                contentColor = if (liquidGlassBackdrop() != null) Color(0xFF202124) else MaterialTheme.colorScheme.onPrimary,
                 disabledContainerColor = accent.copy(alpha = 0.38f)
             )
         ) {
