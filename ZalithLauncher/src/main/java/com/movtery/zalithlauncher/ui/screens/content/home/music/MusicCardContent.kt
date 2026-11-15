@@ -534,25 +534,53 @@ private fun MusicControls(music: MusicState) {
             )
         }
 
-        IconButton(
-            modifier = Modifier.size(60.dp),
-            onClick = { MusicManager.playPause() },
-            enabled = ready && canPlay,
-            colors = IconButtonDefaults.iconButtonColors(
-                containerColor = accent,
-                contentColor = if (liquidGlassBackdrop() != null) Color(0xFF202124) else MaterialTheme.colorScheme.onPrimary,
-                disabledContainerColor = accent.copy(alpha = 0.38f)
-            )
-        ) {
-            Icon(
-                modifier = Modifier.size(30.dp),
-                painter = painterResource(
-                    if (music.isPlaying) R.drawable.ic_music_pause_filled else R.drawable.ic_play_arrow_filled
-                ),
-                contentDescription = stringResource(
-                    if (music.isPlaying) R.string.music_card_pause else R.string.music_card_play
+        val playIcon = painterResource(
+            if (music.isPlaying) R.drawable.ic_music_pause_filled else R.drawable.ic_play_arrow_filled
+        )
+        val playDescription = stringResource(
+            if (music.isPlaying) R.string.music_card_pause else R.string.music_card_play
+        )
+        val playEnabled = ready && canPlay
+        val glass = liquidGlassBackdrop()
+        if (glass != null) {
+            //Liquid glass capsule with a white icon
+            LiquidGlassSurface(
+                modifier = Modifier
+                    .size(60.dp)
+                    .alpha(if (playEnabled) 1f else 0.4f),
+                backdrop = glass,
+                shape = CircleShape,
+                containerColor = Color.White.copy(alpha = 0.16f),
+                contentColor = Color.White,
+                blurRadius = 8.dp,
+                onClick = if (playEnabled) ({ MusicManager.playPause() }) else null
+            ) {
+                Icon(
+                    modifier = Modifier
+                        .size(30.dp)
+                        .align(Alignment.Center),
+                    painter = playIcon,
+                    contentDescription = playDescription,
+                    tint = Color.White
                 )
-            )
+            }
+        } else {
+            IconButton(
+                modifier = Modifier.size(60.dp),
+                onClick = { MusicManager.playPause() },
+                enabled = playEnabled,
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = accent,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    disabledContainerColor = accent.copy(alpha = 0.38f)
+                )
+            ) {
+                Icon(
+                    modifier = Modifier.size(30.dp),
+                    painter = playIcon,
+                    contentDescription = playDescription
+                )
+            }
         }
 
         IconButton(
