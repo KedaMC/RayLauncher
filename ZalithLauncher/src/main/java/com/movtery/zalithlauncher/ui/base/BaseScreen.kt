@@ -37,6 +37,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.drawscope.clipRect
 import com.movtery.zalithlauncher.ui.screens.TitledNavKey
 import com.movtery.zalithlauncher.utils.animation.SwapClock
 import com.movtery.zalithlauncher.utils.animation.SwapTimeline
@@ -118,6 +120,17 @@ fun BaseScreen(
         content = content,
         visible = visible
     )
+}
+
+/** Top gap shared by the category rail and the first element of every page next to it */
+val PageTopGap = 12.dp
+
+/**
+ * Clips what a page draws above [top], so scrolled content stops on the same line the category rail starts at,
+ * instead of climbing above the rail's first button
+ */
+fun Modifier.clipPageTop(top: Dp = PageTopGap): Modifier = drawWithContent {
+    clipRect(top = top.toPx()) { this@drawWithContent.drawContent() }
 }
 
 /** Height of the overlaid top bar that a page has to keep clear of, consumed by [BaseScreen] */

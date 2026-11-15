@@ -55,6 +55,7 @@ import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.game.version.installed.VersionsManager
 import com.movtery.zalithlauncher.notification.NotificationManager
 import com.movtery.zalithlauncher.ui.base.BaseScreen
+import com.movtery.zalithlauncher.ui.base.clipPageTop
 import com.movtery.zalithlauncher.ui.base.VersionViewModelStoreScope
 import com.movtery.zalithlauncher.ui.components.GlassRailItemBody
 import com.movtery.zalithlauncher.ui.components.LiquidGlassSurface
@@ -128,7 +129,7 @@ fun VersionSettingsScreen(
                 )
 
                 NavigationUI(
-                    modifier = Modifier.fillMaxHeight(),
+                    modifier = Modifier.fillMaxHeight().clipPageTop(),
                     key = key,
                     modifyViewModel = modifyViewModel,
                     backScreenViewModel = backScreenViewModel,

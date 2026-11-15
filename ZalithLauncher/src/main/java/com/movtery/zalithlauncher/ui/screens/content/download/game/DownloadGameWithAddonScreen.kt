@@ -242,6 +242,7 @@ fun DownloadGameWithAddonScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(top = 12.dp)
                 .animated(animatedCtx)
         ) {
             ScreenHeader(
