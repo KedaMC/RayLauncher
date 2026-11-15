@@ -21,10 +21,8 @@ package com.movtery.zalithlauncher.ui.screens.content.home
 import com.movtery.zalithlauncher.ui.components.effectiveBackgroundBlur
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -117,11 +115,12 @@ fun HomeGrid(
 ) {
     val scrollState = rememberScrollState()
     val density = LocalDensity.current
-    //Edge to edge: the grid fills the screen. Window insets (system bars, display cutout) keep the cards off the
-    //screen edges; nothing is reserved for the top bar, the cards start at the very top and the bar floats over them
-    val windowInsets = WindowInsets.systemBars.union(WindowInsets.displayCutout)
-    val topInsetDp = with(density) { windowInsets.getTop(density).toDp() }
-    val topClear = topInsetDp
+    //Edge to edge: the grid fills the whole screen, including the strip at the top and the area next to the front
+    //camera. Only the system bars keep the cards clear on the sides and bottom (they are hidden in immersive mode,
+    //so this is normally 0); the display cutout is deliberately ignored. Nothing is reserved at the top either,
+    //the cards start at the very top and the top bar floats over them
+    val windowInsets = WindowInsets.systemBars
+    val topClear = 0.dp
     val gridPaddingDp = 6.dp
     //长按调整工具栏触发的卡片操作
     var operation by remember { mutableStateOf<HomeCardOperation>(HomeCardOperation.None) }
