@@ -5,8 +5,8 @@ on:
     branches:
       - main
       - RayLauncher
-    paths:
-      - 'ZalithLauncher/**'
+    paths-ignore:
+      - '**/README*'
   workflow_dispatch:
     inputs:
       ref:
