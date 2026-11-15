@@ -24,7 +24,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -32,7 +31,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -65,7 +63,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.boundsInParent
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalUriHandler
@@ -76,7 +73,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -87,10 +83,8 @@ import com.movtery.zalithlauncher.game.account.AccountsManager
 import com.movtery.zalithlauncher.game.account.getAccountTypeName
 import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.game.version.installed.VersionsManager
-import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.setting.enums.ActionMenuSide
 import com.movtery.zalithlauncher.ui.base.BaseScreen
-import com.movtery.zalithlauncher.ui.components.AnimatedDirection
 import com.movtery.zalithlauncher.ui.components.BackgroundCard
 import com.movtery.zalithlauncher.ui.components.LiquidGlassSurface
 import com.movtery.zalithlauncher.ui.components.flatGlass
@@ -106,11 +100,10 @@ import com.movtery.zalithlauncher.ui.screens.NormalNavKey
 import com.movtery.zalithlauncher.ui.screens.content.elements.CommonVersionInfoLayout
 import com.movtery.zalithlauncher.ui.screens.content.elements.PlayerFace
 import com.movtery.zalithlauncher.ui.screens.content.elements.VersionIconImage
+import com.movtery.cardgrid.model.CardState
+import androidx.compose.runtime.staticCompositionLocalOf
 import com.movtery.zalithlauncher.ui.screens.content.home.HomeGrid
-import com.movtery.zalithlauncher.ui.screens.content.home.LocalActionMenuDrag
-import com.movtery.zalithlauncher.ui.screens.content.home.actionMenuDragAnchor
-import com.movtery.zalithlauncher.ui.screens.content.home.actionMenuDragExclusion
-import com.movtery.zalithlauncher.ui.screens.content.home.rememberActionMenuDragState
+import com.movtery.zalithlauncher.ui.screens.content.home.LocalHomeGridState
 import com.movtery.zalithlauncher.ui.screens.content.home.server.LocalServerCardQuickPlay
 import com.movtery.zalithlauncher.ui.screens.content.home.version.LocalHomeCardLauncher
 import com.movtery.zalithlauncher.ui.screens.content.home.version.LocalHomeCardVersionSettings
@@ -118,15 +111,19 @@ import com.movtery.zalithlauncher.ui.theme.itemColor
 import com.movtery.zalithlauncher.viewmodel.ScreenBackStackViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlin.math.roundToInt
 
-private const val ContentWeight = 7f
-private const val ActionMenuWeight = 3f
+/** Rows the launch card needs before it switches to the tall layout with the skin preview */
+private const val LaunchCardTallRows = 28
 
-/**
- * 操作菜单停泊槽位与屏幕边缘的间距
- */
-private val ActionMenuOuterPadding = 12.dp
+/** Actions the launch card needs from the launcher screen */
+class LaunchCardActions(
+    val onLaunchGame: (Version?) -> Unit,
+    val toAccountManageScreen: () -> Unit,
+    val toVersionManageScreen: () -> Unit,
+    val toVersionSettingsScreen: () -> Unit
+)
+
+val LocalLaunchCardActions = staticCompositionLocalOf<LaunchCardActions?> { null }
 
 @Composable
 fun LauncherScreen(
@@ -137,123 +134,89 @@ fun LauncherScreen(
     onQuickPlayServer: (Version?, String) -> Unit,
     onOpenLink: (String) -> Unit,
 ) {
+    //Home draws edge to edge: the grid also fills the area under the top bar
     BaseScreen(
         screenKey = NormalNavKey.LauncherMain,
-        currentKey = backStackViewModel.mainScreen.currentKey
+        currentKey = backStackViewModel.mainScreen.currentKey,
+        edgeToEdge = true
     ) { isVisible ->
-        val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
-        val dockedSide = AllSettings.launcherActionMenuSide.state
-        val dragState = rememberActionMenuDragState(
-            onCommit = { side -> AllSettings.launcherActionMenuSide.save(side) }
-        )
-        dragState.dockedSide = dockedSide
-        dragState.isRtl = isRtl
-
-        LaunchedEffect(isVisible) {
-            //屏幕切走时打断进行中的拖拽
-            if (!isVisible) dragState.onDragCancel()
-        }
-
-        BoxWithConstraints(
-            modifier = Modifier
-                .fillMaxSize()
-                .onGloballyPositioned { coordinates ->
-                    dragState.parentOrigin = coordinates.positionInRoot()
-                }
-        ) {
-            val parentWidthPx = constraints.maxWidth.toFloat()
-            dragState.parentWidthPx = parentWidthPx
-            dragState.outerPaddingPx = with(LocalDensity.current) { ActionMenuOuterPadding.toPx() }
-            dragState.menuSpanPx = parentWidthPx * (ActionMenuWeight / (ActionMenuWeight + ContentWeight))
-
-            //拖拽期间以预览侧为准
-            val effectiveSide = dragState.previewSide ?: dockedSide
-
-            //卡片尺寸与停泊槽内容区保持一致
-            val cardWidth = maxWidth * (ActionMenuWeight / (ActionMenuWeight + ContentWeight)) - ActionMenuOuterPadding
-            val cardHeight = maxHeight - ActionMenuOuterPadding * 2
-
-            val toAccountManageScreen: () -> Unit = {
-                backStackViewModel.mainScreen.navigateTo(
-                    screenKey = NormalNavKey.AccountManager(FirstLoginMenu.NONE)
-                )
-            }
-            val toVersionManageScreen: () -> Unit = {
-                backStackViewModel.mainScreen.removeAndNavigateTo(
-                    remove = NestedNavKey.VersionSettings::class,
-                    screenKey = NormalNavKey.VersionsManager
-                )
-            }
-            val toVersionSettingsScreen: () -> Unit = {
-                VersionsManager.currentVersion.value?.let { version ->
-                    navigateToVersions(version)
-                }
-            }
-
-            // 内容区域
-            Row(modifier = Modifier.fillMaxSize()) {
-                // ActionMenu 对接到了 Start，留出空位
-                if (dockedSide == ActionMenuSide.START) {
-                    Spacer(modifier = Modifier.weight(ActionMenuWeight))
-                }
-
-                CompositionLocalProvider(
-                    LocalUriHandler provides object : UriHandler {
-                        override fun openUri(uri: String) {
-                            onOpenLink(uri)
-                        }
-                    }
-                ) {
-                ContentMenu(
-                    modifier = Modifier
-                        .weight(ContentWeight)
-                        .offset { IntOffset(x = dragState.previewShift.value.roundToInt(), y = 0) },
-                    isVisible = isVisible,
-                    gridState = gridState,
-                    onLaunchGame = { version ->
-                        onLaunchGame(version)
-                    },
-                    onQuickPlayServer = onQuickPlayServer,
-                    onOpenVersionSettings = navigateToVersions
-                )
-                }
-
-                // ActionMenu 对接到了 End，留出空位
-                if (dockedSide == ActionMenuSide.END) {
-                    Spacer(modifier = Modifier.weight(ActionMenuWeight))
-                }
-            }
-
-            val isActionMenuTaller = maxHeight >= 600.dp
-            CompositionLocalProvider(LocalActionMenuDrag provides dragState) {
-                Box(
-                    modifier = Modifier
-                        .offset {
-                            val translation = if (dragState.floating) {
-                                dragState.cardPosition
-                            } else {
-                                dragState.landingOf(effectiveSide) + dragState.settleOffset.value
-                            }
-                            val x = if (isRtl) parentWidthPx - cardWidth.toPx() - translation.x else translation.x
-                            IntOffset(x.roundToInt(), translation.y.roundToInt())
-                        }
-                        .size(cardWidth, cardHeight)
-                ) {
-                    ActionMenu(
-                        modifier = Modifier.fillMaxSize(),
-                        isVisible = isVisible,
-                        isTaller = isActionMenuTaller,
-                        dockedSide = dockedSide,
-                        onLaunchGame = onLaunchGame,
-                        swapDirection = if (dockedSide == ActionMenuSide.END) AnimatedDirection.Right else AnimatedDirection.Left,
-                        pickUpScale = { dragState.scale },
-                        toAccountManageScreen = toAccountManageScreen,
-                        toVersionManageScreen = toVersionManageScreen,
-                        toVersionSettingsScreen = toVersionSettingsScreen
+        val launchActions = remember(backStackViewModel, onLaunchGame, navigateToVersions) {
+            LaunchCardActions(
+                onLaunchGame = onLaunchGame,
+                toAccountManageScreen = {
+                    backStackViewModel.mainScreen.navigateTo(
+                        screenKey = NormalNavKey.AccountManager(FirstLoginMenu.NONE)
                     )
+                },
+                toVersionManageScreen = {
+                    backStackViewModel.mainScreen.removeAndNavigateTo(
+                        remove = NestedNavKey.VersionSettings::class,
+                        screenKey = NormalNavKey.VersionsManager
+                    )
+                },
+                toVersionSettingsScreen = {
+                    VersionsManager.currentVersion.value?.let { version ->
+                        navigateToVersions(version)
+                    }
                 }
-            }
+            )
         }
+
+        CompositionLocalProvider(
+            LocalUriHandler provides object : UriHandler {
+                override fun openUri(uri: String) {
+                    onOpenLink(uri)
+                }
+            },
+            LocalLaunchCardActions provides launchActions
+        ) {
+            ContentMenu(
+                modifier = Modifier.fillMaxSize(),
+                isVisible = isVisible,
+                gridState = gridState,
+                onLaunchGame = { version ->
+                    onLaunchGame(version)
+                },
+                onQuickPlayServer = onQuickPlayServer,
+                onOpenVersionSettings = navigateToVersions
+            )
+        }
+    }
+}
+
+/**
+ * The launch card (account, version, launch button). It is a regular home grid card:
+ * it can be placed anywhere, resized and pushed around like the others, but never deleted.
+ */
+@Composable
+fun CardState.LaunchCardContent(cardId: String) {
+    val actions = LocalLaunchCardActions.current ?: return
+    val gridState = LocalHomeGridState.current
+    val account by AccountsManager.currentAccountFlow.collectAsStateWithLifecycle()
+
+    //The skin preview turns towards the middle of the screen
+    val onRight = gridState?.cards?.firstOrNull { it.id == cardId }?.layout
+        ?.let { it.x + it.width / 2f > columns / 2f } ?: true
+
+    if (spanHeight >= LaunchCardTallRows && spanWidth >= 10) {
+        ActionMenuTallerContent(
+            modifier = Modifier.fillMaxSize(),
+            account = account,
+            dockedSide = if (onRight) ActionMenuSide.END else ActionMenuSide.START,
+            onLaunchGame = actions.onLaunchGame,
+            toAccountManageScreen = actions.toAccountManageScreen,
+            toVersionManageScreen = actions.toVersionManageScreen,
+            toVersionSettingsScreen = actions.toVersionSettingsScreen,
+        )
+    } else {
+        ActionMenuCardContent(
+            modifier = Modifier.fillMaxSize(),
+            account = account,
+            onLaunchGame = actions.onLaunchGame,
+            toAccountManageScreen = actions.toAccountManageScreen,
+            toVersionManageScreen = actions.toVersionManageScreen,
+            toVersionSettingsScreen = actions.toVersionSettingsScreen,
+        )
     }
 }
 
@@ -594,8 +557,7 @@ private fun ActionMenuCardContent(
         LauncherPanel(
             modifier = Modifier
                 .widthIn(max = PanelMaxWidth)
-                .fillMaxWidth()
-                .actionMenuDragAnchor(),
+                .fillMaxWidth(),
             account = account,
             onLaunchGame = onLaunchGame,
             toAccountManageScreen = toAccountManageScreen,
@@ -624,9 +586,7 @@ private fun ActionMenuTallerContent(
     }
 
     Column(
-        modifier = Modifier
-            .actionMenuDragAnchor()
-            .then(modifier),
+        modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
@@ -655,51 +615,6 @@ private fun ActionMenuTallerContent(
     }
 }
 
-@Composable
-private fun ActionMenu(
-    isVisible: Boolean,
-    isTaller: Boolean,
-    dockedSide: ActionMenuSide,
-    onLaunchGame: (Version?) -> Unit,
-    swapDirection: AnimatedDirection,
-    pickUpScale: () -> Float,
-    modifier: Modifier = Modifier,
-    toAccountManageScreen: () -> Unit = {},
-    toVersionManageScreen: () -> Unit = {},
-    toVersionSettingsScreen: () -> Unit = {}
-) {
-    val ctx = rememberAnimatedContext(isVisible = isVisible)
-
-    val account by AccountsManager.currentAccountFlow.collectAsStateWithLifecycle()
-
-    val contentModifier = modifier.graphicsLayer {
-        val scale = pickUpScale()
-        scaleX = scale
-        scaleY = scale
-    }.animated(ctx, from = swapDirection)
-
-    if (isTaller) {
-        ActionMenuTallerContent(
-            modifier = contentModifier,
-            account = account,
-            dockedSide = dockedSide,
-            onLaunchGame = onLaunchGame,
-            toAccountManageScreen = toAccountManageScreen,
-            toVersionManageScreen = toVersionManageScreen,
-            toVersionSettingsScreen = toVersionSettingsScreen,
-        )
-    } else {
-        ActionMenuCardContent(
-            modifier = contentModifier,
-            account = account,
-            onLaunchGame = onLaunchGame,
-            toAccountManageScreen = toAccountManageScreen,
-            toVersionManageScreen = toVersionManageScreen,
-            toVersionSettingsScreen = toVersionSettingsScreen,
-        )
-    }
-}
-
 /** Compact "1.21.11 · Fabric 0.20.1" style summary; custom user summaries are shown untouched. */
 private fun Version.panelSummary(): String {
     val summary = getVersionSummary()
@@ -717,8 +632,7 @@ private fun VersionManagerLayout(
 ) {
     Row(
         modifier = modifier
-            .actionMenuDragExclusion()
-            .clip(shape = MaterialTheme.shapes.medium)
+            .clip(shape = MaterialTheme.shapes.large)
             .combinedClickable(
                 role = Role.Button,
                 onClick = swapToVersionManage,

@@ -19,6 +19,7 @@
 package com.movtery.zalithlauncher.ui.screens.main
 
 import com.movtery.cardgrid.state.rememberCardGridState
+import com.movtery.zalithlauncher.ui.base.LocalPageTopInset
 import com.movtery.zalithlauncher.ui.components.effectiveBackgroundOpacity
 import com.movtery.zalithlauncher.ui.components.liquidGlassActive
 import com.movtery.zalithlauncher.ui.components.SharedGlassBlurPage
@@ -149,6 +150,9 @@ import kotlinx.coroutines.flow.collectLatest
 
 private const val NAV_AUTO_HIDE_MS = 3000L
 
+/** Height of the top bar (back button, title, the three navigation buttons, task menu button) */
+val MainTopBarHeight = 40.dp
+
 @Composable
 fun MainScreen(
     screenBackStackModel: ScreenBackStackViewModel,
@@ -223,7 +227,7 @@ fun MainScreen(
         color = backgroundColor,
         contentColor = onBackgroundColor()
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .pointerInput(Unit) {
@@ -238,8 +242,41 @@ fun MainScreen(
         ) {
             Box(
                 modifier = Modifier
+                    .fillMaxSize()
+            ) {
+                //Pages are laid out below the top bar (see BaseScreen), Home draws edge to edge under it
+                CompositionLocalProvider(LocalPageTopInset provides MainTopBarHeight) {
+                    NavStateHost(rootKey = screenBackStackModel.mainScreen) {
+                        NavigationUI(
+                            modifier = Modifier.fillMaxSize(),
+                            screenBackStackModel = screenBackStackModel,
+                            toMainScreen = toMainScreen,
+                            eventViewModel = eventViewModel,
+                            modpackImportViewModel = modpackImportViewModel,
+                            modifyVersionViewModel = modifyVersionViewModel,
+                            slideTracker = slideTracker,
+                            submitError = submitError
+                        )
+                    }
+                }
+
+                TaskMenu(
+                    isExpanded = isTaskMenuExpanded,
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(0.3f)
+                        .align(Alignment.CenterStart)
+                        .padding(top = MainTopBarHeight)
+                        .padding(all = 6.dp)
+                ) {
+                    changeTasksExpandedState()
+                }
+            }
+            Box(
+                modifier = Modifier
                     .fillMaxWidth()
-                    .height(40.dp)
+                    .height(MainTopBarHeight)
+                    .align(Alignment.TopStart)
             ) {
                 TopBar(
                     modifier = Modifier.fillMaxSize(),
@@ -280,36 +317,6 @@ fun MainScreen(
                         changeTasksExpandedState()
                     },
                 )
-            }
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-            ) {
-                NavStateHost(rootKey = screenBackStackModel.mainScreen) {
-                    NavigationUI(
-                        modifier = Modifier.fillMaxSize(),
-                        screenBackStackModel = screenBackStackModel,
-                        toMainScreen = toMainScreen,
-                        eventViewModel = eventViewModel,
-                        modpackImportViewModel = modpackImportViewModel,
-                        modifyVersionViewModel = modifyVersionViewModel,
-                        slideTracker = slideTracker,
-                        submitError = submitError
-                    )
-                }
-
-                TaskMenu(
-                    isExpanded = isTaskMenuExpanded,
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .fillMaxWidth(0.3f)
-                        .align(Alignment.CenterStart)
-                        .padding(all = 6.dp)
-                ) {
-                    changeTasksExpandedState()
-                }
             }
         }
     }

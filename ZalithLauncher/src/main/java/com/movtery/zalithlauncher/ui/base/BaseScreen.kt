@@ -22,6 +22,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -49,6 +54,7 @@ fun BaseScreen(
     screenKey: TitledNavKey,
     currentKey: TitledNavKey?,
     useClassEquality: Boolean = false,
+    edgeToEdge: Boolean = false,
     content: @Composable (isVisible: Boolean) -> Unit,
 ) {
     val targetVisible = remember(currentKey, screenKey, useClassEquality) {
@@ -59,7 +65,8 @@ fun BaseScreen(
 
     BaseScreen(
         content = content,
-        visible = visible
+        visible = visible,
+        edgeToEdge = edgeToEdge
     )
 }
 
@@ -113,6 +120,9 @@ fun BaseScreen(
     )
 }
 
+/** Height of the overlaid top bar that a page has to keep clear of, consumed by [BaseScreen] */
+val LocalPageTopInset = compositionLocalOf<Dp> { 0.dp }
+
 @Composable
 private fun rememberVisibleState(targetVisible: Boolean): Boolean {
     val visibleState = remember { mutableStateOf(false) }
@@ -145,14 +155,26 @@ private suspend fun awaitEnterStart() {
 @Composable
 private fun BaseScreen(
     content: @Composable (isVisible: Boolean) -> Unit,
-    visible: Boolean
+    visible: Boolean,
+    edgeToEdge: Boolean = false
 ) {
+    //The top bar overlays the pages: a page starts below it, unless it draws edge to edge under it.
+    //The inset is consumed here so nested pages do not add it again
+    val topInset = LocalPageTopInset.current
     Box(
         modifier = Modifier
             .fillMaxSize()
             .clipToBounds()
     ) {
-        content(visible)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = if (edgeToEdge) 0.dp else topInset)
+        ) {
+            CompositionLocalProvider(LocalPageTopInset provides 0.dp) {
+                content(visible)
+            }
+        }
 
         if (!visible) {
             Box(

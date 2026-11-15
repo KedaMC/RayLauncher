@@ -38,6 +38,7 @@ import com.movtery.zalithlauncher.BuildConfig
 import com.movtery.zalithlauncher.BuildKeys
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.ui.components.BackgroundCard
+import com.movtery.zalithlauncher.ui.screens.content.LaunchCardContent
 import com.movtery.zalithlauncher.ui.screens.content.home.music.MusicCardContent
 import com.movtery.zalithlauncher.ui.screens.content.home.overlay.OverlayCardContent
 import com.movtery.zalithlauncher.ui.screens.content.home.server.ServerCardContent
@@ -66,6 +67,12 @@ object HomeCards {
 
     /** Music card type id */
     const val MUSIC_CARD_TYPE_ID = "music_card"
+
+    /** Launch card (account, version, launch button) type id */
+    const val LAUNCH_CARD_TYPE_ID = "launch_card"
+
+    /** The launch card is unique, so its grid id is fixed */
+    const val LAUNCH_CARD_ID = "launch_card"
 
     private val versionCardType = CardType(
         typeId = VERSION_CARD_TYPE_ID,
@@ -123,6 +130,25 @@ object HomeCards {
         }
     )
 
+    /**
+     * Launch card: the former side panel as a grid card. It is drawn by its own content (no container),
+     * can be placed and resized anywhere like the other cards, and can not be deleted.
+     */
+    private val launchCardType = CardType(
+        typeId = LAUNCH_CARD_TYPE_ID,
+        defaultSpan = IntOffset(12, 24),
+        limits = CardLimits(
+            minWidth = 10,
+            minHeight = 12,
+            maxHeight = 80
+        ),
+        transparent = true,
+        removable = false,
+        content = { cardId ->
+            LaunchCardContent(cardId)
+        }
+    )
+
     /** 版本卡片类型 */
     fun versionCardType(): CardType = versionCardType
 
@@ -135,8 +161,11 @@ object HomeCards {
     /** Music card type */
     fun musicCardType(): CardType = musicCardType
 
+    /** Launch card type */
+    fun launchCardType(): CardType = launchCardType
+
     /** 用户卡片类型注册表 */
-    val userCardTypes: List<CardType> = listOf(versionCardType, serverCardType, overlayCardType, musicCardType)
+    val userCardTypes: List<CardType> = listOf(versionCardType, serverCardType, overlayCardType, musicCardType, launchCardType)
 
     /** 系统卡片（不可变更） */
     fun systemCards(): List<SystemCard> = buildList {
