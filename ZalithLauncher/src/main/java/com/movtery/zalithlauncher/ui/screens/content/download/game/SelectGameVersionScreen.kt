@@ -304,8 +304,7 @@ private fun SelectGameVersionContent(
                 }
 
                 is VersionState.None -> {
-                    //Same 12dp top gap as the category rail, so the first card lines up with the first rail button
-                    Column(modifier = Modifier.padding(top = 12.dp)) {
+                    Column {
                         if (liquidGlassBackdrop() != null) {
                             BackgroundCard(
                                 modifier = Modifier
