@@ -126,9 +126,9 @@ class Version(
     fun getZalithVersionPath(): File = getZalithVersionPath(getVersionPath())
 
     /**
-     * @return 游戏的上一次运行日志
+     * @return 游戏的上一次运行日志（游戏目录下的 logs/latest.log）
      */
-    fun getLatestLog(): File = File(getZalithVersionPath(), LogName.GAME.fileName)
+    fun getLatestLog(): File = File(File(getGameDir(), "logs"), LogName.GAME.fileName)
 
     /**
      * @return 获取版本设置的图标

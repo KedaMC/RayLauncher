@@ -1,16 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN">
+    <!-- Console only: the launcher captures it and writes logs/latest.log itself -->
     <Appenders>
         <Console name="SysOut" target="SYSTEM_OUT">
             <PatternLayout pattern="[%d{HH:mm:ss}] [%t/%level]: %msg%n" />
         </Console>
-        <RollingRandomAccessFile name="File" fileName="logs/latest.log" filePattern="logs/%d{yyyy-MM-dd}-%i.log.gz">
-            <PatternLayout pattern="[%d{HH:mm:ss}] [%t/%level]: %msg%n" />
-            <Policies>
-                <TimeBasedTriggeringPolicy />
-                <OnStartupTriggeringPolicy />
-            </Policies>
-        </RollingRandomAccessFile>
     </Appenders>
     <Loggers>
         <Root level="info">
@@ -19,7 +13,6 @@
                 <RegexFilter regex="(?s).*\$\{[^}]*\}.*" onMatch="DENY" onMismatch="NEUTRAL"/>
             </filters>
             <AppenderRef ref="SysOut"/>
-            <AppenderRef ref="File"/>
         </Root>
     </Loggers>
 </Configuration>

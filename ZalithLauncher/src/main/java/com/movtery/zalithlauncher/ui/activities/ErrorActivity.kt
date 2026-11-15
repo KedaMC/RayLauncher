@@ -105,7 +105,7 @@ class ErrorActivity : BaseAppCompatActivity() {
                 val jvmCrash = extras.getParcelableSafely(BUNDLE_JVM_CRASH, JvmCrash::class.java) ?: return runFinish()
                 val messageResId = if (jvmCrash.isSignal) R.string.crash_singnal_message else R.string.crash_exit_message
                 val message = getString(messageResId, jvmCrash.code)
-                //游戏崩溃时直接展示 latest_game.log，不再显示“请查看日志文件”的提示
+                //游戏崩溃时直接展示 latest.log，不再显示“请查看日志文件”的提示
                 ErrorMessage(
                     message = message,
                     messageBody = "",

@@ -19,6 +19,6 @@
 package com.movtery.zalithlauncher.game.launch
 
 enum class LogName(val fileName: String) {
-    GAME("latest_game.log"),
+    GAME("latest.log"),
     JVM("latest_jvm.log")
 }

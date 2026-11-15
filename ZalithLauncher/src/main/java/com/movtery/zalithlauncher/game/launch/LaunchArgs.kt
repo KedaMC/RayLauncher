@@ -218,7 +218,10 @@ class LaunchArgs(
         argsList.add("-javaagent:${LibPath.MIO_LIB_PATCHER.absolutePath}")
 
         val configFilePath = version.getVersionPath().child("log4j2.xml")
-        if (!configFilePath.exists()) {
+        //Older launcher-generated configs still contain a file appender that would fight the launcher over logs/latest.log
+        val legacyFileAppender = configFilePath.exists() &&
+                runCatching { configFilePath.readText().contains("RollingRandomAccessFile name=\"File\"") }.getOrDefault(false)
+        if (!configFilePath.exists() || legacyFileAppender) {
             val is7 = (version.getVersionInfo()?.minecraftVersion ?: "0.0").isLowerTo("1.12")
             runCatching {
                 val content = if (is7) {
