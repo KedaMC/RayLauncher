@@ -40,13 +40,7 @@ enum class MusicStatus {
     READY,
 
     /** Local source selected, but no music file was imported yet */
-    LIBRARY_EMPTY,
-
-    /** Background source selected, but notification access was not granted */
-    ACCESS_REQUIRED,
-
-    /** Background source selected, but no other app has a media session */
-    NO_SESSION
+    LIBRARY_EMPTY
 }
 
 enum class MusicRepeat { OFF, ALL, ONE }

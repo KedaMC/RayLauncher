@@ -18,7 +18,6 @@
 
 package com.movtery.zalithlauncher.music
 
-import android.media.audiofx.Visualizer
 import com.movtery.zalithlauncher.utils.logging.Logger
 import kotlin.math.PI
 import kotlin.math.cos
@@ -148,82 +147,5 @@ internal class SpectrumAnalyzer(private val size: Int = 1024) {
             //Hann window: a full scale sine gives size / 4
             out[band] = SpectrumBands.level(4f * peak / size, band)
         }
-    }
-}
-
-/**
- * Reads the frequency data of the audio that other apps play through the system output mix,
- * with the system [Visualizer]. Needs the RECORD_AUDIO permission; without it (or when the device
- * refuses) [start] fails and the card keeps its static pattern.
- */
-internal class ExternalSpectrumCapture {
-    private var visualizer: Visualizer? = null
-    private val levels = FloatArray(AudioSpectrumBus.BANDS)
-
-    val isRunning: Boolean get() = visualizer != null
-
-    fun start(): Boolean {
-        if (visualizer != null) return true
-        return try {
-            val created = Visualizer(0)
-            val range = Visualizer.getCaptureSizeRange()
-            val captureSize = 512.coerceIn(range[0], range[1])
-            created.setEnabled(false)
-            created.setCaptureSize(captureSize)
-            created.setDataCaptureListener(
-                object : Visualizer.OnDataCaptureListener {
-                    override fun onWaveFormDataCapture(visualizer: Visualizer?, waveform: ByteArray?, samplingRate: Int) {}
-
-                    override fun onFftDataCapture(visualizer: Visualizer?, fft: ByteArray?, samplingRate: Int) {
-                        if (fft != null) handleFft(fft, samplingRate)
-                    }
-                },
-                Visualizer.getMaxCaptureRate() / 2,
-                false,
-                true
-            )
-            if (created.setEnabled(true) != Visualizer.SUCCESS) {
-                created.release()
-                error("The system visualizer could not be enabled")
-            }
-            visualizer = created
-            true
-        } catch (e: Throwable) {
-            Logger.warning(TAG, "The system visualizer is not available.", e)
-            stop()
-            false
-        }
-    }
-
-    fun stop() {
-        val current = visualizer ?: return
-        visualizer = null
-        runCatching { current.setEnabled(false) }
-        runCatching { current.setDataCaptureListener(null, 0, false, false) }
-        runCatching { current.release() }
-    }
-
-    private fun handleFft(fft: ByteArray, samplingRateMilliHz: Int) {
-        val n = fft.size
-        if (n < 16) return
-        val binHz = (samplingRateMilliHz / 1000f) / n
-        if (binHz <= 0f) return
-        val maxBin = n / 2 - 1
-        var anySignal = false
-        for (band in 0 until AudioSpectrumBus.BANDS) {
-            val from = max(1, (SpectrumBands.edgesHz[band] / binHz).toInt())
-            val to = min(maxBin, max(from, (SpectrumBands.edgesHz[band + 1] / binHz).toInt()))
-            var peak = 0f
-            for (bin in from..to) {
-                val magnitude = hypot(fft[2 * bin].toFloat(), fft[2 * bin + 1].toFloat())
-                if (magnitude > peak) peak = magnitude
-            }
-            if (peak > 0f) anySignal = true
-            //The system FFT is 8 bit: roughly 90 is a very loud bin
-            val db = 20f * log10(peak / 90f + 1e-4f)
-            levels[band] = ((db + 36f + band * 1.5f) / 36f).coerceIn(0f, 1f)
-        }
-        //A device that hands out only zeros has no usable data: keep the static pattern
-        if (anySignal) AudioSpectrumBus.publish(levels.copyOf())
     }
 }

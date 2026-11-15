@@ -89,8 +89,6 @@ import com.movtery.zalithlauncher.music.MusicManager
 import com.movtery.zalithlauncher.music.MusicRepeat
 import com.movtery.zalithlauncher.music.MusicState
 import com.movtery.zalithlauncher.music.MusicStatus
-import com.movtery.zalithlauncher.music.hasRecordAudioPermission
-import com.movtery.zalithlauncher.setting.enums.MusicSourceType
 import com.movtery.zalithlauncher.ui.components.IconButton
 import com.movtery.zalithlauncher.ui.components.LiquidGlassSurface
 import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
@@ -130,20 +128,6 @@ fun CardState.MusicCardContent() {
     }
 
     val music by MusicManager.state.collectAsStateWithLifecycle()
-    val context = LocalContext.current
-
-    //The visualizer of other apps' music needs the microphone permission: tapping it asks for it
-    var permissionTick by remember { mutableIntStateOf(0) }
-    val recordAudio = remember(permissionTick, music.status, music.isPlaying) { hasRecordAudioPermission(context) }
-    val recordAudioLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) {
-        permissionTick++
-        MusicManager.refresh()
-    }
-    val needsAudioPermission = music.source == MusicSourceType.BACKGROUND &&
-            music.status == MusicStatus.READY && !recordAudio
-
     //Liquid Glass: same surface the other home cards draw behind their content
     val glassBackdrop = liquidGlassBackdrop()
     Box(modifier = Modifier.fillMaxSize()) {
@@ -177,17 +161,7 @@ fun CardState.MusicCardContent() {
                 MusicVisualizer(
                     modifier = Modifier
                         .width(54.dp)
-                        .height(88.dp)
-                        .then(
-                            if (needsAudioPermission) {
-                                Modifier.clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null
-                                ) { recordAudioLauncher.launch(Manifest.permission.RECORD_AUDIO) }
-                            } else {
-                                Modifier
-                            }
-                        ),
+                        .height(88.dp),
                     playing = music.isPlaying,
                     color = mediaAccent
                 )
@@ -287,30 +261,6 @@ private fun TrackInfo(
                     summary = stringResource(R.string.music_card_empty_summary)
                 )
             }
-            MusicStatus.ACCESS_REQUIRED -> {
-                StatusText(
-                    title = stringResource(R.string.music_card_access_title),
-                    summary = stringResource(R.string.music_card_access_summary)
-                )
-                TextButton(
-                    onClick = {
-                        runCatching {
-                            context.startActivity(
-                                Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
-                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                            )
-                        }
-                    }
-                ) {
-                    Text(text = stringResource(R.string.music_card_access_grant))
-                }
-            }
-            MusicStatus.NO_SESSION -> {
-                StatusText(
-                    title = stringResource(R.string.music_card_no_session_title),
-                    summary = stringResource(R.string.music_card_no_session_summary)
-                )
-            }
         }
     }
 }
@@ -341,11 +291,8 @@ private fun SourceBadge(music: MusicState) {
     val accent = MaterialTheme.colorScheme.primary
     val icon = music.sourceIcon
     val label = music.sourceLabel ?: stringResource(R.string.music_source_local)
-    val clickable = music.source == MusicSourceType.BACKGROUND && music.sourcePackage != null
     Row(
-        modifier = Modifier
-            .clip(CircleShape)
-            .then(if (clickable) Modifier.clickable { MusicManager.openSourceApp() } else Modifier),
+        modifier = Modifier.clip(CircleShape),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
