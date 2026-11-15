@@ -189,7 +189,7 @@ fun CardState.MusicCardContent() {
                             }
                         ),
                     playing = music.isPlaying,
-                    color = MaterialTheme.colorScheme.primary
+                    color = mediaAccent
                 )
             }
 
@@ -199,14 +199,19 @@ fun CardState.MusicCardContent() {
     }
 }
 
+/** White while liquid glass is active, the theme color otherwise */
+private val mediaAccent: Color
+    @Composable get() = if (liquidGlassBackdrop() != null) Color.White else MaterialTheme.colorScheme.primary
+
 @Composable
 private fun MusicArtworkView(music: MusicState) {
     val shape = RoundedCornerShape(16.dp)
+    val accent = mediaAccent
     Box(
         modifier = Modifier
             .size(88.dp)
             .clip(shape)
-            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)),
+            .background(accent.copy(alpha = 0.18f)),
         contentAlignment = Alignment.Center
     ) {
         when (val artwork = music.artwork) {
@@ -225,7 +230,7 @@ private fun MusicArtworkView(music: MusicState) {
                     modifier = Modifier.size(36.dp),
                     painter = painterResource(R.drawable.ic_music_note_filled),
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary
+                    tint = accent
                 )
             }
         }

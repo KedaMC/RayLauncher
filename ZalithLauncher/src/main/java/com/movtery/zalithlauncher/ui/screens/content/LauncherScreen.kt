@@ -654,7 +654,9 @@ private fun VersionManagerLayout(
             PanelIconBox {
                 VersionIconImage(
                     version = version,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clip(RoundedCornerShape(8.dp))
                 )
             }
             Spacer(modifier = Modifier.width(10.dp))
