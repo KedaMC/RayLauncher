@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - RayLauncher
+    paths:
+      - 'ZalithLauncher/**'
   workflow_dispatch:
     inputs:
       ref:
