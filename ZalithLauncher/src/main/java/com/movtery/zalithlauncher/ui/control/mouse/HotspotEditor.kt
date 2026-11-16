@@ -36,8 +36,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -61,6 +61,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.bridge.CursorShape
 import com.movtery.zalithlauncher.setting.unit.ParcelableSettingUnit
+import com.movtery.zalithlauncher.ui.components.Surface
 import com.movtery.zalithlauncher.ui.components.rememberDialogMaxHeight
 import com.movtery.zalithlauncher.ui.screens.main.control_editor.InfoLayoutSliderItem
 import com.movtery.zalithlauncher.ui.theme.cardColor
@@ -116,7 +117,7 @@ fun MouseHotspotEditorDialog(
                         modifier = Modifier
                             .layoutId(HotspotSlot.Divider)
                             .padding(horizontal = 12.dp),
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                        color = LocalContentColor.current.copy(alpha = 0.3f)
                     )
 
                     Column(
