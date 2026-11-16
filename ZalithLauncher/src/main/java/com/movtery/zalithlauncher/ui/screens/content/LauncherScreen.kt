@@ -34,7 +34,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
@@ -246,8 +245,6 @@ private fun ContentMenu(
     }
 }
 
-/** Max width of the compact launcher panel inside the action menu slot. */
-private val PanelMaxWidth = 240.dp
 private val PanelPadding = 10.dp
 private val PanelSpacing = 8.dp
 private val PanelInnerShape
@@ -515,28 +512,43 @@ private fun LauncherPanel(
     toAccountManageScreen: () -> Unit,
     toVersionManageScreen: () -> Unit,
     toVersionSettingsScreen: () -> Unit,
+    fillHeight: Boolean = false,
 ) {
     BackgroundCard(
         modifier = modifier,
         shape = MaterialTheme.shapes.extraLarge,
         liquidGlass = true
     ) {
+        //When filling the card, spare height is split between the rows and each row keeps half the
+        //panel spacing around it, so the panel always matches the card box
+        val rowModifier = if (fillHeight) Modifier.padding(vertical = PanelSpacing / 2) else Modifier
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(PanelPadding),
-            verticalArrangement = Arrangement.spacedBy(PanelSpacing)
+            modifier = if (fillHeight) {
+                Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = PanelPadding, vertical = PanelPadding - PanelSpacing / 2)
+            } else {
+                Modifier
+                    .fillMaxWidth()
+                    .padding(PanelPadding)
+            },
+            verticalArrangement = if (fillHeight) Arrangement.SpaceBetween else Arrangement.spacedBy(PanelSpacing)
         ) {
             AccountCard(
+                modifier = rowModifier,
                 account = account,
                 onClick = toAccountManageScreen
             )
             InstanceCard(
+                modifier = rowModifier,
                 onLaunchGame = onLaunchGame,
                 toVersionManageScreen = toVersionManageScreen,
                 toVersionSettingsScreen = toVersionSettingsScreen
             )
-            LaunchButton(onLaunchGame = onLaunchGame)
+            LaunchButton(
+                modifier = rowModifier,
+                onLaunchGame = onLaunchGame
+            )
         }
     }
 }
@@ -550,21 +562,16 @@ private fun ActionMenuCardContent(
     toVersionManageScreen: () -> Unit,
     toVersionSettingsScreen: () -> Unit,
 ) {
-    Box(
+    //The panel fills the whole card, so the selection box of the card always matches the panel
+    LauncherPanel(
         modifier = modifier,
-        contentAlignment = Alignment.BottomCenter
-    ) {
-        LauncherPanel(
-            modifier = Modifier
-                .widthIn(max = PanelMaxWidth)
-                .fillMaxWidth(),
-            account = account,
-            onLaunchGame = onLaunchGame,
-            toAccountManageScreen = toAccountManageScreen,
-            toVersionManageScreen = toVersionManageScreen,
-            toVersionSettingsScreen = toVersionSettingsScreen
-        )
-    }
+        account = account,
+        onLaunchGame = onLaunchGame,
+        toAccountManageScreen = toAccountManageScreen,
+        toVersionManageScreen = toVersionManageScreen,
+        toVersionSettingsScreen = toVersionSettingsScreen,
+        fillHeight = true
+    )
 }
 
 @Composable

@@ -185,7 +185,9 @@ private fun CardGridCanvas(
                         )
                     } else {
                         val edgeHit = state.resizeEdgeAt(start)
-                        val card = state.cardAt(start)
+                        // A touch just outside the selected card still grabs it, so the card is easy to
+                        // move even when its box hugs the content
+                        val card = state.cardAt(start) ?: state.adjustingCardNear(start)
                         when {
                             // 调整态：按到手柄直接进入缩放
                             edgeHit != null -> {
@@ -284,6 +286,19 @@ private fun CardSlot(
             CompositionLocalProvider(LocalLayoutDirection provides contentDirection) {
                 card.type.content(state.cardStateOf(card), card.id)
             }
+        }
+        if (adjusting) {
+            // The selected card is one big drag zone: this overlay keeps the card's own buttons from
+            // taking the touch, and never consumes it, so the grid gesture still receives every press
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .pointerInput(Unit) {
+                        awaitPointerEventScope {
+                            while (true) awaitPointerEvent()
+                        }
+                    }
+            )
         }
     }
 }

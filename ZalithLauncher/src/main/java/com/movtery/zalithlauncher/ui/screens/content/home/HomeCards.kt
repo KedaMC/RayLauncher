@@ -74,6 +74,9 @@ object HomeCards {
     /** The launch card is unique, so its grid id is fixed */
     const val LAUNCH_CARD_ID = "launch_card"
 
+    /** Rows the compact launch panel needs, so the card box hugs the panel at its minimum size */
+    const val LAUNCH_CARD_MIN_ROWS = 11
+
     private val versionCardType = CardType(
         typeId = VERSION_CARD_TYPE_ID,
         defaultSpan = IntOffset(10, 6),
@@ -136,10 +139,10 @@ object HomeCards {
      */
     private val launchCardType = CardType(
         typeId = LAUNCH_CARD_TYPE_ID,
-        defaultSpan = IntOffset(12, 24),
+        defaultSpan = IntOffset(12, LAUNCH_CARD_MIN_ROWS),
         limits = CardLimits(
             minWidth = 10,
-            minHeight = 12,
+            minHeight = LAUNCH_CARD_MIN_ROWS,
             maxHeight = 80
         ),
         transparent = true,

@@ -423,6 +423,17 @@ class CardGridState internal constructor(
             ?.let { (edge, _) -> card to edge }
     }
 
+    /**
+     * Hit-tests the adjusting card with its rect grown by [DRAG_HIT_SLOP_DP] on every side,
+     * so a drag can start slightly outside a card box that hugs its content.
+     * @return the adjusting card, or null when the position is outside the grown rect
+     */
+    fun adjustingCardNear(position: Offset): GridCard? {
+        val card = adjustingCardId?.let { id -> cards.firstOrNull { it.id == id } } ?: return null
+        val slopPx = DRAG_HIT_SLOP_DP * densityFactor
+        return card.takeIf { renderRectOf(it).inflate(slopPx).contains(position) }
+    }
+
     private fun edgeCenter(edge: ResizeEdge, rect: Rect): Offset = when (edge) {
         ResizeEdge.Start -> Offset(rect.left, rect.center.y)
         ResizeEdge.Top -> Offset(rect.center.x, rect.top)
@@ -779,6 +790,9 @@ class CardGridState internal constructor(
     companion object {
         /** 缩放手柄热区半径（dp） */
         private const val EDGE_HIT_RADIUS_DP = 24f
+
+        /** Extra drag hit area (dp) around the selected card */
+        private const val DRAG_HIT_SLOP_DP = 16f
     }
 }
 

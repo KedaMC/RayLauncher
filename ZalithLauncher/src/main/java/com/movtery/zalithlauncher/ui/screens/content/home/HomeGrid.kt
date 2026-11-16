@@ -227,12 +227,15 @@ fun HomeGrid(
         val width = (columns * 3 / 10).coerceIn(limits.minWidth, limits.maxWidth)
         val usablePx = state.viewportHeightPx - with(density) { (topClear + gridPaddingDp * 2).toPx() } -
                 windowInsets.getBottom(density)
-        val height = (usablePx / state.cellPx).toInt().coerceIn(limits.minHeight, limits.maxHeight)
+        // Hug the panel (minimum height) and dock it to the bottom of the visible area
+        val rows = (usablePx / state.cellPx).toInt()
+        val height = limits.minHeight
+        val y = (rows - height).coerceAtLeast(0)
         val x = if (AllSettings.launcherActionMenuSide.getValue() == ActionMenuSide.START) 0 else columns - width
         state.addCard(
             type = type,
             id = HomeCards.LAUNCH_CARD_ID,
-            preferred = CardRect(id = HomeCards.LAUNCH_CARD_ID, x = x, y = 0, width = width, height = height)
+            preferred = CardRect(id = HomeCards.LAUNCH_CARD_ID, x = x, y = y, width = width, height = height)
         )
     }
 
