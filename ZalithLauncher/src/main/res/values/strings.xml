@@ -1719,10 +1719,6 @@
     <string name="settings_renderer_config_title">Renderer Configuration</string>
     <!-- Confirmation text for resetting all settings of one renderer; %s is the renderer name -->
     <string name="settings_renderer_config_reset_message">Reset all %s settings to their default values?</string>
-    <!-- Title of the SFPEW compatibility layer switch in MobileGlues renderer settings -->
-    <string name="renderer_config_mg_sfpew_title">SFPEW Compatibility Layer</string>
-    <!-- Description of the SFPEW compatibility layer switch in MobileGlues renderer settings -->
-    <string name="renderer_config_mg_sfpew_desc">Route the renderer\'s EGL and OpenGL calls through the SimpleFPEWrapper layer, and try turning this off if the game has rendering issues. It is disabled automatically when certain FPE emulator mods are detected</string>
     <!-- Title of the launch session reporting switch in MobileGlues renderer settings -->
     <string name="renderer_config_mg_count_launch_title">Launch Session Reporting</string>
     <!-- Description of the launch session reporting switch in MobileGlues renderer settings -->
@@ -1803,15 +1799,7 @@
     <string name="renderer_config_mg_fsr1_balanced">Balanced</string>
     <!-- FSR1 option prioritizing frame rate -->
     <string name="renderer_config_mg_fsr1_performance">Performance</string>
-    <!-- Title of the switch that enables SFPEW for renderer plugins -->
-    <string name="settings_renderer_sfpew_plugin_layer_title">SFPEW Compatibility Layer (Renderer Plugins)</string>
-    <!-- Summary of the renderer plugin SFPEW compatibility layer switch -->
-    <string name="settings_renderer_sfpew_plugin_layer_summary">Adds SimpleFPEWrapper to renderer plugins without fixed-function pipeline support for legacy OpenGL 1.x/2.1 rendering</string>
     <!-- Label shown when a built-in renderer supports all Minecraft versions -->
-    <!-- Title of the relaxed context switch in SFPEW compatibility layer settings -->
-    <string name="renderer_config_sfpew_relaxed_context_title">Relaxed Context</string>
-    <!-- Description of the relaxed context switch in SFPEW compatibility layer settings -->
-    <string name="renderer_config_sfpew_relaxed_context_desc">Assumes the game keeps one GL context per thread for its whole lifetime and skips per-call context checks. Confirm the game\'s thread/context usage; disable this if rendering errors occur</string>
     <!-- Summary marking a renderer, driver or native library entry as provided by a plugin; %s is the plugin name -->
     <string name="settings_renderer_from_plugins">From %s plugin</string>
     <!-- Title of the resolution scale slider and custom resolution card, in the Renderer tab and in-game menu -->
@@ -1864,10 +1852,6 @@
     <string name="settings_game_skip_game_integrity_check_title">Skip Integrity Check</string>
     <!-- Summary of the skip integrity check switch in the Game settings tab and version settings -->
     <string name="settings_game_skip_game_integrity_check_summary">When launching the game, mismatched game files will not be re-downloaded</string>
-    <!-- Text field title in the Game tab and version settings for custom text shown inside the game -->
-    <string name="settings_game_version_custom_info_title">Custom Version Info</string>
-    <!-- Summary of the custom version info field, explaining where the text appears and the [zl_version] tag -->
-    <string name="settings_game_version_custom_info_summary">Custom info is shown at the bottom-left of the main menu and top-left of the F3 debug screen. It may not work for special versions or external account logins. You can add the [zl_version] tag, which will be replaced with the current version number automatically</string>
     <!-- Switch title in the Game settings tab to let the launcher pick a matching Java runtime -->
     <string name="settings_game_auto_pick_java_runtime_title">Auto-Select Java</string>
     <!-- Summary of the auto-select Java switch in the Game settings tab -->
@@ -2158,10 +2142,6 @@
     <string name="settings_launcher_dark_mode_title">Dark Mode</string>
     <!-- Title of the launcher language picker in Launcher settings -->
     <string name="settings_launcher_language">Language</string>
-    <!-- Title of the fullscreen switch in Launcher settings -->
-    <string name="settings_launcher_full_screen_title">Fullscreen Mode</string>
-    <!-- Description of the fullscreen setting in Launcher settings -->
-    <string name="settings_launcher_full_screen_summary">Make the launcher pages fullscreen, ignoring safe areas like notches and punch-holes</string>
     <!-- Title of the animation speed slider in Launcher settings -->
     <string name="settings_launcher_animate_speed_title">Animation Speed</string>
     <!-- Description of the animation speed setting in Launcher settings -->
@@ -3049,17 +3029,11 @@
     <string name="game_menu_recorder_status_recording">Recording</string>
     <string name="game_menu_recorder_stop">Stop and Save</string>
     <string name="game_menu_recorder_stopped">Recording stopped, saving video…</string>
-    <string name="glass_tier_full">Full</string>
-    <string name="glass_tier_lite">Lite</string>
     <string name="launcher_unofficial_notice">RayLauncher (Unofficial Modified Version)</string>
     <string name="recorder_notification_channel_name">Game recorder</string>
     <string name="recorder_notification_text">Recording game video and sound</string>
     <string name="recorder_notification_title">Recording game</string>
-    <string name="settings_game_glass_tier_summary">Quality of the glass in the game menu panels, separate from the launcher</string>
-    <string name="settings_game_glass_tier_title">In-game glass quality</string>
     <string name="settings_launcher_background_liquid_glass_managed">Managed automatically while Liquid Glass is on (your saved value is kept)</string>
-    <string name="settings_launcher_glass_tier_summary">Lite uses a lighter blur and a cheaper backdrop for dialogs. Pick it on weaker devices. Never changes by itself</string>
-    <string name="settings_launcher_glass_tier_title">Glass quality</string>
     <string name="settings_launcher_liquid_glass_summary">Enable or disable the Liquid Glass effect on the top bar and home cards. Works with an image background; full refraction needs Android 13+</string>
     <string name="settings_launcher_liquid_glass_title">Liquid Glass</string>
     <string name="settings_launcher_overlay_gif_unsupported">GIF is not supported. Pick a PNG/WebP/JPG image or a video</string>
@@ -3068,20 +3042,52 @@
     <string name="settings_launcher_overlay_importing">Importing overlay file</string>
     <string name="settings_launcher_overlay_none">No overlay cards yet</string>
     <string name="settings_launcher_overlay_remove_all">Remove all overlay cards</string>
-    <string name="versions_config_theme_accent_summary">Tap to pick a color for this version. Follows the launcher color when not set</string>
-    <string name="versions_config_theme_accent_title">Accent color</string>
-    <string name="versions_config_theme_error">Theme operation failed</string>
-    <string name="versions_config_theme_export">Export theme</string>
-    <string name="versions_config_theme_export_summary">Save accent color, glass quality and wallpaper as one file</string>
-    <string name="versions_config_theme_exported">Theme exported</string>
-    <string name="versions_config_theme_glass_summary">Off, Lite or Full only for this version</string>
-    <string name="versions_config_theme_glass_title">Glass quality</string>
-    <string name="versions_config_theme_import">Import theme</string>
-    <string name="versions_config_theme_import_summary">Load a theme file into this version</string>
-    <string name="versions_config_theme_imported">Theme imported</string>
-    <string name="versions_config_theme_reset">Reset theme</string>
-    <string name="versions_config_theme_title">Profile theme</string>
-    <string name="versions_config_theme_wallpaper_clear">Remove the wallpaper of this version</string>
-    <string name="versions_config_theme_wallpaper_set">Pick an image or video for this version</string>
-    <string name="versions_config_theme_wallpaper_title">Wallpaper</string>
+    <string name="main_nav_home">Home</string>
+
+    <!-- Music card (home screen) -->
+    <string name="music_listener_label">RayLauncher music card</string>
+    <string name="music_source_local">Local Music</string>
+    <string name="music_source_background">Background Music</string>
+    <string name="music_card_unknown_title">Unknown title</string>
+    <string name="music_card_empty_title">No music yet</string>
+    <string name="music_card_empty_summary">Import audio files in Settings → Launcher → Music card</string>
+    <string name="music_card_access_title">Notification access needed</string>
+    <string name="music_card_access_summary">Allow RayLauncher to read the music other apps are playing</string>
+    <string name="music_card_access_grant">Grant access</string>
+    <string name="music_card_shizuku_title">Shizuku needed</string>
+    <string name="music_card_shizuku_not_installed">Install Shizuku to show the music other apps are playing</string>
+    <string name="music_card_shizuku_not_running">Start Shizuku, then come back here</string>
+    <string name="music_card_shizuku_permission">Allow RayLauncher to use Shizuku</string>
+    <string name="music_card_shizuku_get">Get Shizuku</string>
+    <string name="music_card_shizuku_open">Open Shizuku</string>
+    <string name="music_card_no_session_title">Nothing is playing</string>
+    <string name="music_card_no_session_summary">Start music in another app and it shows up here</string>
+    <string name="music_card_repeat">Repeat</string>
+    <string name="music_card_previous">Previous</string>
+    <string name="music_card_play">Play</string>
+    <string name="music_card_pause">Pause</string>
+    <string name="music_card_next">Next</string>
+    <!-- Settings -> Launcher: music card -->
+    <string name="settings_launcher_music_add">Add music card</string>
+    <string name="settings_launcher_music_add_summary">Adds a music player card to the home screen. Long-press it there to move or resize it</string>
+    <string name="settings_launcher_music_added">The music card is on the home screen</string>
+    <string name="settings_launcher_music_source">Music source</string>
+    <string name="settings_launcher_music_source_summary">Local Music plays imported files inside the launcher. Background Music shows and controls what other apps are playing</string>
+    <string name="settings_launcher_music_import">Import music</string>
+    <string name="settings_launcher_music_import_summary">Pick audio files from your device. Title, artist, album and artwork are read from the files</string>
+    <string name="settings_launcher_music_clear">Clear imported music</string>
+    <string name="settings_launcher_music_none">No music imported yet</string>
+    <string name="settings_launcher_music_count">%d tracks imported</string>
+    <string name="settings_launcher_music_access">Notification access</string>
+    <string name="settings_launcher_music_access_summary">Required to read the music of other apps. Tap to open the system settings and allow RayLauncher</string>
+    <string name="settings_launcher_music_access_granted">Allowed. Tap to open the system settings</string>
+    <string name="settings_launcher_music_shizuku">Shizuku</string>
+    <string name="settings_launcher_music_shizuku_not_installed">Required to read the music of other apps. Shizuku is not installed. Tap to get it</string>
+    <string name="settings_launcher_music_shizuku_not_running">Shizuku is not running. Tap to open it and start the service</string>
+    <string name="settings_launcher_music_shizuku_permission">Tap to allow RayLauncher to use Shizuku</string>
+    <string name="settings_launcher_music_shizuku_granted">Connected. Tap to open Shizuku</string>
+    <string name="settings_launcher_music_visualizer_permission">Visualizer permission</string>
+    <string name="settings_launcher_music_visualizer_permission_summary">Lets the visualizer follow the audio of other apps (microphone permission, no audio is recorded). Without it the visualizer stays static</string>
+    <string name="settings_launcher_music_visualizer_permission_granted">Allowed</string>
+    <string name="settings_launcher_music_remove">Remove music card</string>
 </resources>

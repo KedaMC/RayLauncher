@@ -209,7 +209,7 @@ fun PositionElevatedButton(
     containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
     contentColor = MaterialTheme.colorScheme.primary,
     border = null,
-    shadowElevation = 1.dp,
+    shadowElevation = 0.dp,
     contentPadding = contentPadding,
     content = content
 )

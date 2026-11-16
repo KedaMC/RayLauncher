@@ -19,6 +19,16 @@
 package com.movtery.zalithlauncher.ui.screens.content.home
 
 import com.movtery.zalithlauncher.ui.components.effectiveBackgroundBlur
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.platform.LocalDensity
+import com.movtery.zalithlauncher.setting.enums.ActionMenuSide
+import kotlinx.coroutines.flow.first
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -73,6 +83,7 @@ import com.movtery.cardgrid.ui.CardGridAutoScroll
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.ui.screens.content.elements.backgroundGlass
+import com.movtery.zalithlauncher.ui.screens.content.home.music.MusicCardManager
 import com.movtery.zalithlauncher.ui.screens.content.home.overlay.OverlayCardManager
 import com.movtery.zalithlauncher.ui.screens.content.home.server.ServerCardManager
 import com.movtery.zalithlauncher.ui.screens.content.home.server.ServerCardSettingsHost
@@ -81,6 +92,9 @@ import com.movtery.zalithlauncher.ui.theme.cardColor
 import com.movtery.zalithlauncher.ui.theme.onCardColor
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+
+/** The home grid state, for cards that need to know where they sit on the grid */
+val LocalHomeGridState = staticCompositionLocalOf<CardGridState?> { null }
 
 /** 主页网格的卡片操作 */
 private sealed interface HomeCardOperation {
@@ -100,6 +114,14 @@ fun HomeGrid(
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
+    val density = LocalDensity.current
+    //Edge to edge: the grid fills the whole screen, including the strip at the top and the area next to the front
+    //camera. Only the system bars keep the cards clear on the sides and bottom (they are hidden in immersive mode,
+    //so this is normally 0); the display cutout is deliberately ignored. Nothing is reserved at the top either,
+    //the cards start at the very top and the top bar floats over them
+    val windowInsets = WindowInsets.systemBars
+    val topClear = 0.dp
+    val gridPaddingDp = 6.dp
     //长按调整工具栏触发的卡片操作
     var operation by remember { mutableStateOf<HomeCardOperation>(HomeCardOperation.None) }
 
@@ -147,6 +169,7 @@ fun HomeGrid(
             VersionCardManager.removeCard(cardId)
             ServerCardManager.removeCard(cardId)
             OverlayCardManager.removeCard(cardId)
+            MusicCardManager.removeCard(cardId)
         }
     }
 
@@ -177,6 +200,43 @@ fun HomeGrid(
                     .filter { card -> records.none { it.cardId == card.id } }
                     .forEach { state.removeCard(it.id) }
             }
+    }
+
+    // Music card: add it to the grid while its record exists, drop it from the grid when the record is gone
+    LaunchedEffect(Unit) {
+        snapshotFlow { state.cards.size }
+            .combine(MusicCardManager.cardId) { _, id -> id }
+            .collect { id ->
+                if (id != null && state.cards.none { it.id == id }) {
+                    state.addCard(HomeCards.musicCardType(), id)
+                }
+                state.cards
+                    .filter { it.type.typeId == HomeCards.MUSIC_CARD_TYPE_ID && it.id != id }
+                    .forEach { state.removeCard(it.id) }
+            }
+    }
+
+    // Launch card: always on the grid. A missing one (first run, or a layout from before it became a card)
+    // is placed on the side the launch panel was docked to, over the visible height
+    LaunchedEffect(state) {
+        snapshotFlow { state.isLayoutReady && state.viewportHeightPx > 0f }.first { it }
+        if (state.cards.any { it.type.typeId == HomeCards.LAUNCH_CARD_TYPE_ID }) return@LaunchedEffect
+        val type = HomeCards.launchCardType()
+        val columns = state.geometry.columns
+        val limits = type.limits.clampedFor(columns)
+        val width = (columns * 3 / 10).coerceIn(limits.minWidth, limits.maxWidth)
+        val usablePx = state.viewportHeightPx - with(density) { (topClear + gridPaddingDp * 2).toPx() } -
+                windowInsets.getBottom(density)
+        // Hug the panel (minimum height) and dock it to the bottom of the visible area
+        val rows = (usablePx / state.cellPx).toInt()
+        val height = limits.minHeight
+        val y = (rows - height).coerceAtLeast(0)
+        val x = if (AllSettings.launcherActionMenuSide.getValue() == ActionMenuSide.START) 0 else columns - width
+        state.addCard(
+            type = type,
+            id = HomeCards.LAUNCH_CARD_ID,
+            preferred = CardRect(id = HomeCards.LAUNCH_CARD_ID, x = x, y = y, width = width, height = height)
+        )
     }
 
     // 与服务器卡片记录保持同步：记录存在而网格缺卡时补齐
@@ -234,7 +294,10 @@ fun HomeGrid(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
-                .padding(6.dp),
+                .windowInsetsPadding(
+                    windowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)
+                )
+                .padding(start = gridPaddingDp, end = gridPaddingDp, bottom = gridPaddingDp, top = topClear),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             val systemCards = HomeCards.systemCards()
@@ -255,18 +318,20 @@ fun HomeGrid(
                 }
             }
 
-            CardGrid(
-                state = state,
-                containerColor = cardColor(),
-                contentColor = onCardColor(),
-                cardBackground = { base ->
-                    base.backgroundGlass(
-                        blur = effectiveBackgroundBlur(),
-                        color = cardColor(),
-                        enabled = true
-                    )
-                },
-            )
+            CompositionLocalProvider(LocalHomeGridState provides state) {
+                CardGrid(
+                    state = state,
+                    containerColor = cardColor(),
+                    contentColor = onCardColor(),
+                    cardBackground = { base ->
+                        base.backgroundGlass(
+                            blur = effectiveBackgroundBlur(),
+                            color = cardColor(),
+                            enabled = true
+                        )
+                    },
+                )
+            }
         }
         CardGridAutoScroll(
             state = state,
@@ -326,6 +391,9 @@ private fun AdjustingBar(
     val isServerCard = remember(state.cards, adjustingId) {
         state.cards.firstOrNull { it.id == adjustingId }?.type?.typeId == HomeCards.SERVER_CARD_TYPE_ID
     }
+    val isRemovable = remember(state.cards, adjustingId) {
+        state.cards.firstOrNull { it.id == adjustingId }?.type?.removable != false
+    }
 
     Surface(
         modifier = Modifier
@@ -355,7 +423,7 @@ private fun AdjustingBar(
 
             IconButton(
                 modifier = Modifier.size(34.dp),
-                enabled = adjustingId != null,
+                enabled = adjustingId != null && isRemovable,
                 onClick = { adjustingId?.let(state::removeCard) }
             ) {
                 Icon(

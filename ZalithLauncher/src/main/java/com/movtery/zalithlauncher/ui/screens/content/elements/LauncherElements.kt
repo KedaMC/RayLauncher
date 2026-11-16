@@ -80,7 +80,6 @@ import com.movtery.zalithlauncher.game.plugin.natives.NativePluginManager
 import com.movtery.zalithlauncher.game.plugin.renderer.RendererPluginManager
 import com.movtery.zalithlauncher.game.renderer.RendererInterface
 import com.movtery.zalithlauncher.game.renderer.Renderers
-import com.movtery.zalithlauncher.game.renderer.isSfpewConfiguredFor
 import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.game.version.installed.hasVulkanBackend
 import com.movtery.zalithlauncher.game.version.installed.utils.isBiggerVer
@@ -314,7 +313,7 @@ fun LaunchGameOperation(
                 // 设备完全支持 Vulkan 时跳过渲染器的版本支持检查
                 if (!version.hasVulkanBackend() || !ensureVulkanSupported(version)) {
                     val supportedMin = currentRenderer.getMinMCVersion()?.let { verStr ->
-                        !isSfpewConfiguredFor(currentRenderer, version) && mcVer.isLowerVer(verStr)
+                        mcVer.isLowerVer(verStr)
                     } ?: false
                     val supportedMax = currentRenderer.getMaxMCVersion()?.let { verStr ->
                         mcVer.isBiggerVer(verStr)
@@ -511,7 +510,7 @@ private fun AccountRefreshFailedDialog(
                 shape = MaterialTheme.shapes.extraLarge,
                 color = cardColor(false),
                 contentColor = onCardColor(),
-                shadowElevation = 6.dp
+                shadowElevation = 0.dp
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp)
@@ -613,7 +612,7 @@ fun Background(
             when {
                 viewModel.isVideo && allowVideo -> {
                     VideoPlayer(
-                        videoUri = Uri.fromFile(viewModel.activeFile),
+                        videoUri = Uri.fromFile(viewModel.backgroundFile),
                         modifier = Modifier.fillMaxSize(),
                         refreshTrigger = viewModel.refreshTrigger,
                         volume = AllSettings.videoBackgroundVolume.state / 100f
@@ -631,7 +630,7 @@ fun Background(
                     } else {
                         BackgroundImage(
                             modifier = Modifier.fillMaxSize(),
-                            imageFile = viewModel.activeFile,
+                            imageFile = viewModel.backgroundFile,
                             refreshTrigger = viewModel.refreshTrigger
                         )
                     }

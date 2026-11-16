@@ -814,8 +814,6 @@
     <string name="settings_renderer_global_vulkan_driver_title">Vulkan 驅動程式</string>
     <string name="settings_renderer_config_title">渲染器設定</string>
     <string name="settings_renderer_config_reset_message">要將 %s 的所有設定還原為預設值嗎？</string>
-    <string name="renderer_config_mg_sfpew_title">SFPEW 相容層</string>
-    <string name="renderer_config_mg_sfpew_desc">讓渲染器的 EGL 與 OpenGL 呼叫經過 SimpleFPEWrapper 相容層包裝，遊戲出現渲染問題時可嘗試關閉。偵測到部分 FPE 模擬模組時會自動停用</string>
     <string name="renderer_config_mg_count_launch_title">啟動工作階段統計</string>
     <string name="renderer_config_mg_count_launch_desc">僅統計經啟動器啟動的遊戲工作階段，基準測試與工具不計入</string>
     <string name="renderer_config_mg_angle_title">ANGLE 後端</string>
@@ -856,10 +854,6 @@
     <string name="renderer_config_mg_fsr1_quality">品質優先</string>
     <string name="renderer_config_mg_fsr1_balanced">均衡</string>
     <string name="renderer_config_mg_fsr1_performance">效能優先</string>
-    <string name="settings_renderer_sfpew_plugin_layer_title">SFPEW 相容層（渲染器外掛程式）</string>
-    <string name="settings_renderer_sfpew_plugin_layer_summary">為沒有固定管線能力的外部渲染器外掛程式疊加 SimpleFPEWrapper OpenGL 相容層，用於採用舊式 OpenGL 1.x/2.1 渲染的程式</string>
-    <string name="renderer_config_sfpew_relaxed_context_title">寬鬆上下文</string>
-    <string name="renderer_config_sfpew_relaxed_context_desc">假定遊戲每個執行緒終生只使用一個 GL 上下文，跳過每次呼叫的上下文檢查，請確認遊戲的執行緒上下文使用方式，若出現渲染錯誤請關閉此項</string>
     <string name="settings_renderer_from_plugins">來自 %s 外掛程式</string>
     <string name="settings_renderer_resolution_scale_title">遊戲視窗解析度</string>
     <string name="settings_renderer_resolution_scale_summary">數值越低效能越高，數值越高畫質越清晰，請依實際需求調整</string>
@@ -886,8 +880,6 @@
     <string name="settings_game_version_isolation_summary">預設隔離所有版本，使版本之間的資料互不干擾</string>
     <string name="settings_game_skip_game_integrity_check_title">不檢查遊戲完整性</string>
     <string name="settings_game_skip_game_integrity_check_summary">啟動遊戲時，若已存在的遊戲檔案與實際不符，是否進行重新下載</string>
-    <string name="settings_game_version_custom_info_title">自訂版本資訊</string>
-    <string name="settings_game_version_custom_info_summary">自訂資訊會顯示在遊戲主選單左下角和 F3 偵錯介面左上角。部分特殊版本或使用外部帳號登入時可能不生效。您也可以加入 [zl_version] 欄位，啟動器會自動替換為目前版本號</string>
     <string name="settings_game_auto_pick_java_runtime_title">自動選擇 Java 環境</string>
     <string name="settings_game_auto_pick_java_runtime_summary">在需要使用 Java 時，啟動器將自動選擇合適的環境。若無法判斷，將使用預設 Java 環境</string>
     <string name="settings_game_java_runtime_title">遊戲 Java 環境</string>
@@ -1031,8 +1023,6 @@
     <string name="settings_gamepad_config_no_items">尚未建立任何設定，無法切換</string>
     <string name="settings_launcher_dark_mode_title">深色模式</string>
     <string name="settings_launcher_language">語言</string>
-    <string name="settings_launcher_full_screen_title">頁面全螢幕化</string>
-    <string name="settings_launcher_full_screen_summary">使啟動器的頁面全螢幕化，忽略瀏海螢幕、挖孔螢幕等螢幕的安全區域</string>
     <string name="settings_launcher_animate_speed_title">動畫速度</string>
     <string name="settings_launcher_animate_speed_summary">調整啟動器動畫的速度倍率</string>
     <string name="settings_launcher_swap_anim_enabled_title">啟用頁面切換動畫</string>
@@ -1563,4 +1553,5 @@
     <string name="control_editor_menu_new_widget_joystick">新增搖桿</string>
     <string name="festivals_halloween">萬聖節快樂！</string>
     <string name="festivals_valentines">情人節快樂！</string>
+    <string name="main_nav_home">主頁</string>
 </resources>

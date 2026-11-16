@@ -19,6 +19,7 @@
 package com.movtery.zalithlauncher.ui.screens.main
 
 import com.movtery.cardgrid.state.rememberCardGridState
+import com.movtery.zalithlauncher.ui.base.LocalPageTopInset
 import com.movtery.zalithlauncher.ui.components.effectiveBackgroundOpacity
 import com.movtery.zalithlauncher.ui.components.liquidGlassActive
 import com.movtery.zalithlauncher.ui.components.SharedGlassBlurPage
@@ -67,7 +68,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -75,7 +78,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -92,7 +96,6 @@ import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.coroutine.TaskSystem
 import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.game.version.installed.VersionsManager
-import com.movtery.zalithlauncher.path.PathManager
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.ui.AndroidStringText
 import com.movtery.zalithlauncher.ui.androidText
@@ -100,12 +103,15 @@ import com.movtery.zalithlauncher.ui.components.BackgroundCard
 import com.movtery.zalithlauncher.ui.components.CardTitleLayout
 import com.movtery.zalithlauncher.ui.components.LiquidGlassSurface
 import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
-import com.movtery.zalithlauncher.ui.components.TextRailItem
 import com.movtery.zalithlauncher.ui.screens.BackStackNavKey
 import com.movtery.zalithlauncher.ui.screens.NavStateHost
 import com.movtery.zalithlauncher.ui.screens.NestedNavDisplay
 import com.movtery.zalithlauncher.ui.screens.NestedNavKey
 import com.movtery.zalithlauncher.ui.screens.NormalNavKey
+import com.movtery.zalithlauncher.ui.screens.PAGE_SLIDE_MILLIS
+import com.movtery.zalithlauncher.ui.screens.PageSlideTracker
+import com.movtery.zalithlauncher.ui.screens.pageIndexOf
+import com.movtery.zalithlauncher.ui.screens.rememberPageSlideSpec
 import com.movtery.zalithlauncher.ui.screens.TitledNavKey
 import com.movtery.zalithlauncher.ui.screens.content.AccountManageScreen
 import com.movtery.zalithlauncher.ui.screens.content.DownloadScreen
@@ -122,12 +128,12 @@ import com.movtery.zalithlauncher.ui.screens.content.addoninfo.AddonInfoScreen
 import com.movtery.zalithlauncher.ui.screens.content.navigateToDownload
 import com.movtery.zalithlauncher.ui.screens.navigateTo
 import com.movtery.zalithlauncher.ui.screens.onBack
-import com.movtery.zalithlauncher.ui.screens.rememberTransitionSpec
 import com.movtery.zalithlauncher.ui.theme.backgroundColor
 import com.movtery.zalithlauncher.ui.theme.cardColor
 import com.movtery.zalithlauncher.ui.theme.festivals.FestivalTitleText
 import com.movtery.zalithlauncher.ui.theme.onBackgroundColor
 import com.movtery.zalithlauncher.ui.theme.onCardColor
+import com.movtery.zalithlauncher.utils.animation.SwapTimeline
 import com.movtery.zalithlauncher.utils.animation.getAnimateTween
 import com.movtery.zalithlauncher.utils.festival.LocalFestivals
 import com.movtery.zalithlauncher.utils.file.formatFileSize
@@ -139,6 +145,13 @@ import com.movtery.zalithlauncher.viewmodel.ModpackImportViewModel
 import com.movtery.zalithlauncher.viewmodel.ScreenBackStackViewModel
 import com.movtery.zalithlauncher.viewmodel.sendKeepScreen
 import com.movtery.zalithlauncher.viewmodel.sendToast
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+
+private const val NAV_AUTO_HIDE_MS = 3000L
+
+/** Height of the top bar (back button, title, the three navigation buttons, task menu button) */
+val MainTopBarHeight = 40.dp
 
 @Composable
 fun MainScreen(
@@ -172,6 +185,34 @@ fun MainScreen(
     val mainScreenKey = screenBackStackModel.mainScreen.currentKey
     val inLauncherScreen = mainScreenKey == null || mainScreenKey is NormalNavKey.LauncherMain
 
+    //Which main page the top navigation highlights: the topmost main page in the stack
+    val mainBackStack = screenBackStackModel.mainScreen.backStack
+    val navIndex = mainBackStack.lastOrNull { pageIndexOf(it) >= 0 }?.let { pageIndexOf(it) } ?: 0
+    val autoHideEnabled = mainBackStack.lastOrNull().let { it == null || pageIndexOf(it) == 0 }
+
+    //Auto-hide of the navigation: Home only. Shown on open, hidden after 3s without touch,
+    //shown again on touch, never hidden while a page slide runs
+    val lastTouch = remember { mutableLongStateOf(0L) }
+    var navVisible by remember { mutableStateOf(true) }
+    var pageTransitioning by remember { mutableStateOf(false) }
+    LaunchedEffect(navIndex) {
+        pageTransitioning = true
+        delay(PAGE_SLIDE_MILLIS + 120L)
+        pageTransitioning = false
+    }
+    LaunchedEffect(autoHideEnabled, pageTransitioning) {
+        navVisible = true
+        if (!autoHideEnabled || pageTransitioning) return@LaunchedEffect
+        snapshotFlow { lastTouch.longValue }.collectLatest {
+            navVisible = true
+            delay(NAV_AUTO_HIDE_MS)
+            navVisible = false
+        }
+    }
+    val navShown = !autoHideEnabled || navVisible
+
+    val slideTracker = remember { PageSlideTracker() }
+
     val isBackgroundValid = LocalBackgroundViewModel.current?.isValid == true
     val launcherBackgroundOpacity = effectiveBackgroundOpacity().toFloat() / 100f
 
@@ -186,14 +227,56 @@ fun MainScreen(
         color = backgroundColor,
         contentColor = onBackgroundColor()
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
+                .pointerInput(Unit) {
+                    //Observe only: never consumes, so children keep their own touch handling
+                    awaitPointerEventScope {
+                        while (true) {
+                            awaitPointerEvent(PointerEventPass.Initial)
+                            lastTouch.longValue = System.nanoTime()
+                        }
+                    }
+                }
         ) {
             Box(
                 modifier = Modifier
+                    .fillMaxSize()
+            ) {
+                //Pages are laid out below the top bar (see BaseScreen), Home draws edge to edge under it
+                CompositionLocalProvider(LocalPageTopInset provides MainTopBarHeight) {
+                    NavStateHost(rootKey = screenBackStackModel.mainScreen) {
+                        NavigationUI(
+                            modifier = Modifier.fillMaxSize(),
+                            screenBackStackModel = screenBackStackModel,
+                            toMainScreen = toMainScreen,
+                            eventViewModel = eventViewModel,
+                            modpackImportViewModel = modpackImportViewModel,
+                            modifyVersionViewModel = modifyVersionViewModel,
+                            slideTracker = slideTracker,
+                            submitError = submitError
+                        )
+                    }
+                }
+
+                TaskMenu(
+                    isExpanded = isTaskMenuExpanded,
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(0.3f)
+                        .align(Alignment.CenterStart)
+                        .padding(top = MainTopBarHeight)
+                        .padding(all = 6.dp)
+                ) {
+                    changeTasksExpandedState()
+                }
+            }
+            Box(
+                modifier = Modifier
                     .fillMaxWidth()
-                    .height(40.dp)
+                    .height(MainTopBarHeight)
+                    .align(Alignment.TopStart)
             ) {
                 TopBar(
                     modifier = Modifier.fillMaxSize(),
@@ -205,56 +288,35 @@ fun MainScreen(
                     onScreenBack = {
                         screenBackStackModel.mainScreen.backStack.removeFirstOrNull()
                     },
-                    toMainScreen = toMainScreen,
-                    toSettingsScreen = {
-                        screenBackStackModel.mainScreen.removeAndNavigateTo(
-                            removes = screenBackStackModel.clearBeforeNavKeys,
-                            screenKey = screenBackStackModel.settingsScreen
-                        )
-                    },
-                    toDownloadScreen = {
-                        screenBackStackModel.navigateToDownload()
-                    },
-                    openFileManager = {
-                        eventViewModel.sendEvent(
-                            EventViewModel.Event.OpenFileManager(
-                                rootPath = PathManager.DIR_FILES_EXTERNAL.absolutePath
-                            )
-                        )
+                    navIndex = navIndex,
+                    navShown = navShown,
+                    onNavigate = { page ->
+                        when (page) {
+                            MainPage.HOME -> if (pageIndexOf(mainBackStack.lastOrNull()) != 0) {
+                                //Back to the Home group page that was open last (Home Screen, Version List,
+                                //Account list or Manage version): drop everything stacked above it
+                                val lastHome = mainBackStack.indexOfLast { pageIndexOf(it) == 0 }
+                                if (lastHome >= 0) {
+                                    repeat(mainBackStack.size - lastHome - 1) { mainBackStack.removeLastOrNull() }
+                                } else {
+                                    toMainScreen()
+                                }
+                            }
+                            MainPage.DOWNLOAD -> if (mainScreenKey !is NestedNavKey.Download) {
+                                screenBackStackModel.navigateToDownload()
+                            }
+                            MainPage.SETTINGS -> if (mainScreenKey !is NestedNavKey.Settings) {
+                                screenBackStackModel.mainScreen.removeAndNavigateTo(
+                                    removes = screenBackStackModel.clearBeforeNavKeys,
+                                    screenKey = screenBackStackModel.settingsScreen
+                                )
+                            }
+                        }
                     },
                     changeExpandedState = {
                         changeTasksExpandedState()
                     },
                 )
-            }
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-            ) {
-                NavStateHost(rootKey = screenBackStackModel.mainScreen) {
-                    NavigationUI(
-                        modifier = Modifier.fillMaxSize(),
-                        screenBackStackModel = screenBackStackModel,
-                        toMainScreen = toMainScreen,
-                        eventViewModel = eventViewModel,
-                        modpackImportViewModel = modpackImportViewModel,
-                        modifyVersionViewModel = modifyVersionViewModel,
-                        submitError = submitError
-                    )
-                }
-
-                TaskMenu(
-                    isExpanded = isTaskMenuExpanded,
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .fillMaxWidth(0.3f)
-                        .align(Alignment.CenterStart)
-                        .padding(all = 6.dp)
-                ) {
-                    changeTasksExpandedState()
-                }
             }
         }
     }
@@ -266,51 +328,23 @@ private fun <E: TitledNavKey> TopBar(
     inLauncherScreen: Boolean,
     taskRunning: Boolean,
     isTasksExpanded: Boolean,
+    navIndex: Int,
+    navShown: Boolean,
     modifier: Modifier = Modifier,
     contentColor: Color,
     onScreenBack: () -> Unit,
-    toMainScreen: () -> Unit,
-    toSettingsScreen: () -> Unit,
-    toDownloadScreen: () -> Unit,
-    openFileManager: () -> Unit,
+    onNavigate: (MainPage) -> Unit,
     changeExpandedState: () -> Unit,
 ) {
     val festivals = LocalFestivals.current
-
-    val inDownloadScreen = mainScreenKey is NestedNavKey.Download
-    val inSettingsScreen = mainScreenKey is NestedNavKey.Settings
 
     CompositionLocalProvider(
         LocalContentColor provides if (liquidGlassActive()) Color.White else contentColor
     ) {
         ConstraintLayout(modifier = modifier) {
-            val (backCenter, title, endButtons, headerGlass) = createRefs()
+            val (backCenter, title, navGroup, endButtons) = createRefs()
             //Title spacing below is glass-only; with glass off the title keeps the stock layout
             val titleGlass = liquidGlassBackdrop() != null
-
-            val headerGlassBackdrop = liquidGlassBackdrop()
-            // Inner pages share one continuous glass header. The launcher home keeps
-            // its title and action group as separate surfaces.
-            if (headerGlassBackdrop != null && !inLauncherScreen) {
-                SharedGlassBlurPage {
-                    LiquidGlassSurface(
-                        backdrop = headerGlassBackdrop,
-                        shape = MaterialTheme.shapes.large,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight()
-                            .constrainAs(headerGlass) {
-                                start.linkTo(parent.start)
-                                end.linkTo(parent.end)
-                                top.linkTo(parent.top)
-                                bottom.linkTo(parent.bottom)
-                            },
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        contentColor = Color.White,
-                        blurRadius = 12.dp
-                    ) {}
-                }
-            }
 
             val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
@@ -348,77 +382,64 @@ private fun <E: TitledNavKey> TopBar(
                                 )
                             }
                         }
-
-                        ToolbarTooltip(label = stringResource(R.string.generic_main_menu)) {
-                            IconButton(
-                                modifier = Modifier.fillMaxHeight(),
-                                onClick = {
-                                    if (!inLauncherScreen) {
-                                        //不在主屏幕时才允许回到主页面
-                                        toMainScreen()
-                                    }
-                                }
-                            ) {
-                                Icon(
-                                    painter = painterResource(R.drawable.ic_home_filled),
-                                    contentDescription = stringResource(R.string.generic_main_menu)
-                                )
-                            }
-                        }
                     }
                 }
             }
             val parentRes = mainScreenKey?.title
             val childRes = (mainScreenKey as? BackStackNavKey<*>)?.currentKey?.title
+            //The page title is plain text on the page background. White only works where the glass veil
+            //over a wallpaper darkens it; without a wallpaper use the theme's content color so it stays readable
+            val titleColor = if (liquidGlassActive() && LocalBackgroundViewModel.current?.isValid == true) {
+                Color.White
+            } else {
+                contentColor
+            }
 
             Crossfade(
                 modifier = Modifier.constrainAs(title) {
                     centerVerticallyTo(parent)
-                    start.linkTo(backCenter.end, margin = if (titleGlass && inLauncherScreen) 12.dp else 16.dp)
-                    if (titleGlass && !inLauncherScreen) {
-                        // Left-aligned at a fixed start point (the back/home group is always
-                        // present on inner pages), so the text no longer drifts when the
-                        // right button group changes width.
-                        end.linkTo(endButtons.start, margin = 8.dp)
-                        width = Dimension.preferredWrapContent
-                        horizontalBias = 0f
-                    }
+                    start.linkTo(backCenter.end, margin = 16.dp)
+                    // Left-aligned at a fixed start point, never running under the centered navigation.
+                    // The title area always fills the space between the Back button and the navigation,
+                    // so it can never collapse to zero width
+                    end.linkTo(navGroup.start, margin = 8.dp)
+                    width = Dimension.fillToConstraints
                 },
                 targetState = parentRes to childRes
             ) { (parent, child) ->
                 val style = MaterialTheme.typography.titleMedium
                 val softWarp = false
                 val maxLines = 1
-                val titleBackdrop = if (inLauncherScreen) liquidGlassBackdrop() else null
+                //Only the Home festival greeting sits on a glass pill. Decide it from the content being drawn
+                //(parent == null), not from the live page: while Crossfade fades the old page title out,
+                //the live page is already Home and the fading title would be wrapped in glass.
+                val titleBackdrop = if (parent == null) liquidGlassBackdrop() else null
 
                 @Composable
                 fun TitleContent() {
                     if (parent == null) {
-                        if (festivals.isEmpty()) {
-                            Text(
-                                modifier = if (titleGlass) Modifier.padding(horizontal = 10.dp, vertical = 5.dp) else Modifier,
-                                text = stringResource(R.string.launcher_unofficial_notice),
-                                style = style,
-                                softWrap = softWarp,
-                                maxLines = maxLines
-                            )
-                        } else {
+                        //Home shows no title text, except the festival greeting when one is active
+                        if (festivals.isNotEmpty()) {
                             FestivalTitleText(festivals = festivals, style = style, maxLines = maxLines)
                         }
                     } else {
                         val titleText = if (child != null) androidText(parent, androidText(" - "), child) else parent
-                        AndroidStringText(
-                            modifier = if (titleGlass) Modifier.padding(horizontal = 10.dp, vertical = 5.dp) else Modifier,
-                            text = titleText,
-                            style = style,
-                            overflow = if (titleGlass) TextOverflow.Ellipsis else TextOverflow.Clip,
-                            softWrap = softWarp,
-                            maxLines = maxLines
-                        )
+                        CompositionLocalProvider(LocalContentColor provides titleColor) {
+                            AndroidStringText(
+                                modifier = if (titleGlass) Modifier.padding(horizontal = 10.dp, vertical = 5.dp) else Modifier,
+                                text = titleText,
+                                style = style,
+                                overflow = TextOverflow.Ellipsis,
+                                softWrap = softWarp,
+                                maxLines = maxLines
+                            )
+                        }
                     }
                 }
 
-                if (titleBackdrop != null) {
+                if (parent == null && festivals.isEmpty()) {
+                    //Nothing to show on Home: no empty glass pill either
+                } else if (titleBackdrop != null) {
                     SharedGlassBlurPage {
                         LiquidGlassSurface(
                             backdrop = titleBackdrop,
@@ -434,6 +455,17 @@ private fun <E: TitledNavKey> TopBar(
                     TitleContent()
                 }
             }
+
+            MainNavigationBar(
+                modifier = Modifier.constrainAs(navGroup) {
+                    centerHorizontallyTo(parent)
+                    top.linkTo(parent.top)
+                    bottom.linkTo(parent.bottom)
+                },
+                selectedIndex = navIndex,
+                shown = navShown,
+                onNavigate = onNavigate
+            )
 
             Row(
                 modifier = Modifier
@@ -473,61 +505,6 @@ private fun <E: TitledNavKey> TopBar(
                         }
                     }
                 }
-
-                val toolbarGlassBackdrop = liquidGlassBackdrop()
-                val toolbarActions: @Composable () -> Unit = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(if (toolbarGlassBackdrop != null) 2.dp else 8.dp)
-                    ) {
-                        ToolbarTooltip(label = "File manager") {
-                            IconButton(onClick = openFileManager) {
-                                Icon(
-                                    painter = painterResource(R.drawable.ic_folder_filled),
-                                    contentDescription = "File manager"
-                                )
-                            }
-                        }
-
-                        ToolbarTooltip(label = stringResource(R.string.generic_download)) {
-                            TopBarRailItem(
-                                selected = inDownloadScreen,
-                                painter = painterResource(R.drawable.ic_download_2_filled),
-                                text = stringResource(R.string.generic_download),
-                                onClick = {
-                                    if (!inDownloadScreen) toDownloadScreen()
-                                },
-                            )
-                        }
-
-                        ToolbarTooltip(label = stringResource(R.string.generic_setting)) {
-                            TopBarRailItem(
-                                selected = inSettingsScreen,
-                                painter = painterResource(R.drawable.ic_settings_filled),
-                                text = stringResource(R.string.generic_setting),
-                                onClick = {
-                                    if (!inSettingsScreen) toSettingsScreen()
-                                },
-                            )
-                        }
-                    }
-                }
-                if (toolbarGlassBackdrop != null && inLauncherScreen) {
-                    SharedGlassBlurPage {
-                        LiquidGlassSurface(
-                            backdrop = toolbarGlassBackdrop,
-                            shape = MaterialTheme.shapes.large,
-                            modifier = Modifier.height(40.dp),
-                            containerColor = MaterialTheme.colorScheme.surface,
-                            contentColor = LocalContentColor.current,
-                            blurRadius = 12.dp
-                        ) {
-                            toolbarActions()
-                        }
-                    }
-                } else {
-                    toolbarActions()
-                }
             }
         }
     }
@@ -559,42 +536,6 @@ private fun ToolbarTooltip(
 }
 
 @Composable
-private fun TopBarRailItem(
-    selected: Boolean,
-    painter: Painter,
-    text: String,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit = {},
-    textStyle: TextStyle = MaterialTheme.typography.labelMedium
-) {
-    TextRailItem(
-        modifier = modifier,
-        onClick = onClick,
-        text = {
-            AnimatedVisibility(visible = selected) {
-                val glassRail = liquidGlassBackdrop() != null
-                Row(
-                    modifier = if (glassRail) Modifier.padding(horizontal = 8.dp, vertical = 4.dp) else Modifier,
-                    verticalAlignment = if (glassRail) Alignment.CenterVertically else Alignment.Top
-                ) {
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(text = text, style = textStyle)
-                }
-            }
-        },
-        icon = {
-            Icon(
-                painter = painter,
-                contentDescription = text
-            )
-        },
-        selected = selected,
-        selectedPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
-        unSelectedPadding = PaddingValues(all = 8.dp),
-    )
-}
-
-@Composable
 private fun NavigationUI(
     modifier: Modifier = Modifier,
     screenBackStackModel: ScreenBackStackViewModel,
@@ -602,10 +543,20 @@ private fun NavigationUI(
     eventViewModel: EventViewModel,
     modpackImportViewModel: ModpackImportViewModel,
     modifyVersionViewModel: ModifyVersionViewModel,
+    slideTracker: PageSlideTracker,
     submitError: (ErrorViewModel.ThrowableMessage) -> Unit
 ) {
     val backStack = screenBackStackModel.mainScreen.backStack
     val currentKey = backStack.lastOrNull()
+
+    //Direction of the full-page slide follows page order, so Back plays the reverse
+    slideTracker.update(currentKey)
+    LaunchedEffect(currentKey) {
+        if (slideTracker.direction() != 0) {
+            delay(PAGE_SLIDE_MILLIS + 80L)
+            SwapTimeline.pageSlideActive = false
+        }
+    }
     //主页网格状态随主导航存活，离开主页再返回时不会重建、重播种与重放入场动画
     val homeGridState = rememberCardGridState()
 
@@ -637,8 +588,8 @@ private fun NavigationUI(
             onBack = {
                 onBack(backStack)
             },
-            transitionSpec = rememberTransitionSpec(),
-            popTransitionSpec = rememberTransitionSpec(),
+            transitionSpec = rememberPageSlideSpec(slideTracker),
+            popTransitionSpec = rememberPageSlideSpec(slideTracker),
             entryProvider = entryProvider {
                 entry<NormalNavKey.LauncherMain> {
                     SharedGlassBlurPage {

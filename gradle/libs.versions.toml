@@ -55,7 +55,9 @@ appcompat = "1.8.0"
 dagger = "2.60.1"
 hilt = "1.4.0"
 webkit = "1.18.0"
-prismal = "v1.0.6"
+prismal = "v1.0.7"
+shizuku = "13.1.5"
+hiddenApiBypass = "4.3"
 
 [libraries]
 androidx-media3-exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "media3Exoplayer" }
@@ -116,7 +118,6 @@ ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
 lunarcalendar = { module = "com.xhinliang:LunarCalendar", version.ref = "lunarcalendar" }
 material = { module = "com.google.android.material:material", version.ref = "material" }
 material-color-utilities = { module = "com.materialkolor:material-color-utilities", version.ref = "materialKolor" }
-materialKolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
 maven-artifact = { module = "org.apache.maven:maven-artifact", version.ref = "mavenArtifact" }
 minidns-hla = { module = "org.minidns:minidns-hla", version.ref = "minidnsHla" }
 mmkv = { module = "com.tencent:mmkv", version.ref = "mmkv" }
@@ -137,6 +138,9 @@ zip4j = { module = "net.lingala.zip4j:zip4j", version.ref = "zip4j" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hilt" }
 prismal = { module = "com.github.styropyr0:PrismalAGSL", version.ref = "prismal" }
+shizuku-api = { module = "dev.rikka.shizuku:api", version.ref = "shizuku" }
+shizuku-provider = { module = "dev.rikka.shizuku:provider", version.ref = "shizuku" }
+hiddenapibypass = { module = "org.lsposed.hiddenapibypass:hiddenapibypass", version.ref = "hiddenApiBypass" }
 dagger-hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "dagger" }
 dagger-hilt-android-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "dagger" }
 

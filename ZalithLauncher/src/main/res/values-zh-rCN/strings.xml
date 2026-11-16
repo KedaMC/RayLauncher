@@ -908,8 +908,6 @@
     <string name="settings_renderer_global_vulkan_driver_title">Vulkan 驱动器</string>
     <string name="settings_renderer_config_title">渲染器配置</string>
     <string name="settings_renderer_config_reset_message">要将 %s 的所有设置恢复为默认值吗？</string>
-    <string name="renderer_config_mg_sfpew_title">SFPEW 兼容层</string>
-    <string name="renderer_config_mg_sfpew_desc">让渲染器的 EGL 与 OpenGL 调用经过 SimpleFPEWrapper 兼容层包裹，游戏出现渲染问题时可尝试关闭。检测到部分 FPE 模拟模组时会自动禁用</string>
     <string name="renderer_config_mg_count_launch_title">启动会话统计</string>
     <string name="renderer_config_mg_count_launch_desc">仅统计经启动器启动的游戏会话，基准测试与工具不计入</string>
     <string name="renderer_config_mg_angle_title">ANGLE 后端</string>
@@ -950,10 +948,6 @@
     <string name="renderer_config_mg_fsr1_quality">质量优先</string>
     <string name="renderer_config_mg_fsr1_balanced">均衡</string>
     <string name="renderer_config_mg_fsr1_performance">性能优先</string>
-    <string name="settings_renderer_sfpew_plugin_layer_title">SFPEW 兼容层（渲染器插件）</string>
-    <string name="settings_renderer_sfpew_plugin_layer_summary">为无固定管线能力的外部渲染器插件叠加 SimpleFPEWrapper OpenGL 兼容层，用于旧式 OpenGL 1.x/2.1 渲染的程序</string>
-    <string name="renderer_config_sfpew_relaxed_context_title">宽松上下文</string>
-    <string name="renderer_config_sfpew_relaxed_context_desc">假定游戏每线程终生只用一个 GL 上下文，跳过每次调用的上下文核查，请确认游戏的线程上下文使用方式，若出现渲染错误请关闭此项</string>
     <string name="settings_renderer_from_plugins">来自 %s 插件</string>
     <string name="settings_renderer_resolution_scale_title">游戏窗口分辨率</string>
     <string name="settings_renderer_resolution_scale_summary">数值越低性能越高，数值越高画质越清晰，根据实际需求进行调整</string>
@@ -980,8 +974,6 @@
     <string name="settings_game_version_isolation_summary">默认隔离所有的版本，版本之间的数据互不干扰</string>
     <string name="settings_game_skip_game_integrity_check_title">不检查游戏完整性</string>
     <string name="settings_game_skip_game_integrity_check_summary">启动游戏时，若已存在的游戏文件与实际不匹配，是否进行重新下载</string>
-    <string name="settings_game_version_custom_info_title">自定义版本信息</string>
-    <string name="settings_game_version_custom_info_summary">自定义信息会显示在游戏主菜单左下角和 F3 调试界面左上角。部分特殊版本或使用外置账号登录时可能不生效。您也可以添加 [zl_version] 字段，启动器会自动替换为当前版本号</string>
     <string name="settings_game_auto_pick_java_runtime_title">自动选择 Java 环境</string>
     <string name="settings_game_auto_pick_java_runtime_summary">在需要使用 Java 时，启动器将自动选择合适的环境。若无法判断，将使用默认 Java 环境</string>
     <string name="settings_game_java_runtime_title">游戏 Java 环境</string>
@@ -1127,8 +1119,6 @@
     <string name="settings_gamepad_config_no_items">未创建配置，无法切换</string>
     <string name="settings_launcher_dark_mode_title">深色模式</string>
     <string name="settings_launcher_language">语言</string>
-    <string name="settings_launcher_full_screen_title">页面全屏化</string>
-    <string name="settings_launcher_full_screen_summary">使启动器的页面全屏化，忽略刘海屏、挖孔屏等屏幕的安全区</string>
     <string name="settings_launcher_animate_speed_title">动画速度</string>
     <string name="settings_launcher_animate_speed_summary">调整启动器动画的速度倍率</string>
     <string name="settings_launcher_swap_anim_enabled_title">启用页面切换动画</string>
@@ -1532,7 +1522,6 @@
     <string name="fm_calculating">计算中…</string>
     <string name="fm_name_conflict">与已有条目重名</string>
 
-
     <string name="guide_main_welcome_title">欢迎使用 %s ！</string>
     <string name="guide_main_welcome_text">我们来简单看看主界面的功能吧~</string>
     <string name="guide_main_account">点击此处可进入账号管理页面，你可以添加或管理 Minecraft 账号</string>
@@ -1570,4 +1559,5 @@
     <string name="guide_joystick_events_lock_text4">请点击按钮编辑触发事件</string>
     <string name="guide_joystick_events_events_text1">可触发的事件与普通按钮一致，自由度很高</string>
     <string name="guide_joystick_events_events_text2">若只想用于控制游戏，编辑“按键”分区的实际键值绑定即可</string>
+    <string name="main_nav_home">主页</string>
 </resources>

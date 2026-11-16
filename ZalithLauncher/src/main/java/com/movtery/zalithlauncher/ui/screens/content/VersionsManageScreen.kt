@@ -79,6 +79,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.game.path.GamePathManager
+import com.movtery.zalithlauncher.path.PathManager
 import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.game.version.installed.VersionComparator
 import com.movtery.zalithlauncher.game.version.installed.VersionType
@@ -104,6 +105,7 @@ import com.movtery.zalithlauncher.ui.screens.content.elements.GamePathItemLayout
 import com.movtery.zalithlauncher.ui.screens.content.elements.GamePathOperation
 import com.movtery.zalithlauncher.ui.screens.content.elements.VersionCategory
 import com.movtery.zalithlauncher.ui.screens.content.elements.VersionCategoryItem
+import com.movtery.zalithlauncher.ui.screens.content.elements.VersionFileManagerItem
 import com.movtery.zalithlauncher.ui.screens.content.elements.VersionItemLayout
 import com.movtery.zalithlauncher.ui.screens.content.elements.VersionsOperation
 import com.movtery.zalithlauncher.ui.screens.content.elements.backgroundGlass
@@ -324,6 +326,13 @@ fun VersionsManageScreen(
                 },
                 onInstall = {
                     backScreenViewModel.navigateToDownload()
+                },
+                onOpenFileManager = {
+                    eventViewModel.sendEvent(
+                        EventViewModel.Event.OpenFileManager(
+                            rootPath = PathManager.DIR_FILES_EXTERNAL.absolutePath
+                        )
+                    )
                 }
             )
 
@@ -477,6 +486,7 @@ private fun VersionsLayout(
     onRefresh: () -> Unit,
     onVersionPinned: () -> Unit,
     onInstall: () -> Unit,
+    onOpenFileManager: () -> Unit,
 ) {
     val ctx = rememberAnimatedContext(isVisible = isVisible)
 
@@ -523,7 +533,7 @@ private fun VersionsLayout(
                 derivedStateOf { 1f - topAppBarState.collapsedFraction }
             }
             //背景可见时不使用阴影，因为卡片会半透明化
-            val withShadow = !backgroundVisible()
+            val withShadow = false
 
             //悬浮操作栏的阴影在图层块内读取滚动比例，滚动时只更新图层不重组
             val barShape = MaterialTheme.shapes.large
@@ -683,6 +693,7 @@ private fun VersionsLayout(
                                     selected = versionCategory == VersionCategory.MODLOADER,
                                     onClick = { onCategoryChange(VersionCategory.MODLOADER) }
                                 )
+                                VersionFileManagerItem(onClick = onOpenFileManager)
                             }
                         }
                     }

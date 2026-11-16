@@ -45,7 +45,6 @@ import com.movtery.zalithlauncher.utils.network.ServerAddress
 import com.movtery.zalithlauncher.utils.string.insertJSONValueList
 import com.movtery.zalithlauncher.utils.string.isEmptyOrBlank
 import com.movtery.zalithlauncher.utils.string.isLowerTo
-import com.movtery.zalithlauncher.utils.string.isNotEmptyOrBlank
 import com.movtery.zalithlauncher.utils.string.splitPreservingQuotes
 import com.movtery.zalithlauncher.utils.string.toUnicodeEscaped
 import java.io.File
@@ -219,7 +218,10 @@ class LaunchArgs(
         argsList.add("-javaagent:${LibPath.MIO_LIB_PATCHER.absolutePath}")
 
         val configFilePath = version.getVersionPath().child("log4j2.xml")
-        if (!configFilePath.exists()) {
+        //Older launcher-generated configs still contain a file appender that would fight the launcher over logs/latest.log
+        val legacyFileAppender = configFilePath.exists() &&
+                runCatching { configFilePath.readText().contains("RollingRandomAccessFile name=\"File\"") }.getOrDefault(false)
+        if (!configFilePath.exists() || legacyFileAppender) {
             val is7 = (version.getVersionInfo()?.minecraftVersion ?: "0.0").isLowerTo("1.12")
             runCatching {
                 val content = if (is7) {
@@ -388,9 +390,7 @@ class LaunchArgs(
     private fun setLauncherInfo(verArgMap: MutableMap<String, String>) {
         verArgMap["launcher_name"] = BuildKeys.LAUNCHER_NAME
         verArgMap["launcher_version"] = BuildConfig.VERSION_NAME
-        verArgMap["version_type"] = version.getCustomInfo()
-            .takeIf { it.isNotEmptyOrBlank() }
-            ?: gameManifest.type
+        verArgMap["version_type"] = BuildKeys.LAUNCHER_NAME
     }
 
     private fun splitAndFilterEmpty(arg: String): Array<String> {

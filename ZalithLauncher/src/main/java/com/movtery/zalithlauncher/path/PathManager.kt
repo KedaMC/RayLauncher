@@ -131,7 +131,7 @@ class PathManager {
          */
         private fun handleLegacy() {
             //不再支持的共用游戏运行日志
-            File(DIR_FILES_EXTERNAL, LogName.GAME.fileName).takeIf { it.exists() }?.let {
+            File(DIR_FILES_EXTERNAL, "latest_game.log").takeIf { it.exists() }?.let {
                 FileUtils.deleteQuietly(it)
             }
         }

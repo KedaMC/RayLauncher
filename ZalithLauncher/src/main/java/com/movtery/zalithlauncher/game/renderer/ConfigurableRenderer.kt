@@ -48,9 +48,7 @@ interface ConfigurableRenderer : RendererInterface {
  */
 data class RendererLaunchConfig(
     /** 的环境变量 */
-    val environment: Map<String, String>,
-    /** SFPEW 兼容层开关，渲染器配置未声明时为 null */
-    val sfpewLayerEnabled: Boolean?
+    val environment: Map<String, String>
 )
 
 @WorkerThread
@@ -64,7 +62,6 @@ fun prepareRendererLaunchConfig(renderer: ConfigurableRenderer, version: Version
     } else null
     val config = resolveRendererConfig(rendererId, renderer.configSpec, versionStore)
     return RendererLaunchConfig(
-        environment = renderer.getConfiguredEnv(config),
-        sfpewLayerEnabled = config.sfpewLayerEnabled
+        environment = renderer.getConfiguredEnv(config)
     )
 }

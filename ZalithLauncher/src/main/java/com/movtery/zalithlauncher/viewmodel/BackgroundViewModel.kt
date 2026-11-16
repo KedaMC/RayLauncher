@@ -87,28 +87,7 @@ class BackgroundViewModel: ViewModel() {
     var backgroundBounds by mutableStateOf(Rect.Zero)
         private set
 
-    /**
-     * Wallpaper of the selected version's theme, or null to use the global [backgroundFile]
-     */
-    private var profileFile by mutableStateOf<File?>(null)
-
-    /**
-     * The file that is actually shown as background: the profile wallpaper when there is one
-     */
-    val activeFile: File get() = profileFile ?: backgroundFile
-
-    private val glassBlur = BackgroundGlassBlur { activeFile }
-
-    /**
-     * Switches to the wallpaper of the selected version's theme (null = global background)
-     */
-    fun setProfileWallpaper(file: File?) {
-        if (profileFile == file) return
-        profileFile = file
-        viewModelScope.launch(Dispatchers.Main) {
-            updateState()
-        }
-    }
+    private val glassBlur = BackgroundGlassBlur { backgroundFile }
 
     /**
      * Android 12+ 上由背景捕获节点维护的共享预模糊 GPU 层
@@ -147,7 +126,7 @@ class BackgroundViewModel: ViewModel() {
     }
 
     private suspend fun updateState() {
-        val file = activeFile
+        val file = backgroundFile
         val (isImage0, isVideo0) = withContext(Dispatchers.IO) {
             val isImage = file.isImageFile()
             //如果文件是图片，则不检查是否为视频

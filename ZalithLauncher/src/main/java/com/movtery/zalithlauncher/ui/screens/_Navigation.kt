@@ -20,13 +20,17 @@ package com.movtery.zalithlauncher.ui.screens
 
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.unit.IntOffset
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.scene.Scene
 import com.movtery.zalithlauncher.setting.AllSettings
@@ -132,5 +136,77 @@ fun <T : Any> rememberTransitionSpec(): AnimatedContentTransitionScope<Scene<T>>
             )
         }
         transform
+    }
+}
+
+/** Duration of the full-page horizontal slide between main pages (ms) */
+const val PAGE_SLIDE_MILLIS = 600
+
+/** Ease Out Quint: fast at the start, slowing down gradually until it stops smoothly */
+val EaseOutQuint = CubicBezierEasing(0.22f, 1f, 0.36f, 1f)
+
+/**
+ * Index of a main page in the top navigation, or -1 for any other screen.
+ * 0 is the Home group: Home Screen, Version List, Account list and Manage version.
+ * Moving inside the group is a normal swap; only moving between groups slides.
+ */
+fun pageIndexOf(key: TitledNavKey?): Int = when (key) {
+    is NormalNavKey.LauncherMain,
+    is NormalNavKey.VersionsManager,
+    is NormalNavKey.AccountManager,
+    is NestedNavKey.VersionSettings -> 0
+    is NestedNavKey.Download -> 1
+    is NestedNavKey.Settings -> 2
+    else -> -1
+}
+
+/**
+ * Tracks which main page was left and which was entered, to pick the slide direction.
+ * Direction comes from page order, so navigating back plays the reverse slide.
+ */
+class PageSlideTracker {
+    private var currentKey: Any? = null
+    private var currentIndex = -2
+    private var direction = 0
+
+    /** Call during composition with the top screen of the main back stack */
+    fun update(key: TitledNavKey?) {
+        if (key == currentKey) return
+        val newIndex = pageIndexOf(key)
+        direction = if (currentIndex >= 0 && newIndex >= 0 && currentIndex != newIndex) {
+            if (newIndex > currentIndex) 1 else -1
+        } else {
+            0
+        }
+        currentKey = key
+        currentIndex = newIndex
+        SwapTimeline.pageSlideActive = direction != 0
+    }
+
+    /** 1: slide forward (content moves left), -1: backward, 0: not a switch between main pages */
+    fun direction(): Int = direction
+}
+
+/**
+ * Full-page horizontal slide between main pages, falling back to the default swap
+ * transition for every other navigation.
+ */
+@Composable
+fun <T : Any> rememberPageSlideSpec(tracker: PageSlideTracker): AnimatedContentTransitionScope<Scene<T>>.() -> ContentTransform {
+    val fallback = rememberTransitionSpec<T>()
+    return remember(fallback, tracker) {
+        val spec: AnimatedContentTransitionScope<Scene<T>>.() -> ContentTransform = {
+            val dir = tracker.direction()
+            if (dir == 0 || !AllSettings.launcherSwapAnimEnabled.state) {
+                fallback(this)
+            } else {
+                val slide = tween<IntOffset>(durationMillis = PAGE_SLIDE_MILLIS, easing = EaseOutQuint)
+                ContentTransform(
+                    slideInHorizontally(animationSpec = slide) { full -> dir * full },
+                    slideOutHorizontally(animationSpec = slide) { full -> -dir * full }
+                )
+            }
+        }
+        spec
     }
 }

@@ -110,7 +110,7 @@ fun ColorPickerDialog(
                     .padding(all = 16.dp)
                     .heightIn(max = (maxHeight - 32.dp).coerceAtMost(rememberDialogMaxHeight()))
                     .wrapContentHeight(),
-                shadowElevation = 3.dp,
+                shadowElevation = 0.dp,
                 color = cardColor(false),
                 contentColor = onCardColor(),
                 shape = MaterialTheme.shapes.extraLarge

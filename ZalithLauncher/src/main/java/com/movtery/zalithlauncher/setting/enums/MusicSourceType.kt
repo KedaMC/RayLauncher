@@ -18,21 +18,19 @@
 
 package com.movtery.zalithlauncher.setting.enums
 
-import com.google.gson.annotations.SerializedName
 import com.movtery.zalithlauncher.R
 
 /**
- * Quality level of the Liquid Glass effect. Chosen manually, never changed automatically.
- *
- * - [OFF]: no glass, normal Material surfaces
- * - [LITE]: lighter blur and cheaper dialog backdrop capture, for weaker GPUs
- * - [FULL]: the complete effect
+ * Where the Music Card gets its music from.
  */
-enum class GlassTier(val textRes: Int) {
-    @SerializedName("OFF")
-    OFF(R.string.generic_disable),
-    @SerializedName("LITE")
-    LITE(R.string.glass_tier_lite),
-    @SerializedName("FULL")
-    FULL(R.string.glass_tier_full)
+enum class MusicSourceType(val textRes: Int) {
+    /**
+     * Audio files imported from device storage, played by the launcher itself (Media3 ExoPlayer)
+     */
+    LOCAL(R.string.music_source_local),
+
+    /**
+     * Music played by other apps, read from their media sessions
+     */
+    BACKGROUND(R.string.music_source_background)
 }

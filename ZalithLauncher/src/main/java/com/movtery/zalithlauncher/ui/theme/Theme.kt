@@ -19,7 +19,6 @@
 package com.movtery.zalithlauncher.ui.theme
 
 import android.os.Build
-import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.darkColorScheme
@@ -33,16 +32,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import com.materialkolor.PaletteStyle
-import com.materialkolor.dynamicColorScheme
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.setting.enums.isLauncherInDarkTheme
 import com.movtery.zalithlauncher.ui.theme.components.activeMaskView
 import com.movtery.zalithlauncher.utils.festival.Festival
 import com.movtery.zalithlauncher.utils.festival.LocalFestivals
-import com.movtery.zalithlauncher.game.version.installed.VersionsManager
 import com.movtery.zalithlauncher.ui.components.GlassPageCapture
 import com.movtery.zalithlauncher.ui.components.launcherGlassOn
 import com.movtery.zalithlauncher.ui.components.LocalLiquidGlassBackdrop
@@ -130,22 +125,6 @@ private val embermireDark = darkColorScheme(
     surfaceContainerHighest = surfaceContainerHighestDark,
 )
 
-private fun accentLight(color: Color): ColorScheme {
-    return dynamicColorScheme(
-        primary = color,
-        isDark = false,
-        style = PaletteStyle.TonalSpot,
-    )
-}
-
-private fun accentDark(color: Color): ColorScheme {
-    return dynamicColorScheme(
-        primary = color,
-        isDark = true,
-        style = PaletteStyle.TonalSpot,
-    )
-}
-
 @Composable
 fun ZalithLauncherTheme(
     darkTheme: Boolean = isLauncherInDarkTheme(),
@@ -158,9 +137,6 @@ fun ZalithLauncherTheme(
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
-
-    //Per-profile theme: the selected version may bring its own accent color (launcher only, not in game)
-    val profileAccent = if (forceGlassLayer) null else ProfileTheme.accent
 
     //Liquid Glass：仅在设置开启且存在有效背景媒体时提供可采样的背景图层
     val glassLayer = rememberPrismalGlassLayer()
@@ -178,13 +154,8 @@ fun ZalithLauncherTheme(
     //the dark palette so text, tints and surfaces match dark mode instead of turning black or white.
     val paletteDark = darkTheme || activeGlassLayer != null
 
-    val targetColorScheme = remember(paletteDark, dynamicColor, profileAccent) {
+    val targetColorScheme = remember(paletteDark, dynamicColor) {
         when {
-            profileAccent != null -> {
-                val accent = Color(profileAccent)
-                if (paletteDark) accentDark(accent) else accentLight(accent)
-            }
-
             dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
                 if (paletteDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
             }
@@ -213,18 +184,6 @@ fun ZalithLauncherTheme(
             currentDisplayScheme = targetColorScheme
         }
     }
-
-    if (!forceGlassLayer) {
-        //Follow the selected version so its theme (accent, glass tier, wallpaper) is applied
-        LaunchedEffect(Unit) {
-            VersionsManager.currentVersion.collect { ProfileTheme.selectVersion(it) }
-        }
-        val profileWallpaper = remember(ProfileTheme.stamp) { ProfileTheme.wallpaperFile }
-        LaunchedEffect(backgroundViewModel, profileWallpaper) {
-            backgroundViewModel?.setProfileWallpaper(profileWallpaper)
-        }
-    }
-
 
     //Second layer that records the whole page (wallpaper + UI) while a dialog is open
     val pageLayer = rememberPrismalGlassLayer()

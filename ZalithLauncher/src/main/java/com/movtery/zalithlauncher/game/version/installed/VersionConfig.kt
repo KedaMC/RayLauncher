@@ -25,7 +25,6 @@ import com.google.gson.annotations.SerializedName
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.game.support.touch_controller.VibrationHandler
 import com.movtery.zalithlauncher.setting.AllSettings
-import com.movtery.zalithlauncher.setting.enums.GlassTier
 import com.movtery.zalithlauncher.utils.GSON
 import com.movtery.zalithlauncher.utils.logging.Logger
 import com.movtery.zalithlauncher.utils.string.getStringNotNull
@@ -78,12 +77,6 @@ class VersionConfig(
     @SerializedName("renderer")
     var renderer: String = ""
         get() = getStringNotNull(field)
-    @SerializedName("sfpewPluginLayer")
-    var sfpewPluginLayer: SettingState = SettingState.FOLLOW_GLOBAL
-        get() = getSettingStateNotNull(field)
-    @SerializedName("sfpewRelaxedContext")
-    var sfpewRelaxedContext: SettingState = SettingState.FOLLOW_GLOBAL
-        get() = getSettingStateNotNull(field)
     @SerializedName("driver")
     var driver: String = ""
         get() = getStringNotNull(field)
@@ -94,9 +87,6 @@ class VersionConfig(
         get() = getStringNotNull(field)
     @SerializedName("customPath")
     var customPath: String = ""
-        get() = getStringNotNull(field)
-    @SerializedName("customInfo")
-    var customInfo: String = ""
         get() = getStringNotNull(field)
     @SerializedName("versionSummary")
     var versionSummary: String = ""
@@ -111,13 +101,6 @@ class VersionConfig(
     @SerializedName("touchVibrateKind")
     var touchVibrateKind: VibrationHandler.VibrateKind? = null
 
-    /** Per-profile theme: accent color (ARGB), null follows the launcher theme */
-    @SerializedName("themeAccent")
-    var themeAccent: Int? = null
-    /** Per-profile theme: glass tier, null follows the launcher setting */
-    @SerializedName("themeGlassTier")
-    var themeGlassTier: GlassTier? = null
-
     constructor(
         filePath: File,
         isolationType: SettingState = SettingState.FOLLOW_GLOBAL,
@@ -126,20 +109,15 @@ class VersionConfig(
         jvmArgs: String = "",
         gameArgs: String = "",
         renderer: String = "",
-        sfpewPluginLayer: SettingState = SettingState.FOLLOW_GLOBAL,
-        sfpewRelaxedContext: SettingState = SettingState.FOLLOW_GLOBAL,
         driver: String = "",
         graphicsApi: GraphicsApi? = null,
         control: String = "",
         customPath: String = "",
-        customInfo: String = "",
         versionSummary: String = "",
         serverIp: String = "",
         ramAllocation: Int = -1,
         touchVibrateDuration: Int = 100,
         touchVibrateKind: VibrationHandler.VibrateKind? = null,
-        themeAccent: Int? = null,
-        themeGlassTier: GlassTier? = null,
     ) : this(filePath) {
         this.isolationType = isolationType
         this.skipGameIntegrityCheck = skipGameIntegrityCheck
@@ -147,20 +125,15 @@ class VersionConfig(
         this.jvmArgs = jvmArgs
         this.gameArgs = gameArgs
         this.renderer = renderer
-        this.sfpewPluginLayer = sfpewPluginLayer
-        this.sfpewRelaxedContext = sfpewRelaxedContext
         this.driver = driver
         this.graphicsApi = graphicsApi
         this.control = control
         this.customPath = customPath
-        this.customInfo = customInfo
         this.versionSummary = versionSummary
         this.serverIp = serverIp
         this.ramAllocation = ramAllocation
         this.touchVibrateDuration = touchVibrateDuration
         this.touchVibrateKind = touchVibrateKind
-        this.themeAccent = themeAccent
-        this.themeGlassTier = themeGlassTier
     }
 
     fun copy(): VersionConfig = VersionConfig(
@@ -171,20 +144,15 @@ class VersionConfig(
         getStringNotNull(jvmArgs),
         getStringNotNull(gameArgs),
         getStringNotNull(renderer),
-        getSettingStateNotNull(sfpewPluginLayer),
-        getSettingStateNotNull(sfpewRelaxedContext),
         getStringNotNull(driver),
         graphicsApi,
         getStringNotNull(control),
         getStringNotNull(customPath),
-        getStringNotNull(customInfo),
         getStringNotNull(versionSummary),
         getStringNotNull(serverIp),
         ramAllocation,
         touchVibrateDuration,
         touchVibrateKind,
-        themeAccent,
-        themeGlassTier,
     )
 
     /**
@@ -197,13 +165,10 @@ class VersionConfig(
                 getStringNotNull(jvmArgs) != getStringNotNull(other.jvmArgs) ||
                 getStringNotNull(gameArgs) != getStringNotNull(other.gameArgs) ||
                 getStringNotNull(renderer) != getStringNotNull(other.renderer) ||
-                getSettingStateNotNull(sfpewPluginLayer) != getSettingStateNotNull(other.sfpewPluginLayer) ||
-                getSettingStateNotNull(sfpewRelaxedContext) != getSettingStateNotNull(other.sfpewRelaxedContext) ||
                 getStringNotNull(driver) != getStringNotNull(other.driver) ||
                 graphicsApi != other.graphicsApi ||
                 getStringNotNull(control) != getStringNotNull(other.control) ||
                 getStringNotNull(customPath) != getStringNotNull(other.customPath) ||
-                getStringNotNull(customInfo) != getStringNotNull(other.customInfo) ||
                 getStringNotNull(versionSummary) != getStringNotNull(other.versionSummary) ||
                 getStringNotNull(serverIp) != getStringNotNull(other.serverIp) ||
                 ramAllocation != other.ramAllocation ||
@@ -242,10 +207,6 @@ class VersionConfig(
 
     fun skipGameIntegrityCheck(): Boolean = skipGameIntegrityCheck.toBoolean(AllSettings.skipGameIntegrityCheck.getValue())
 
-    fun isSfpewPluginLayerEnabled(): Boolean = sfpewPluginLayer.toBoolean(AllSettings.sfpewPluginLayer.getValue())
-
-    fun isSfpewRelaxedContextEnabled(): Boolean = sfpewRelaxedContext.toBoolean(AllSettings.sfpewRelaxedContext.getValue())
-
     private fun SettingState.toBoolean(global: Boolean) = when(getSettingStateNotNull(this)) {
         SettingState.FOLLOW_GLOBAL -> global
         SettingState.ENABLE -> true
@@ -263,21 +224,15 @@ class VersionConfig(
             writeString(getStringNotNull(jvmArgs))
             writeString(getStringNotNull(gameArgs))
             writeString(getStringNotNull(renderer))
-            writeInt(getSettingStateNotNull(sfpewPluginLayer).ordinal)
-            writeInt(getSettingStateNotNull(sfpewRelaxedContext).ordinal)
             writeString(getStringNotNull(driver))
             writeInt(graphicsApi?.ordinal ?: -1)
             writeString(getStringNotNull(control))
             writeString(getStringNotNull(customPath))
-            writeString(getStringNotNull(customInfo))
             writeString(getStringNotNull(versionSummary))
             writeString(getStringNotNull(serverIp))
             writeInt(ramAllocation)
             writeInt(touchVibrateDuration)
             writeInt(touchVibrateKind?.ordinal ?: -1)
-            writeInt(if (themeAccent != null) 1 else 0)
-            writeInt(themeAccent ?: 0)
-            writeInt(themeGlassTier?.ordinal ?: -1)
         }
     }
 
@@ -290,21 +245,15 @@ class VersionConfig(
             val jvmArgs = parcel.readString().orEmpty()
             val gameArgs = parcel.readString().orEmpty()
             val renderer = parcel.readString().orEmpty()
-            val sfpewPluginLayer = SettingState.entries.getOrNull(parcel.readInt()) ?: SettingState.FOLLOW_GLOBAL
-            val sfpewRelaxedContext = SettingState.entries.getOrNull(parcel.readInt()) ?: SettingState.FOLLOW_GLOBAL
             val driver = parcel.readString().orEmpty()
             val graphicsApi = GraphicsApi.entries.getOrNull(parcel.readInt())
             val control = parcel.readString().orEmpty()
             val customPath = parcel.readString().orEmpty()
-            val customInfo = parcel.readString().orEmpty()
             val versionSummary = parcel.readString().orEmpty()
             val serverIp = parcel.readString().orEmpty()
             val ramAllocation = parcel.readInt()
             val touchVibrateDuration = parcel.readInt()
             val touchVibrateKind = VibrationHandler.VibrateKind.entries.getOrNull(parcel.readInt())
-            val hasThemeAccent = parcel.readInt() == 1
-            val themeAccentValue = parcel.readInt()
-            val themeGlassTier = GlassTier.entries.getOrNull(parcel.readInt())
 
             return VersionConfig(
                 versionPath,
@@ -314,20 +263,15 @@ class VersionConfig(
                 jvmArgs,
                 gameArgs,
                 renderer,
-                sfpewPluginLayer,
-                sfpewRelaxedContext,
                 driver,
                 graphicsApi,
                 control,
                 customPath,
-                customInfo,
                 versionSummary,
                 serverIp,
                 ramAllocation,
                 touchVibrateDuration,
                 touchVibrateKind,
-                if (hasThemeAccent) themeAccentValue else null,
-                themeGlassTier,
             )
         }
 

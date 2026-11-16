@@ -60,7 +60,14 @@ object SwapTimeline {
     /**
      * @return 页面切换动画是否关闭
      */
-    fun isSwapClosed(): Boolean = !AllSettings.launcherSwapAnimEnabled.state
+    fun isSwapClosed(): Boolean = !AllSettings.launcherSwapAnimEnabled.state || pageSlideActive
+
+    /**
+     * True while a full-page horizontal slide runs between main pages.
+     * Per-item swap animations are skipped meanwhile so the whole page moves as one piece.
+     */
+    @Volatile
+    var pageSlideActive: Boolean = false
 
     /**
      * @return 速度倍率

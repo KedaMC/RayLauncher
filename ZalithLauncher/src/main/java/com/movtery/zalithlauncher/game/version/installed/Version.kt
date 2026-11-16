@@ -25,7 +25,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.google.gson.JsonObject
-import com.movtery.zalithlauncher.BuildConfig
 import com.movtery.zalithlauncher.BuildKeys
 import com.movtery.zalithlauncher.context.GlobalContext
 import com.movtery.zalithlauncher.game.launch.LogName
@@ -84,10 +83,6 @@ class Version(
      * 启用控制代理
      */
     var enableTouchProxy: Boolean = false,
-    /**
-     * 是否检测到自实现 FPE 模拟的模组
-     */
-    var fpeEmulatorModDetected: Boolean = false,
 ): Parcelable {
     /**
      * 当前版本是否被置顶
@@ -131,9 +126,9 @@ class Version(
     fun getZalithVersionPath(): File = getZalithVersionPath(getVersionPath())
 
     /**
-     * @return 游戏的上一次运行日志
+     * @return 游戏的上一次运行日志（游戏目录下的 logs/latest.log）
      */
-    fun getLatestLog(): File = File(getZalithVersionPath(), LogName.GAME.fileName)
+    fun getLatestLog(): File = File(File(getGameDir(), "logs"), LogName.GAME.fileName)
 
     /**
      * @return 获取版本设置的图标
@@ -209,10 +204,6 @@ class Version(
 
     fun getRenderer(): String = versionConfig.renderer.getValueOrDefault(AllSettings.renderer.getValue())
 
-    fun isSfpewPluginLayerEnabled(): Boolean = versionConfig.isSfpewPluginLayerEnabled()
-
-    fun isSfpewRelaxedContextEnabled(): Boolean = versionConfig.isSfpewRelaxedContextEnabled()
-
     fun getDriver(): String = versionConfig.driver.getValueOrDefault(AllSettings.vulkanDriver.getValue())
 
     fun getGraphicsApi(): GraphicsApi = versionConfig.graphicsApi ?: AllSettings.graphicsApi.getValue()
@@ -227,9 +218,6 @@ class Version(
     fun getJvmArgs(): String = versionConfig.jvmArgs
 
     fun getGameArgs(): String = versionConfig.gameArgs
-
-    fun getCustomInfo(): String = versionConfig.customInfo.getValueOrDefault(AllSettings.versionCustomInfo.getValue())
-        .replace("[zl_version]", BuildConfig.VERSION_NAME)
 
     fun getServerIp(): String? = versionConfig.serverIp.takeIf { it.isNotEmptyOrBlank() }
 

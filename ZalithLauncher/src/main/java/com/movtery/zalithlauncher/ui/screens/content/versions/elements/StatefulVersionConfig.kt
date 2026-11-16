@@ -34,12 +34,9 @@ class StatefulVersionConfig(private val config: VersionConfig) {
     var jvmArgs by mutableStateOf(config.jvmArgs)
     var gameArgs by mutableStateOf(config.gameArgs)
     var renderer by mutableStateOf(config.renderer)
-    var sfpewPluginLayer by mutableStateOf(config.sfpewPluginLayer)
-    var sfpewRelaxedContext by mutableStateOf(config.sfpewRelaxedContext)
     var driver by mutableStateOf(config.driver)
     var graphicsApi by mutableStateOf(config.graphicsApi)
     var control by mutableStateOf(config.control)
-    var customInfo by mutableStateOf(config.customInfo)
     var serverIp by mutableStateOf(config.serverIp)
     var ramAllocation by mutableIntStateOf(config.ramAllocation)
     var touchVibrateKind by mutableStateOf(config.touchVibrateKind)
@@ -64,12 +61,9 @@ class StatefulVersionConfig(private val config: VersionConfig) {
         target.jvmArgs = jvmArgs
         target.gameArgs = gameArgs
         target.renderer = renderer
-        target.sfpewPluginLayer = sfpewPluginLayer
-        target.sfpewRelaxedContext = sfpewRelaxedContext
         target.driver = driver
         target.graphicsApi = graphicsApi
         target.control = control
-        target.customInfo = customInfo
         target.serverIp = serverIp
         target.ramAllocation = ramAllocation
         target.touchVibrateKind = touchVibrateKind

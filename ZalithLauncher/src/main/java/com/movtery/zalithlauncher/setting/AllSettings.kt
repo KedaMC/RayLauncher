@@ -20,7 +20,6 @@ package com.movtery.zalithlauncher.setting
 
 import androidx.compose.ui.geometry.Offset
 import com.movtery.layer_controller.utils.snap.SnapMode
-import com.movtery.zalithlauncher.BuildKeys
 import com.movtery.zalithlauncher.game.download.addon.platform.Platform
 import com.movtery.zalithlauncher.game.path.GamePathManager
 import com.movtery.zalithlauncher.game.version.installed.GraphicsApi
@@ -30,11 +29,11 @@ import com.movtery.zalithlauncher.setting.enums.BackgroundBlur
 import com.movtery.zalithlauncher.setting.enums.DarkMode
 import com.movtery.zalithlauncher.setting.enums.FpsDisplayMode
 import com.movtery.zalithlauncher.setting.enums.GamepadInputMode
-import com.movtery.zalithlauncher.setting.enums.GlassTier
 import com.movtery.zalithlauncher.setting.enums.GestureActionType
 import com.movtery.zalithlauncher.setting.enums.MirrorSourceType
 import com.movtery.zalithlauncher.setting.enums.MouseControlMode
 import com.movtery.zalithlauncher.setting.enums.MouseTouchBlockMode
+import com.movtery.zalithlauncher.setting.enums.MusicSourceType
 import com.movtery.zalithlauncher.setting.enums.ResolutionRule
 import com.movtery.zalithlauncher.ui.control.HotbarRule
 import com.movtery.zalithlauncher.ui.control.gamepad.JoystickMode
@@ -49,16 +48,6 @@ object AllSettings : SettingsRegistry() {
      * 全局渲染器
      */
     val renderer = stringSetting("renderer", "")
-
-    /**
-     * 为渲染器插件叠加 SFPEW 兼容层
-     */
-    val sfpewPluginLayer = boolSetting("sfpewPluginLayer", false)
-
-    /**
-     * SFPEW 宽松上下文模式
-     */
-    val sfpewRelaxedContext = boolSetting("sfpewRelaxedContext", false)
 
     /**
      * Vulkan 驱动器
@@ -120,11 +109,6 @@ object AllSettings : SettingsRegistry() {
      * 不检查游戏完整性
      */
     val skipGameIntegrityCheck = boolSetting("skipGameIntegrityCheck", false)
-
-    /**
-     * 版本自定义信息
-     */
-    val versionCustomInfo = stringSetting("versionCustomInfo", BuildKeys.LAUNCHER_NAME)
 
     /**
      * 启动器的Java环境
@@ -339,11 +323,6 @@ object AllSettings : SettingsRegistry() {
     val launcherLanguage = enumSetting("launcherLanguage", AppLanguage.FOLLOW_SYSTEM)
 
     /**
-     * 启动器部分屏幕全屏
-     */
-    val launcherFullScreen = boolSetting("launcherFullScreen", true)
-
-    /**
      * 持续型节日彩蛋效果
      */
     val launcherFestivalEffects = boolSetting("launcherFestivalEffects", true)
@@ -361,15 +340,7 @@ object AllSettings : SettingsRegistry() {
 
     /**
      * Glass quality used while [launcherLiquidGlass] is on in the launcher (LITE or FULL).
-     * A per-profile theme can override it.
      */
-    val launcherGlassTier = enumSetting("launcherGlassTier", GlassTier.FULL)
-
-    /**
-     * Glass quality of the in-game menu panels (LITE or FULL), independent from the launcher tier.
-     * Glass in game is switched on/off with [gameLiquidGlass].
-     */
-    val gameGlassTier = enumSetting("gameGlassTier", GlassTier.FULL)
 
     /**
      * 启用页面切换动画
@@ -385,6 +356,11 @@ object AllSettings : SettingsRegistry() {
      * 主界面操作菜单的停泊侧
      */
     val launcherActionMenuSide = enumSetting("launcherActionMenuSide", ActionMenuSide.END)
+
+    /**
+     * Music Card source: local files or music from other apps
+     */
+    val musicCardSource = enumSetting("musicCardSource", MusicSourceType.LOCAL)
 
     /**
      * 启动器背景元素不透明度

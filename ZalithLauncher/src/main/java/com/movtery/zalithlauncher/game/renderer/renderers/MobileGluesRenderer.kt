@@ -41,13 +41,6 @@ object MobileGluesRenderer : ConfigurableRenderer {
             "LIBGL_EGL" to "libmobileglues.so"
         )
         switch(
-            id = "sfpewLayer",
-            title = R.string.renderer_config_mg_sfpew_title,
-            description = R.string.renderer_config_mg_sfpew_desc,
-            default = true,
-            target = ConfigTarget.SfpewLayer
-        )
-        switch(
             id = "MG_COUNT_LAUNCH",
             title = R.string.renderer_config_mg_count_launch_title,
             description = R.string.renderer_config_mg_count_launch_desc,
@@ -240,8 +233,6 @@ object MobileGluesRenderer : ConfigurableRenderer {
     override fun getRendererId(): String = "opengles3_mobileglues"
 
     override fun getUniqueIdentifier(): String = "acaf8100-bbaf-4d68-b30d-38bf42fcd640"
-
-    override fun supportsSfpewByDefault(): Boolean = true
 
     override fun getRendererName(): String = "MobileGlues"
 

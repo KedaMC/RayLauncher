@@ -34,7 +34,6 @@ import com.movtery.zalithlauncher.game.account.isReloginRequired
 import com.movtery.zalithlauncher.game.account.microsoft.validateAccessToken
 import com.movtery.zalithlauncher.game.account.refreshMicrosoft
 import com.movtery.zalithlauncher.game.download.game.GameLibDownloader
-import com.movtery.zalithlauncher.game.renderer.detectFpeEmulatorMods
 import com.movtery.zalithlauncher.game.support.lwjgl3ify.patchLwjgl3ifyIfNeeded
 import com.movtery.zalithlauncher.game.version.download.BaseMinecraftDownloader
 import com.movtery.zalithlauncher.game.version.download.DownloadMode
@@ -300,7 +299,6 @@ class GameLaunchFlow(scope: CoroutineScope) {
     private suspend fun checkMods(version: Version): GameManifest? {
         val modsDir = VersionFolders.MOD.getDir(version.getGameDir())
         val mods = AllModReader(modsDir).readAllLocals()
-        version.fpeEmulatorModDetected = detectFpeEmulatorMods(mods)
 
         if (mods.any { it.id == "touchcontroller" && it.file.isEnabled() }) {
             version.enableTouchProxy = true

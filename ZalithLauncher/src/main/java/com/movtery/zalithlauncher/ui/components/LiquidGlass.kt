@@ -27,7 +27,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.platform.LocalWindowInfo
+import kotlin.math.roundToInt
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -109,9 +113,7 @@ import com.styropyr0.prismal.PrismalBackdrop
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.movtery.zalithlauncher.setting.AllSettings
-import com.movtery.zalithlauncher.setting.enums.GlassTier
 import com.movtery.zalithlauncher.viewmodel.LocalBackgroundViewModel
-import com.styropyr0.prismal.PrismalGlassSurface
 import com.styropyr0.prismal.sources.PrismalGlassLayer
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -142,17 +144,6 @@ fun liquidGlassEnabled(): Boolean =
     } else {
         launcherGlassOn()
     }
-
-/**
- * Quality of the glass being composed: the in-game tier in game, otherwise the launcher tier
- * (selected version's theme first). Never [GlassTier.OFF]; use [liquidGlassEnabled] for on/off.
- */
-@Composable
-@ReadOnlyComposable
-fun liquidGlassTier(): GlassTier {
-    val tier = if (LocalLiquidGlassInGame.current) AllSettings.gameGlassTier.state else launcherGlassTier()
-    return if (tier == GlassTier.OFF) GlassTier.FULL else tier
-}
 
 /**
  * What glass surfaces actually sample. Normally this is [LocalLiquidGlassBackdrop] itself; inside a
@@ -304,13 +295,6 @@ private const val SNAPSHOT_DOWNSCALE = 4
 /** At most ~30 snapshots per second. */
 private const val SNAPSHOT_MIN_INTERVAL_NANOS = 30_000_000L
 
-/** Lite tier: 1/8 size and at most ~15 snapshots per second. */
-private const val LITE_SNAPSHOT_DOWNSCALE = 8
-private const val LITE_SNAPSHOT_MIN_INTERVAL_NANOS = 66_000_000L
-
-/** Lite tier uses half of the requested blur radius. */
-internal const val LITE_BLUR_FACTOR = 0.5f
-
 private tailrec fun Context.findHostWindow(): Window? = when (this) {
     is Activity -> window
     is ContextWrapper -> baseContext.findHostWindow()
@@ -418,14 +402,13 @@ private fun rememberGlassWindowSampler(): DialogWindowBackdrop? {
     val background = LocalBackgroundViewModel.current
     val videoBehindDialog = background != null && background.isValid && background.isVideo
     val hostWindow = LocalContext.current.findHostWindow()
-    val lite = liquidGlassTier() == GlassTier.LITE
     if (videoBehindDialog && hostWindow != null) {
-        LaunchedEffect(sampler, hostWindow, lite) {
+        LaunchedEffect(sampler, hostWindow) {
             captureWindowSnapshots(
                 window = hostWindow,
                 sampler = sampler,
-                downscale = if (lite) LITE_SNAPSHOT_DOWNSCALE else SNAPSHOT_DOWNSCALE,
-                minIntervalNanos = if (lite) LITE_SNAPSHOT_MIN_INTERVAL_NANOS else SNAPSHOT_MIN_INTERVAL_NANOS
+                downscale = SNAPSHOT_DOWNSCALE,
+                minIntervalNanos = SNAPSHOT_MIN_INTERVAL_NANOS
             )
         }
     }
@@ -555,16 +538,16 @@ fun LiquidGlassSurface(
     //A new lambda every recomposition makes Prismal think the shape changed and rebuild its effects
     val shapeProvider: () -> Shape = remember(shape) { { shape } }
 
-    val effectiveBlur = if (liquidGlassTier() == GlassTier.LITE) blurRadius * LITE_BLUR_FACTOR else blurRadius
     //On opted-in pages a still wallpaper is blurred once for everybody: sample that and skip the live blur
-    val sharedLayer = sharedGlassLayerFor(backdrop, effectiveBlur.value)
+    val sharedLayer = sharedGlassLayerFor(backdrop, blurRadius.value)
 
-    PrismalGlassSurface(
+    //PrismalGlassSurface always draws its built-in drop shadow, so use the shadowless copy
+    FlatPrismalGlassSurface(
         backdrop = sharedLayer ?: backdrop,
         modifier = modifier,
         shape = shapeProvider,
         onClick = stableOnClick,
-        blurRadius = if (sharedLayer != null) 0.dp else effectiveBlur,
+        blurRadius = if (sharedLayer != null) 0.dp else blurRadius,
         surfaceColor = if (containerColor.isSpecified) {
             glassTint(containerColor).copy(alpha = GLASS_SURFACE_ALPHA)
         } else {
@@ -804,6 +787,12 @@ fun LiquidGlassBar(
 }
 
 
+/** Below this much room under the anchor, a glass menu opens above it instead (if there is more room). */
+private val MIN_MENU_ROOM = 140.dp
+
+/** Smallest height a glass menu is squeezed to when the anchor leaves almost no room on either side. */
+private val MIN_MENU_HEIGHT = 96.dp
+
 /** Places a menu popup under its anchor, flipping above or clamping when it would leave the window. */
 private class GlassMenuPositionProvider(private val offset: IntOffset) : PopupPositionProvider {
     override fun calculatePosition(
@@ -844,7 +833,7 @@ fun DropdownMenu(
     modifier: Modifier = Modifier,
     offset: DpOffset = DpOffset(0.dp, 0.dp),
     shape: Shape = MaterialTheme.shapes.extraSmall,
-    shadowElevation: Dp = 3.dp,
+    shadowElevation: Dp = 0.dp,
     properties: PopupProperties = PopupProperties(focusable = true),
     matchAnchorWidth: Boolean = false,
     content: @Composable ColumnScope.() -> Unit
@@ -893,19 +882,43 @@ private fun GlassDropdownPopup(
     val sampler = rememberGlassWindowSampler() ?: return
     val density = LocalDensity.current
 
-    //The popup is anchored to its parent layout; read that width for menus that match their field
+    //The popup is anchored to its parent layout; read its width (for menus that match their field)
+    //and its bounds in the window (to cap the menu height to the room next to the anchor)
     var anchorWidthPx by remember { mutableIntStateOf(0) }
-    if (matchAnchorWidth) {
-        Layout(
-            content = {},
-            modifier = Modifier.onGloballyPositioned { anchorWidthPx = it.parentLayoutCoordinates?.size?.width ?: 0 }
-        ) { _, _ -> layout(0, 0) {} }
-    }
+    var anchorBounds by remember { mutableStateOf<IntRect?>(null) }
+    Layout(
+        content = {},
+        modifier = Modifier.onGloballyPositioned { coordinates ->
+            val parent = coordinates.parentLayoutCoordinates
+            anchorWidthPx = parent?.size?.width ?: 0
+            anchorBounds = parent?.boundsInWindow()?.let { rect ->
+                IntRect(rect.left.roundToInt(), rect.top.roundToInt(), rect.right.roundToInt(), rect.bottom.roundToInt())
+            }
+        }
+    ) { _, _ -> layout(0, 0) {} }
     val widthModifier = if (matchAnchorWidth && anchorWidthPx > 0) {
         Modifier.width(with(density) { anchorWidthPx.toDp() })
     } else {
         Modifier.sizeIn(minWidth = 112.dp, maxWidth = 280.dp)
     }
+
+    //Like Material3's menus: never taller than the room below the anchor (or above it when there is
+    //too little below), the rest scrolls. An uncapped menu with many items was taller than the window,
+    //got clamped to the top edge and covered everything, including the field it belongs to.
+    val windowHeightPx = LocalWindowInfo.current.containerSize.height
+    val maxHeightPx = with(density) {
+        val margin = 8.dp.roundToPx()
+        val bounds = anchorBounds
+        val room = if (bounds == null) {
+            windowHeightPx - 2 * margin
+        } else {
+            val below = windowHeightPx - bounds.bottom - margin
+            val above = bounds.top - margin
+            if (below >= MIN_MENU_ROOM.roundToPx() || below >= above) below else above
+        }
+        room.coerceAtLeast(MIN_MENU_HEIGHT.roundToPx())
+    }
+    val heightModifier = Modifier.heightIn(max = with(density) { maxHeightPx.toDp() })
     val layoutDirection = LocalLayoutDirection.current
     val positionProvider = remember(offset, density, layoutDirection) {
         with(density) {
@@ -925,7 +938,8 @@ private fun GlassDropdownPopup(
                 modifier = Modifier
                     .glassPopTransform(progress, TransformOrigin(0f, 0f))
                     .then(modifier)
-                    .then(widthModifier),
+                    .then(widthModifier)
+                    .then(heightModifier),
                 containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = Color.White
             ) {

@@ -2,32 +2,32 @@
 
 [English](README.md) | [简体中文](README_ZH_CN.md) | [繁體中文](README_ZH_TW.md)
 
-**適用於 Android 的非官方 Minecraft: Java Edition 啟動器修改版。**
+## 關於
 
-RayLauncher 是基於 [Zalith Launcher 2](https://github.com/ZalithLauncher/ZalithLauncher2) 的社群維護修改版，著重於自訂啟動器體驗與介面改進。
-
-> **非官方修改版**
->
-> RayLauncher 是獨立專案，與原 Zalith Launcher 開發者、Mojang Studios 或 Microsoft 沒有隸屬關係，也未獲得其認可或支援。
+RayLauncher 是基於 [Zalith Launcher 2](https://github.com/ZalithLauncher/ZalithLauncher2) 的非官方修改版，目標是盡可能降低啟動器的資源占用。優化方向包括縮小 APK 體積，並在可行的情況下提升 Minecraft 的執行效能。
 
 ## 功能
 
-- 自訂啟動器介面。
-- [`feature/liquid-glass` 分支](https://github.com/KedaMC/RayLauncher/tree/feature/liquid-glass) 正在開發 Liquid Glass 風格的視覺效果。不同分支的功能可能有所不同，後續也可能調整。
+- **Liquid Glass** — 採用 Liquid Glass 視覺效果的現代化介面。
+- **PanVK 執行支援** — 修改驅動程式執行機制，使啟動器能夠執行包括 PanVK 在內的 MediaTek Vulkan 驅動程式。RayLauncher 不包含 PanVK 驅動程式本身。
+- **披風系統** — 移植自 [ZalithLauncher2Plus](https://github.com/Star1xr/ZalithLauncher2Plus) 的披風功能。
+- **內建錄影工具** — 整合 Minecraft 遊戲畫面錄製功能，移植自 ZalithLauncher2Plus。
 
-## 授權與署名
+## 截圖
 
-RayLauncher 基於 [Zalith Launcher 2](https://github.com/ZalithLauncher/ZalithLauncher2)，該專案採用 GPL-3.0 授權並附帶額外條款。請參閱本儲存庫的 [LICENSE](LICENSE) 以及上游專案的授權聲明，以了解適用條款。
+<!-- 在此處新增 RayLauncher 截圖。 -->
 
-散布修改版本時，相關要求包括：
+## 致謝
 
-- 保留原有著作權聲明與授權資訊。
-- 使用能明確區別原專案的名稱。
-- 必須在應用程式啟動畫面或主介面醒目標示為**非官方修改版**。
-- 遵守 GPL-3.0 關於原始碼與軟體散布的要求。
+RayLauncher 使用了以下專案的元件：
 
-RayLauncher 不主張擁有原專案程式碼或第三方元件的所有權。
+| 專案 | 貢獻 | 授權條款 |
+|---|---|---|
+| [PrismalAGSL](https://github.com/styropyr0/PrismalAGSL) | Liquid Glass 介面元件 | MIT |
+| [ZalithLauncher2Plus](https://github.com/Star1xr/ZalithLauncher2Plus) | 披風系統與內建錄影工具 | GPL-3.0 |
 
-## 免責聲明
+## 授權條款
 
-Minecraft 是 Microsoft Corporation 的商標。RayLauncher 是獨立的社群專案，與 Mojang Studios 或 Microsoft 沒有隸屬關係，也未獲得其認可。
+RayLauncher 基於 Zalith Launcher 2，並採用 **GNU 通用公眾授權條款第 3 版（GPL-3.0）** 發佈，同時受上游專案第 7 條中的附加條款約束。
+
+授權全文請參閱 [LICENSE](LICENSE)。必須保留適用的著作權聲明與授權條款。RayLauncher 是非官方修改版，並非原版 Zalith Launcher 2 專案。

@@ -38,6 +38,8 @@ import com.movtery.zalithlauncher.BuildConfig
 import com.movtery.zalithlauncher.BuildKeys
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.ui.components.BackgroundCard
+import com.movtery.zalithlauncher.ui.screens.content.LaunchCardContent
+import com.movtery.zalithlauncher.ui.screens.content.home.music.MusicCardContent
 import com.movtery.zalithlauncher.ui.screens.content.home.overlay.OverlayCardContent
 import com.movtery.zalithlauncher.ui.screens.content.home.server.ServerCardContent
 import com.movtery.zalithlauncher.ui.screens.content.home.version.VersionCardContent
@@ -62,6 +64,18 @@ object HomeCards {
 
     /** 装饰叠加（图片/视频）卡片的类型 id */
     const val OVERLAY_CARD_TYPE_ID = "overlay_card"
+
+    /** Music card type id */
+    const val MUSIC_CARD_TYPE_ID = "music_card"
+
+    /** Launch card (account, version, launch button) type id */
+    const val LAUNCH_CARD_TYPE_ID = "launch_card"
+
+    /** The launch card is unique, so its grid id is fixed */
+    const val LAUNCH_CARD_ID = "launch_card"
+
+    /** Rows the compact launch panel needs, so the card box hugs the panel at its minimum size */
+    const val LAUNCH_CARD_MIN_ROWS = 11
 
     private val versionCardType = CardType(
         typeId = VERSION_CARD_TYPE_ID,
@@ -105,6 +119,39 @@ object HomeCards {
         }
     )
 
+    /** Music card: album artwork, track info, audio visualizer and playback controls */
+    private val musicCardType = CardType(
+        typeId = MUSIC_CARD_TYPE_ID,
+        defaultSpan = IntOffset(18, 8),
+        limits = CardLimits(
+            minWidth = 14,
+            minHeight = 7,
+            maxHeight = 12
+        ),
+        content = { _ ->
+            MusicCardContent()
+        }
+    )
+
+    /**
+     * Launch card: the former side panel as a grid card. It is drawn by its own content (no container),
+     * can be placed and resized anywhere like the other cards, and can not be deleted.
+     */
+    private val launchCardType = CardType(
+        typeId = LAUNCH_CARD_TYPE_ID,
+        defaultSpan = IntOffset(12, LAUNCH_CARD_MIN_ROWS),
+        limits = CardLimits(
+            minWidth = 10,
+            minHeight = LAUNCH_CARD_MIN_ROWS,
+            maxHeight = 80
+        ),
+        transparent = true,
+        removable = false,
+        content = { cardId ->
+            LaunchCardContent(cardId)
+        }
+    )
+
     /** 版本卡片类型 */
     fun versionCardType(): CardType = versionCardType
 
@@ -114,8 +161,14 @@ object HomeCards {
     /** 装饰叠加卡片类型 */
     fun overlayCardType(): CardType = overlayCardType
 
+    /** Music card type */
+    fun musicCardType(): CardType = musicCardType
+
+    /** Launch card type */
+    fun launchCardType(): CardType = launchCardType
+
     /** 用户卡片类型注册表 */
-    val userCardTypes: List<CardType> = listOf(versionCardType, serverCardType, overlayCardType)
+    val userCardTypes: List<CardType> = listOf(versionCardType, serverCardType, overlayCardType, musicCardType, launchCardType)
 
     /** 系统卡片（不可变更） */
     fun systemCards(): List<SystemCard> = buildList {

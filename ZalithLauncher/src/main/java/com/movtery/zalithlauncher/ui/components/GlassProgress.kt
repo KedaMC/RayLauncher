@@ -19,14 +19,12 @@
 package com.movtery.zalithlauncher.ui.components
 
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.WavyProgressIndicatorDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
-import com.movtery.zalithlauncher.setting.enums.GlassTier
 
 /** Opacity of the progress track on glass, same as the glass sliders. */
 private const val GLASS_TRACK_ALPHA = 0.28f
@@ -35,9 +33,7 @@ private const val GLASS_TRACK_ALPHA = 0.28f
  * Indeterminate linear progress for loading states.
  *
  * - Liquid Glass off: the normal Material wavy indicator.
- * - Glass on ([GlassTier.FULL]): wavy indicator in white, like the glass sliders.
- * - Glass on ([GlassTier.LITE]): flat white bar. The wave animation redraws every frame for as long
- *   as it is on screen, which is not worth the GPU time on weaker devices.
+ * - Glass on: wavy indicator in white, like the glass sliders.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -51,20 +47,16 @@ fun GlassLinearProgress(
     }
     val color = Color.White
     val trackColor = Color.White.copy(alpha = GLASS_TRACK_ALPHA)
-    if (liquidGlassTier() == GlassTier.LITE) {
-        LinearProgressIndicator(modifier = modifier, color = color, trackColor = trackColor)
-    } else {
-        LinearWavyProgressIndicator(
-            modifier = modifier,
-            color = color,
-            trackColor = trackColor,
-            wavelength = wavelength
-        )
-    }
+    LinearWavyProgressIndicator(
+        modifier = modifier,
+        color = color,
+        trackColor = trackColor,
+        wavelength = wavelength
+    )
 }
 
 /**
- * Determinate variant of [GlassLinearProgress], with the same glass and tier behavior.
+ * Determinate variant of [GlassLinearProgress], with the same glass behavior.
  * [progress] is read lazily so only the indicator redraws when the value changes.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -79,14 +71,10 @@ fun GlassLinearProgress(
     }
     val color = Color.White
     val trackColor = Color.White.copy(alpha = GLASS_TRACK_ALPHA)
-    if (liquidGlassTier() == GlassTier.LITE) {
-        LinearProgressIndicator(progress = progress, modifier = modifier, color = color, trackColor = trackColor)
-    } else {
-        LinearWavyProgressIndicator(
-            progress = progress,
-            modifier = modifier,
-            color = color,
-            trackColor = trackColor
-        )
-    }
+    LinearWavyProgressIndicator(
+        progress = progress,
+        modifier = modifier,
+        color = color,
+        trackColor = trackColor
+    )
 }

@@ -96,7 +96,7 @@ fun UpgradeDialog(
                 shape = MaterialTheme.shapes.extraLarge,
                 color = cardColor(false),
                 contentColor = onCardColor(),
-                shadowElevation = 3.dp
+                shadowElevation = 0.dp
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth(),

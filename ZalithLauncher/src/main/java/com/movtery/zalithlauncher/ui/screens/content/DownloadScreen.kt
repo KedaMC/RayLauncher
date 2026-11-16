@@ -52,6 +52,7 @@ import com.movtery.zalithlauncher.game.download.addon.favorites.FavoriteProjects
 import com.movtery.zalithlauncher.game.download.addon.platform.Platform
 import com.movtery.zalithlauncher.game.download.addon.platform.PlatformClasses
 import com.movtery.zalithlauncher.ui.base.BaseScreen
+import com.movtery.zalithlauncher.ui.base.clipPageTop
 import com.movtery.zalithlauncher.ui.components.GlassRailItemBody
 import com.movtery.zalithlauncher.ui.components.LiquidGlassSurface
 import com.movtery.zalithlauncher.ui.components.AnimatedDirection
@@ -155,7 +156,7 @@ fun DownloadScreen(
                 eventViewModel = eventViewModel,
                 modpackImportViewModel = modpackImportViewModel,
                 submitError = submitError,
-                modifier = Modifier.fillMaxHeight()
+                modifier = Modifier.fillMaxHeight().clipPageTop()
             )
         }
     }

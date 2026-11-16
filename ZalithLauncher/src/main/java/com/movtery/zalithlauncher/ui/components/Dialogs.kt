@@ -310,7 +310,7 @@ fun SimpleEditDialog(
                 shape = MaterialTheme.shapes.extraLarge,
                 color = cardColor(false),
                 contentColor = onCardColor(),
-                shadowElevation = 6.dp
+                shadowElevation = 0.dp
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -387,7 +387,7 @@ fun SimpleEditDialog(
                 shape = MaterialTheme.shapes.extraLarge,
                 color = cardColor(false),
                 contentColor = onCardColor(),
-                shadowElevation = 6.dp
+                shadowElevation = 0.dp
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -581,7 +581,7 @@ fun <T> SimpleListDialog(
                 shape = MaterialTheme.shapes.extraLarge,
                 color = cardColor(false),
                 contentColor = onCardColor(),
-                shadowElevation = 3.dp
+                shadowElevation = 0.dp
             ) {
                 Column(
                     modifier = Modifier
@@ -679,7 +679,7 @@ fun ProgressDialog(
             shape = MaterialTheme.shapes.extraLarge,
             color = cardColor(false),
             contentColor = onCardColor(),
-            shadowElevation = 6.dp
+            shadowElevation = 0.dp
         ) {
             Column(
                 modifier = Modifier

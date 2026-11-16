@@ -19,10 +19,25 @@
 package com.movtery.zalithlauncher.ui.screens.content.settings
 
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import android.Manifest
+import android.content.Intent
+import android.provider.Settings
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.DisposableEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.movtery.zalithlauncher.music.LocalMusicLibrary
+import com.movtery.zalithlauncher.music.MusicManager
+import com.movtery.zalithlauncher.music.ShizukuAccess
+import com.movtery.zalithlauncher.music.ShizukuState
+import com.movtery.zalithlauncher.music.hasRecordAudioPermission
+import com.movtery.zalithlauncher.setting.enums.MusicSourceType
+import com.movtery.zalithlauncher.ui.screens.content.home.music.MusicCardManager
+import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.EnumSettingsCard
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
 import com.movtery.zalithlauncher.ui.screens.content.home.overlay.OverlayCardManager
-import com.movtery.zalithlauncher.setting.enums.GlassTier
 import com.movtery.zalithlauncher.ui.components.launcherGlassOn
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.AnimatedVisibility
@@ -166,40 +181,12 @@ fun LauncherSettingsScreen(
 
                     SwitchSettingsCard(
                         modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Middle,
-                        unit = AllSettings.launcherFullScreen,
-                        title = stringResource(R.string.settings_launcher_full_screen_title),
-                        summary = stringResource(R.string.settings_launcher_full_screen_summary)
-                    )
-
-                    SwitchSettingsCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Middle,
+                        position = CardPosition.Bottom,
                         unit = AllSettings.launcherLiquidGlass,
                         title = stringResource(R.string.settings_launcher_liquid_glass_title),
                         summary = stringResource(R.string.settings_launcher_liquid_glass_summary)
                     )
 
-                    ListSettingsCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Middle,
-                        unit = AllSettings.launcherGlassTier,
-                        items = glassTierChoices,
-                        title = stringResource(R.string.settings_launcher_glass_tier_title),
-                        summary = stringResource(R.string.settings_launcher_glass_tier_summary),
-                        getItemText = { stringResource(it.textRes) },
-                        enabled = AllSettings.launcherLiquidGlass.state
-                    )
-
-                    ListSettingsCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Bottom,
-                        unit = AllSettings.gameGlassTier,
-                        items = glassTierChoices,
-                        title = stringResource(R.string.settings_game_glass_tier_title),
-                        summary = stringResource(R.string.settings_game_glass_tier_summary),
-                        getItemText = { stringResource(it.textRes) }
-                    )
                 }
             }
 
@@ -304,6 +291,15 @@ fun LauncherSettingsScreen(
                         .fillMaxWidth()
                         .animated(ctx),
                     submitError = submitError
+                )
+            }
+
+            //Music card (added below the overlay card, configured here)
+            animatedItem { ctx ->
+                MusicSettings(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animated(ctx)
                 )
             }
 
@@ -414,9 +410,6 @@ fun LauncherSettingsScreen(
     }
 }
 
-/** Glass tiers the user can choose in settings; [GlassTier.OFF] is the Liquid Glass switch itself. */
-private val glassTierChoices = listOf(GlassTier.LITE, GlassTier.FULL)
-
 @Composable
 private fun OverlaySettings(
     submitError: (ErrorViewModel.ThrowableMessage) -> Unit,
@@ -472,6 +465,142 @@ private fun OverlaySettings(
             summary = if (cards.isEmpty()) stringResource(R.string.settings_launcher_overlay_none) else null,
             enabled = cards.isNotEmpty(),
             onClick = { OverlayCardManager.removeAll() }
+        )
+    }
+}
+
+@Composable
+private fun MusicSettings(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    val cardId by MusicCardManager.cardId.collectAsStateWithLifecycle()
+    val tracks by LocalMusicLibrary.tracks.collectAsStateWithLifecycle()
+    val hasCard = cardId != null
+    val source = AllSettings.musicCardSource.state
+
+    //Permissions are granted outside of the app, so they are read again when the user comes back
+    var shizukuState by remember { mutableStateOf(ShizukuAccess.state(context)) }
+    var recordAudio by remember { mutableStateOf(hasRecordAudioPermission(context)) }
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                shizukuState = ShizukuAccess.state(context)
+                recordAudio = hasRecordAudioPermission(context)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        //Shizuku can start, stop or answer the permission dialog while this screen is open
+        val subscription = ShizukuAccess.subscribe { shizukuState = ShizukuAccess.state(context) }
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            subscription.close()
+        }
+    }
+
+    val audioPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenMultipleDocuments()
+    ) { uris ->
+        if (uris.isNotEmpty()) {
+            scope.launch { LocalMusicLibrary.importUris(context, uris) }
+        }
+    }
+    val recordAudioLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        recordAudio = granted
+        MusicManager.refresh()
+    }
+
+    SettingsCardColumn(modifier = modifier) {
+        SettingsCard(
+            modifier = Modifier.fillMaxWidth(),
+            position = CardPosition.Top,
+            title = stringResource(R.string.settings_launcher_music_add),
+            summary = stringResource(
+                if (hasCard) R.string.settings_launcher_music_added else R.string.settings_launcher_music_add_summary
+            ),
+            enabled = !hasCard,
+            onClick = { MusicCardManager.addCard() }
+        )
+
+        EnumSettingsCard(
+            modifier = Modifier.fillMaxWidth(),
+            position = CardPosition.Middle,
+            unit = AllSettings.musicCardSource,
+            entries = MusicSourceType.entries,
+            title = stringResource(R.string.settings_launcher_music_source),
+            summary = stringResource(R.string.settings_launcher_music_source_summary),
+            getRadioText = { stringResource(it.textRes) },
+            getRadioEnable = { hasCard }
+        )
+
+        when (source) {
+            MusicSourceType.LOCAL -> {
+                SettingsCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    position = CardPosition.Middle,
+                    title = stringResource(R.string.settings_launcher_music_import),
+                    summary = stringResource(R.string.settings_launcher_music_import_summary),
+                    enabled = hasCard,
+                    onClick = { audioPicker.launch(arrayOf("audio/*")) }
+                )
+                SettingsCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    position = CardPosition.Middle,
+                    title = stringResource(R.string.settings_launcher_music_clear),
+                    summary = if (tracks.isEmpty()) {
+                        stringResource(R.string.settings_launcher_music_none)
+                    } else {
+                        stringResource(R.string.settings_launcher_music_count, tracks.size)
+                    },
+                    enabled = hasCard && tracks.isNotEmpty(),
+                    onClick = { LocalMusicLibrary.clear(context) }
+                )
+            }
+            MusicSourceType.BACKGROUND -> {
+                SettingsCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    position = CardPosition.Middle,
+                    title = stringResource(R.string.settings_launcher_music_shizuku),
+                    summary = stringResource(
+                        when (shizukuState) {
+                            ShizukuState.NOT_INSTALLED -> R.string.settings_launcher_music_shizuku_not_installed
+                            ShizukuState.NOT_RUNNING -> R.string.settings_launcher_music_shizuku_not_running
+                            ShizukuState.PERMISSION_NEEDED -> R.string.settings_launcher_music_shizuku_permission
+                            ShizukuState.GRANTED -> R.string.settings_launcher_music_shizuku_granted
+                        }
+                    ),
+                    enabled = hasCard,
+                    onClick = {
+                        if (shizukuState == ShizukuState.PERMISSION_NEEDED) {
+                            ShizukuAccess.requestPermission(context)
+                        } else {
+                            ShizukuAccess.openShizuku(context)
+                        }
+                    }
+                )
+                SettingsCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    position = CardPosition.Middle,
+                    title = stringResource(R.string.settings_launcher_music_visualizer_permission),
+                    summary = stringResource(
+                        if (recordAudio) R.string.settings_launcher_music_visualizer_permission_granted
+                        else R.string.settings_launcher_music_visualizer_permission_summary
+                    ),
+                    enabled = hasCard && !recordAudio,
+                    onClick = { recordAudioLauncher.launch(Manifest.permission.RECORD_AUDIO) }
+                )
+            }
+        }
+
+        SettingsCard(
+            modifier = Modifier.fillMaxWidth(),
+            position = CardPosition.Bottom,
+            title = stringResource(R.string.settings_launcher_music_remove),
+            enabled = hasCard,
+            onClick = { MusicCardManager.removeCard() }
         )
     }
 }

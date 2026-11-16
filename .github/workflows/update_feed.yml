@@ -1,0 +1,78 @@
+name: Update Feed
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: "Release tag to publish into update/latest_version_md.json"
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to publish into update/latest_version_md.json"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  feed:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ inputs.tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: RayLauncher
+          fetch-depth: 0
+
+      - name: Generate update/latest_version_md.json
+        shell: bash
+        run: |
+          set -euo pipefail
+          PROPS="$(git show "refs/tags/${TAG}:ZalithLauncher/gradle.properties")"
+          CODE="$(echo "$PROPS" | grep -E '^launcher_version_code=' | head -n1 | cut -d= -f2- | tr -d '\r')"
+          NAME="$(echo "$PROPS" | grep -E '^launcher_version_name=' | head -n1 | cut -d= -f2- | tr -d '\r')"
+          gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" > release.json
+          FILES="$(jq '[.assets[] | select(.name | endswith(".apk")) | {
+            file_name: .name,
+            uri: .browser_download_url,
+            size: .size,
+            arch: (if (.name | test("arm64-v8a")) then "arm64"
+                   elif (.name | test("armeabi-v7a")) then "arm"
+                   else "all" end)
+          }]' release.json)"
+          if [ "$(echo "$FILES" | jq 'length')" -eq 0 ]; then
+            echo "No APK assets found on release ${TAG}"
+            exit 1
+          fi
+          mkdir -p update
+          jq -n \
+            --argjson code "$CODE" \
+            --arg version "$NAME" \
+            --arg created "$(jq -r '.published_at' release.json)" \
+            --arg body "$(jq -r '.body // ""' release.json)" \
+            --argjson files "$FILES" \
+            '{code: $code, version: $version, created_at: $created,
+              default_cloud_drive: null, cloud_drives: [], files: $files,
+              default_body: {language: "NULL", markdown: $body}, bodies: []}' \
+            > update/latest_version_md.json
+          cat update/latest_version_md.json
+
+      - name: Commit feed
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add update/latest_version_md.json
+          if git diff --cached --quiet; then
+            echo "Feed unchanged"
+            exit 0
+          fi
+          git commit -m "Update feed for ${TAG}"
+          git push origin HEAD:RayLauncher

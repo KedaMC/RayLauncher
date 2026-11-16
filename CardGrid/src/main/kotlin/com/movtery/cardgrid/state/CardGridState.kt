@@ -210,12 +210,18 @@ class CardGridState internal constructor(
     private var typeById: Map<String, CardType> = emptyMap()
 
     /** 网格几何是否已经依据实际容器宽度完成过计算 */
-    private var geometryReady = false
+    private var geometryReadyState by mutableStateOf(false)
+    private var geometryReady: Boolean
+        get() = geometryReadyState
+        set(value) { geometryReadyState = value }
+
+    /** 网格几何已就绪且持久化布局已落位后为 true，可据此安全地补放必备卡片 */
+    val isLayoutReady: Boolean get() = isSeeded && geometryReadyState
 
     private val animators = mutableMapOf<String, Animatable<Rect, AnimationVector4D>>()
 
     /** 是否已经播种过；状态跨导航存活时，据此避免重复播种与重放入场动画 */
-    var isSeeded: Boolean = false
+    var isSeeded by mutableStateOf(false)
         private set
 
     // ---------- 播种 ----------
@@ -332,13 +338,32 @@ class CardGridState internal constructor(
 
     // ---------- 卡片管理 ----------
 
-    /** 追加一张卡片，落在最上最左的空闲位置 */
-    fun addCard(type: CardType, id: String = UUID.randomUUID().toString()): GridCard? {
+    /**
+     * 追加一张卡片，默认落在最上最左的空闲位置。
+     * 指定 [preferred] 时按其跨度与位置放置，被占用则取距离它最近的空闲位置。
+     */
+    fun addCard(
+        type: CardType,
+        id: String = UUID.randomUUID().toString(),
+        preferred: CardRect? = null
+    ): GridCard? {
         if (cards.any { it.id == id }) return null
         val lim = type.limits.clampedFor(geometry.columns)
-        val width = type.defaultSpan.x.coerceIn(lim.minWidth, lim.maxWidth)
-        val height = type.defaultSpan.y.coerceIn(lim.minHeight, lim.maxHeight)
-        val slot = GridEngine.findTopLeftFreeSlot(
+        val width = (preferred?.width ?: type.defaultSpan.x).coerceIn(lim.minWidth, lim.maxWidth)
+        val height = (preferred?.height ?: type.defaultSpan.y).coerceIn(lim.minHeight, lim.maxHeight)
+        val nearest = preferred?.let {
+            GridEngine.findNearestFreeSlot(
+                width = width,
+                height = height,
+                origin = IntOffset(
+                    it.x.coerceIn(0, (geometry.columns - width).coerceAtLeast(0)),
+                    it.y.coerceAtLeast(0)
+                ),
+                columns = geometry.columns,
+                obstacles = layouts()
+            )
+        }
+        val slot = nearest ?: GridEngine.findTopLeftFreeSlot(
             width = width,
             height = height,
             columns = geometry.columns,
@@ -396,6 +421,17 @@ class CardGridState internal constructor(
             .filter { (_, distance) -> distance <= hitRadiusPx }
             .minByOrNull { (_, distance) -> distance }
             ?.let { (edge, _) -> card to edge }
+    }
+
+    /**
+     * Hit-tests the adjusting card with its rect grown by [DRAG_HIT_SLOP_DP] on every side,
+     * so a drag can start slightly outside a card box that hugs its content.
+     * @return the adjusting card, or null when the position is outside the grown rect
+     */
+    fun adjustingCardNear(position: Offset): GridCard? {
+        val card = adjustingCardId?.let { id -> cards.firstOrNull { it.id == id } } ?: return null
+        val slopPx = DRAG_HIT_SLOP_DP * densityFactor
+        return card.takeIf { renderRectOf(it).inflate(slopPx).contains(position) }
     }
 
     private fun edgeCenter(edge: ResizeEdge, rect: Rect): Offset = when (edge) {
@@ -754,6 +790,9 @@ class CardGridState internal constructor(
     companion object {
         /** 缩放手柄热区半径（dp） */
         private const val EDGE_HIT_RADIUS_DP = 24f
+
+        /** Extra drag hit area (dp) around the selected card */
+        private const val DRAG_HIT_SLOP_DP = 16f
     }
 }
 

@@ -31,6 +31,7 @@ typealias CardContent = @Composable CardState.(cardId: String) -> Unit
  * @param limits 尺寸边界限制
  * @param shape 形状
  * @param transparent 为 true 时卡片没有容器底色与背景装饰，内容直接绘制在网格上（仍按 [shape] 裁剪）
+ * @param removable false 时卡片不可被用户删除（始终保留在网格中）
  * @param content 该卡片的 UI 内容
  */
 class CardType(
@@ -39,5 +40,6 @@ class CardType(
     val limits: CardLimits = CardLimits.DEFAULT,
     val shape: Shape? = null,
     val transparent: Boolean = false,
+    val removable: Boolean = true,
     val content: CardContent
 )

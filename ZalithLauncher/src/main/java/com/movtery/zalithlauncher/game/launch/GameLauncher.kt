@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.IntSize
 import com.movtery.zalithlauncher.BuildConfig
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.ZLApplication
+import com.movtery.zalithlauncher.bridge.LoggerBridge
 import com.movtery.zalithlauncher.bridge.LoggerBridge.appendInfo
 import com.movtery.zalithlauncher.bridge.LoggerBridge.appendTitle
 import com.movtery.zalithlauncher.bridge.ZLBridge
@@ -44,8 +45,6 @@ import com.movtery.zalithlauncher.game.plugin.renderer.RendererPluginManager
 import com.movtery.zalithlauncher.game.renderer.ConfigurableRenderer
 import com.movtery.zalithlauncher.game.renderer.RendererLaunchConfig
 import com.movtery.zalithlauncher.game.renderer.Renderers
-import com.movtery.zalithlauncher.game.renderer.getSfpewLibraryPath
-import com.movtery.zalithlauncher.game.renderer.isSfpewEnabledFor
 import com.movtery.zalithlauncher.game.renderer.prepareRendererLaunchConfig
 import com.movtery.zalithlauncher.game.support.touch_controller.ControllerProxy
 import com.movtery.zalithlauncher.game.version.installed.Version
@@ -221,20 +220,27 @@ class GameLauncher(
         RendererPluginManager.selectedRendererPlugin?.let { renderer ->
             val libs by renderer.getDlopenLibrary()
             libs.forEach { libPath ->
-                ZLBridge.dlopen(libPath)
+                dlopenLogged(libPath)
             }
         }
 
         val rendererLib = getRendererLibrary() ?: return
-        if (!ZLBridge.dlopen(rendererLib) && !ZLBridge.dlopen(findInLdLibPath(rendererLib))) {
+        if (!dlopenLogged(rendererLib) && !dlopenLogged(findInLdLibPath(rendererLib))) {
             Logger.error(TAG, "Failed to load renderer $rendererLib")
         }
+    }
+
+    //Failures are already logged by the native dlopen, so only successes are logged here
+    private fun dlopenLogged(libPath: String): Boolean {
+        val loaded = ZLBridge.dlopen(libPath)
+        if (loaded) LoggerBridge.append("[DEBUG] DLOPEN: $libPath , success")
+        return loaded
     }
 
     override fun progressFinalUserArgs(args: MutableList<String>, ramAllocation: Int) {
         super.progressFinalUserArgs(args, version.getRamAllocation(activity))
         if (Renderers.isCurrentRendererValid()) {
-            args.add("-Dorg.lwjgl.opengl.libname=${getGameRendererLibrary(version, configuredRenderer)}")
+            args.add("-Dorg.lwjgl.opengl.libname=${getRendererLibrary()}")
         }
     }
 
@@ -492,19 +498,6 @@ private fun setRendererEnv(
 
     envMap["POJAV_RENDERER"] = rendererId
 
-    if (isSfpewEnabledFor(renderer, version, configuredRenderer)) {
-        envMap["SFPEW_LAYER"] = "1"
-        envMap["SFPEW_EGL"] = envMap["SDL_EGL_LIBRARY"]
-            ?: envMap["POJAVEXEC_EGL"]
-            ?: "libEGL.so"
-        if (version.isSfpewRelaxedContextEnabled()) {
-            envMap["SFPEW_RELAXED_CONTEXT"] = "1"
-        }
-        val sfpewLibraryPath = getSfpewLibraryPath()
-        envMap["SDL_OPENGL_LIBRARY"] = sfpewLibraryPath
-        envMap["SDL_EGL_LIBRARY"] = sfpewLibraryPath
-    }
-
     if (RendererPluginManager.selectedRendererPlugin != null) return
 
     if (renderer.mesaBased) {
@@ -542,16 +535,6 @@ private fun setRendererEnv(
 private fun getRendererLibrary(): String? {
     return if (!Renderers.isCurrentRendererValid()) null
     else Renderers.getCurrentRenderer().getRendererLibrary()
-}
-
-private fun getGameRendererLibrary(version: Version, configuredRenderer: RendererLaunchConfig?): String? {
-    if (!Renderers.isCurrentRendererValid()) return null
-    val renderer = Renderers.getCurrentRenderer()
-    return if (isSfpewEnabledFor(renderer, version, configuredRenderer)) {
-        getSfpewLibraryPath()
-    } else {
-        renderer.getRendererLibrary()
-    }
 }
 
 /**
