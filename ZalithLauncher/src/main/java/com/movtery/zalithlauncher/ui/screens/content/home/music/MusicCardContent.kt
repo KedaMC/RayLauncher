@@ -91,6 +91,8 @@ import com.movtery.zalithlauncher.music.MusicState
 import com.movtery.zalithlauncher.music.MusicStatus
 import com.movtery.zalithlauncher.ui.components.IconButton
 import com.movtery.zalithlauncher.ui.components.LiquidGlassSurface
+import com.movtery.zalithlauncher.ui.components.liquidGlassPressAnimation
+import com.movtery.zalithlauncher.ui.theme.cardColor
 import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
 import com.movtery.zalithlauncher.ui.components.MarqueeText
 import kotlinx.coroutines.delay
@@ -547,12 +549,13 @@ private fun MusicControls(music: MusicState) {
             LiquidGlassSurface(
                 modifier = Modifier
                     .size(60.dp)
+                    .then(if (playEnabled) Modifier.liquidGlassPressAnimation() else Modifier)
                     .alpha(if (playEnabled) 1f else 0.4f),
                 backdrop = glass,
                 shape = CircleShape,
-                containerColor = Color.White.copy(alpha = 0.16f),
+                //Same glass as the Launch button
+                containerColor = cardColor(),
                 contentColor = Color.White,
-                blurRadius = 8.dp,
                 onClick = if (playEnabled) ({ MusicManager.playPause() }) else null
             ) {
                 Icon(
