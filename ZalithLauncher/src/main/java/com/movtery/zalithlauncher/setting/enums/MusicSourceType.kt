@@ -27,5 +27,10 @@ enum class MusicSourceType(val textRes: Int) {
     /**
      * Audio files imported from device storage, played by the launcher itself (Media3 ExoPlayer)
      */
-    LOCAL(R.string.music_source_local)
+    LOCAL(R.string.music_source_local),
+
+    /**
+     * Music played by other apps, read from their media sessions
+     */
+    BACKGROUND(R.string.music_source_background)
 }

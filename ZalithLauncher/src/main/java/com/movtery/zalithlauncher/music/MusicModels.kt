@@ -40,7 +40,13 @@ enum class MusicStatus {
     READY,
 
     /** Local source selected, but no music file was imported yet */
-    LIBRARY_EMPTY
+    LIBRARY_EMPTY,
+
+    /** Background source selected, but notification access was not granted */
+    ACCESS_REQUIRED,
+
+    /** Background source selected, but no other app has a media session */
+    NO_SESSION
 }
 
 enum class MusicRepeat { OFF, ALL, ONE }
@@ -74,7 +80,9 @@ data class MusicState(
     val canPrevious: Boolean = false,
     val canNext: Boolean = false,
     val canSeek: Boolean = false,
-    val canRepeat: Boolean = false
+    val canRepeat: Boolean = false,
+    /** Only meaningful with [MusicStatus.ACCESS_REQUIRED]: what the user still has to do in Shizuku */
+    val shizukuState: ShizukuState = ShizukuState.GRANTED
 ) {
     val repeatActive: Boolean get() = repeat != MusicRepeat.OFF
 

@@ -3054,6 +3054,12 @@
     <string name="music_card_access_title">Notification access needed</string>
     <string name="music_card_access_summary">Allow RayLauncher to read the music other apps are playing</string>
     <string name="music_card_access_grant">Grant access</string>
+    <string name="music_card_shizuku_title">Shizuku needed</string>
+    <string name="music_card_shizuku_not_installed">Install Shizuku to show the music other apps are playing</string>
+    <string name="music_card_shizuku_not_running">Start Shizuku, then come back here</string>
+    <string name="music_card_shizuku_permission">Allow RayLauncher to use Shizuku</string>
+    <string name="music_card_shizuku_get">Get Shizuku</string>
+    <string name="music_card_shizuku_open">Open Shizuku</string>
     <string name="music_card_no_session_title">Nothing is playing</string>
     <string name="music_card_no_session_summary">Start music in another app and it shows up here</string>
     <string name="music_card_repeat">Repeat</string>
@@ -3075,6 +3081,11 @@
     <string name="settings_launcher_music_access">Notification access</string>
     <string name="settings_launcher_music_access_summary">Required to read the music of other apps. Tap to open the system settings and allow RayLauncher</string>
     <string name="settings_launcher_music_access_granted">Allowed. Tap to open the system settings</string>
+    <string name="settings_launcher_music_shizuku">Shizuku</string>
+    <string name="settings_launcher_music_shizuku_not_installed">Required to read the music of other apps. Shizuku is not installed. Tap to get it</string>
+    <string name="settings_launcher_music_shizuku_not_running">Shizuku is not running. Tap to open it and start the service</string>
+    <string name="settings_launcher_music_shizuku_permission">Tap to allow RayLauncher to use Shizuku</string>
+    <string name="settings_launcher_music_shizuku_granted">Connected. Tap to open Shizuku</string>
     <string name="settings_launcher_music_visualizer_permission">Visualizer permission</string>
     <string name="settings_launcher_music_visualizer_permission_summary">Lets the visualizer follow the audio of other apps (microphone permission, no audio is recorded). Without it the visualizer stays static</string>
     <string name="settings_launcher_music_visualizer_permission_granted">Allowed</string>
