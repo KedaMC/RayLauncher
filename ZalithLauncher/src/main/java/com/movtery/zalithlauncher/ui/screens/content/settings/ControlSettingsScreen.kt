@@ -60,9 +60,6 @@ import com.movtery.zalithlauncher.contract.MediaPickerContract
 import com.movtery.zalithlauncher.coroutine.Task
 import com.movtery.zalithlauncher.coroutine.TaskSystem
 import com.movtery.zalithlauncher.setting.AllSettings
-import com.movtery.zalithlauncher.setting.enums.GestureActionType
-import com.movtery.zalithlauncher.setting.enums.MouseControlMode
-import com.movtery.zalithlauncher.setting.enums.MouseTouchBlockMode
 import com.movtery.zalithlauncher.setting.unit.ParcelableSettingUnit
 import com.movtery.zalithlauncher.setting.unit.floatRange
 import com.movtery.zalithlauncher.ui.androidText
@@ -93,7 +90,6 @@ import com.movtery.zalithlauncher.ui.screens.NormalNavKey
 import com.movtery.zalithlauncher.ui.screens.TitledNavKey
 import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.CardPosition
 import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.IntSliderSettingsCard
-import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.ListSettingsCard
 import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.SettingsCard
 import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.SwitchSettingsCard
 import com.movtery.zalithlauncher.utils.formatKeyCode
@@ -245,136 +241,6 @@ fun ControlSettingsScreen(
                     title = stringResource(R.string.settings_control_mouse_size_title),
                     valueRange = AllSettings.mouseSize.floatRange,
                     suffix = "Dp",
-                    fineTuningControl = true
-                )
-            }
-            groupGap("gap_1")
-
-            //Group 2: mouse control
-            card("mouse_hide", 2) {
-                SwitchSettingsCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    position = CardPosition.Top,
-                    unit = AllSettings.hideMouse,
-                    title = stringResource(R.string.settings_control_mouse_hide_title),
-                    summary = stringResource(R.string.settings_control_mouse_hide_summary),
-                    enabled = AllSettings.mouseControlMode.state == MouseControlMode.CLICK //仅点击模式下可更改设置
-                )
-            }
-            card("mouse_enable_click", 2) {
-                SwitchSettingsCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    unit = AllSettings.enableMouseClick,
-                    position = CardPosition.Middle,
-                    title = stringResource(R.string.settings_control_mouse_enable_click_title),
-                    summary = stringResource(R.string.settings_control_mouse_enable_click_summary),
-                    enabled = AllSettings.mouseControlMode.state == MouseControlMode.SLIDE //仅滑动模式下可更改设置
-                )
-            }
-            card("mouse_control_mode", 2) {
-                ListSettingsCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    position = CardPosition.Middle,
-                    unit = AllSettings.mouseControlMode,
-                    items = MouseControlMode.entries,
-                    title = stringResource(R.string.settings_control_mouse_control_mode_title),
-                    summary = stringResource(R.string.settings_control_mouse_control_mode_summary),
-                    getItemText = { stringResource(it.nameRes) }
-                )
-            }
-            card("mouse_touch_block_mode", 2) {
-                ListSettingsCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    position = CardPosition.Middle,
-                    unit = AllSettings.mouseTouchBlockMode,
-                    items = MouseTouchBlockMode.entries,
-                    title = stringResource(R.string.settings_control_mouse_block_touch_title),
-                    summary = stringResource(R.string.settings_control_mouse_block_touch_summary),
-                    getItemText = { stringResource(it.nameRes) }
-                )
-            }
-            card("mouse_sensitivity", 2) {
-                IntSliderSettingsCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    position = CardPosition.Middle,
-                    unit = AllSettings.cursorSensitivity,
-                    title = stringResource(R.string.settings_control_mouse_sensitivity_title),
-                    summary = stringResource(R.string.settings_control_mouse_sensitivity_summary),
-                    valueRange = AllSettings.cursorSensitivity.floatRange,
-                    suffix = "%",
-                    fineTuningControl = true
-                )
-            }
-            card("mouse_capture_sensitivity", 2) {
-                IntSliderSettingsCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    position = CardPosition.Middle,
-                    unit = AllSettings.mouseCaptureSensitivity,
-                    title = stringResource(R.string.settings_control_mouse_capture_sensitivity_title),
-                    summary = stringResource(R.string.settings_control_mouse_capture_sensitivity_summary),
-                    valueRange = AllSettings.mouseCaptureSensitivity.floatRange,
-                    suffix = "%",
-                    fineTuningControl = true
-                )
-            }
-            card("mouse_long_press_delay", 2) {
-                IntSliderSettingsCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    position = CardPosition.Bottom,
-                    unit = AllSettings.mouseLongPressDelay,
-                    title = stringResource(R.string.settings_control_mouse_long_press_delay_title),
-                    summary = stringResource(R.string.settings_control_mouse_long_press_delay_summary),
-                    valueRange = AllSettings.mouseLongPressDelay.floatRange,
-                    suffix = "ms",
-                    fineTuningControl = true
-                )
-            }
-            groupGap("gap_2")
-
-            //Group 3: gestures
-            card("gesture_control", 3) {
-                SwitchSettingsCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    position = CardPosition.Top,
-                    unit = AllSettings.gestureControl,
-                    title = stringResource(R.string.settings_control_gesture_control_title),
-                    summary = stringResource(R.string.settings_control_gesture_control_summary)
-                )
-            }
-            card("gesture_tap_action", 3) {
-                ListSettingsCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    position = CardPosition.Middle,
-                    unit = AllSettings.gestureTapMouseAction,
-                    items = GestureActionType.entries,
-                    title = stringResource(R.string.settings_control_gesture_tap_action_title),
-                    summary = stringResource(R.string.settings_control_gesture_tap_action_summary),
-                    getItemText = { stringResource(it.nameRes) },
-                    enabled = AllSettings.gestureControl.state
-                )
-            }
-            card("gesture_long_press_action", 3) {
-                ListSettingsCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    position = CardPosition.Middle,
-                    unit = AllSettings.gestureLongPressMouseAction,
-                    items = GestureActionType.entries,
-                    title = stringResource(R.string.settings_control_gesture_long_press_action_title),
-                    summary = stringResource(R.string.settings_control_gesture_long_press_action_summary),
-                    getItemText = { stringResource(it.nameRes) },
-                    enabled = AllSettings.gestureControl.state
-                )
-            }
-            card("gesture_long_press_delay", 3) {
-                IntSliderSettingsCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    position = CardPosition.Bottom,
-                    unit = AllSettings.gestureLongPressDelay,
-                    title = stringResource(R.string.settings_control_gesture_long_press_delay_title),
-                    summary = stringResource(R.string.settings_control_mouse_long_press_delay_summary),
-                    valueRange = AllSettings.gestureLongPressDelay.floatRange,
-                    suffix = "ms",
-                    enabled = AllSettings.gestureControl.state,
                     fineTuningControl = true
                 )
             }
