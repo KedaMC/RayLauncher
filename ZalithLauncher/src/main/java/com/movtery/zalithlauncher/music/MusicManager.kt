@@ -42,8 +42,9 @@ import kotlinx.coroutines.launch
  * The one music state of the launcher. It serves the local player and the music of other apps,
  * the Music Card only talks to this object.
  *
- * Nothing runs while no Music Card is on the screen: the card calls [acquire] / [release] around its
- * composition and [onStart] / [onStop] around the app lifecycle. Every update is callback driven.
+ * The card calls [acquire] / [release] around its composition and [onStart] / [onStop] around the app
+ * lifecycle. Everything but the local player stops while no card is on the screen: local playback goes on
+ * across launcher pages and in the background until [pauseLocal] or [stopLocal]. Every update is callback driven.
  * All functions must be called on the main thread.
  */
 object MusicManager {
@@ -69,12 +70,13 @@ object MusicManager {
         if (users != 1) return
         val newScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
         scope = newScope
-        local = LocalMusicSource(appContext, ::publish)
+        if (local == null) local = LocalMusicSource(appContext, ::publish)
         external = ExternalMusicSource(appContext, ::publish)
         capture = ExternalSpectrumCapture()
         //Shizuku can start, stop or answer the permission dialog at any time
         shizukuSubscription = ShizukuAccess.subscribe { Handler(Looper.getMainLooper()).post(::refresh) }
         source = AllSettings.musicCardSource.getValue()
+        if (source == MusicSourceType.BACKGROUND) local?.pause()
 
         newScope.launch {
             snapshotFlow { AllSettings.musicCardSource.state }
@@ -99,10 +101,9 @@ object MusicManager {
         scope = null
         shizukuSubscription?.close()
         shizukuSubscription = null
-        local?.release()
+        local?.setAnalysisEnabled(false)
         external?.stop()
         capture?.stop()
-        local = null
         external = null
         capture = null
         AudioSpectrumBus.clear()
@@ -118,16 +119,33 @@ object MusicManager {
         publish()
     }
 
-    /** The app left the screen: stop everything that costs power, local playback is paused */
+    /** The app left the screen: stop everything that costs power, local playback goes on */
     fun onStop() {
         if (!started) return
         started = false
-        local?.pause()
         local?.setAnalysisEnabled(false)
         external?.stop()
         capture?.stop()
         AudioSpectrumBus.clear()
         publish()
+    }
+
+    /** Pauses local playback, used when a game or a jar is about to run */
+    fun pauseLocal() {
+        local?.pause()
+    }
+
+    /** Releases the local player, used when the Music Card is removed */
+    fun stopLocal() {
+        local?.release()
+        local = null
+        if (users > 0) {
+            local = LocalMusicSource(appContext, ::publish).also {
+                it.setTracks(LocalMusicLibrary.tracks.value)
+                it.setAnalysisEnabled(started)
+            }
+            publish()
+        }
     }
 
     /** Re-reads the Shizuku and microphone state, used when the user comes back to the app */
