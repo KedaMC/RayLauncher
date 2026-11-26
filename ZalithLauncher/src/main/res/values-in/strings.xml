@@ -1550,4 +1550,5 @@
     <string name="settings_ray_startup_import_failed">Gagal mengimpor video</string>
     <string name="settings_ray_startup_too_long">Durasi video lebih dari 10 detik.</string>
     <string name="settings_ray_startup_invalid">File bukan video yang bisa diputar.</string>
+    <string name="game_log_keep_open">Biarkan log tetap terbuka</string>
 </resources>

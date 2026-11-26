@@ -141,6 +141,11 @@ object AllSettings : SettingsRegistry() {
     val showLogAutomatic = boolSetting("showLogAutomatic", false)
 
     /**
+     * Keep the automatically shown log open after the game starts rendering
+     */
+    val keepLogOnRendering = boolSetting("keepLogOnRendering", false)
+
+    /**
      * 日志字体大小
      */
     val logTextSize = intSetting("logTextSize", 15, 5..20)

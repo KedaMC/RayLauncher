@@ -3104,4 +3104,5 @@
     <string name="settings_ray_startup_import_failed">Failed to import the video</string>
     <string name="settings_ray_startup_too_long">The video is longer than 10 seconds.</string>
     <string name="settings_ray_startup_invalid">The file is not a playable video.</string>
+    <string name="game_log_keep_open">Keep log open</string>
 </resources>

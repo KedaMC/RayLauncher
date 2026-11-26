@@ -145,7 +145,11 @@ class GameHandler(
             showGameInfo = false
             //游戏已经开始渲染，如果日志状态为渲染前显示，则在这里关闭日志
             if (logState == LogState.SHOW_BEFORE_LOADING) {
-                logState = LogState.CLOSE
+                logState = if (AllSettings.keepLogOnRendering.getValue()) {
+                    LogState.SHOW
+                } else {
+                    LogState.CLOSE
+                }
             }
         }
     }

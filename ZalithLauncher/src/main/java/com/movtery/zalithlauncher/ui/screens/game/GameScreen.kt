@@ -675,7 +675,8 @@ fun GameScreen(
             onClose = {
                 onLogStateChange(LogState.CLOSE)
             },
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
+            showKeepOpenAction = true
         )
 
         GameMenuSubscreen(
