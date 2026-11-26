@@ -79,8 +79,8 @@ import com.movtery.zalithlauncher.game.download.addon.platform.PlatformClasses
 import com.movtery.zalithlauncher.game.download.addon.platform.PlatformDisplayLabel
 import com.movtery.zalithlauncher.game.download.addon.platform.PlatformProject
 import com.movtery.zalithlauncher.game.download.addon.platform.PlatformVersion
+import com.movtery.zalithlauncher.game.version.installed.DownloadTargetVersion
 import com.movtery.zalithlauncher.game.version.installed.Version
-import com.movtery.zalithlauncher.game.version.installed.VersionsManager
 import com.movtery.zalithlauncher.game.version.mod.InstalledMod
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.ui.AndroidStringText
@@ -160,7 +160,7 @@ fun List<PlatformVersion>.mapWithVersions(classes: PlatformClasses): List<Versio
         }
     }
 
-    val currentVersion = VersionsManager.currentVersion.value
+    val currentVersion = DownloadTargetVersion.current
 
     return grouped.map { (key, versions) ->
         VersionInfoMap(

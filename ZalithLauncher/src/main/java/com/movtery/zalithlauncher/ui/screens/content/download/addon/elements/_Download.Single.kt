@@ -87,6 +87,7 @@ import com.movtery.zalithlauncher.game.download.addon.platform.PlatformDisplayLa
 import com.movtery.zalithlauncher.game.download.addon.platform.PlatformProject
 import com.movtery.zalithlauncher.game.download.addon.platform.PlatformVersion
 import com.movtery.zalithlauncher.game.download.addon.platform.cacheKey
+import com.movtery.zalithlauncher.game.version.installed.DownloadTargetVersion
 import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.game.version.installed.VersionsManager
 import com.movtery.zalithlauncher.ui.components.MarqueeText
@@ -218,9 +219,13 @@ private fun DownloadDialog(
     onInstall: (List<Version>, List<DependencyRequest>) -> Unit,
     onDependencyClicked: (Platform, String, PlatformClasses) -> Unit
 ) {
-    val versions by rememberValidVersions()
-    val version by VersionsManager.currentVersion.collectAsStateWithLifecycle()
-    val version0 = version
+    val validVersions by rememberValidVersions()
+    val currentVersion by VersionsManager.currentVersion.collectAsStateWithLifecycle()
+    val target = DownloadTargetVersion.override?.takeIf { it.isValid() }
+    //The target of a Version Card may live in another game directory, so it can be missing from the list
+    val targetInList = target?.let { t -> validVersions.find { it.getVersionPath() == t.getVersionPath() } }
+    val versions = if (target != null && targetInList == null) listOf(target) + validVersions else validVersions
+    val version0 = targetInList ?: target ?: currentVersion
 
     if (version0 == null || versions.isEmpty()) {
         SimpleAlertDialog(

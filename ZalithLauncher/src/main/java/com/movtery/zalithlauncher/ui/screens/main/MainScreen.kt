@@ -94,6 +94,7 @@ import androidx.navigation3.runtime.entryProvider
 import com.movtery.zalithlauncher.BuildKeys
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.coroutine.TaskSystem
+import com.movtery.zalithlauncher.game.version.installed.DownloadTargetVersion
 import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.game.version.installed.VersionsManager
 import com.movtery.zalithlauncher.setting.AllSettings
@@ -562,6 +563,12 @@ private fun NavigationUI(
 
     LaunchedEffect(currentKey) {
         screenBackStackModel.mainScreen.currentKey = currentKey
+        //Downloads started from a version's settings go to that version until the user leaves them
+        when (currentKey) {
+            is NestedNavKey.VersionSettings -> DownloadTargetVersion.override = currentKey.version
+            is NestedNavKey.Download, is NestedNavKey.AddonInfo -> Unit
+            else -> DownloadTargetVersion.override = null
+        }
     }
 
     if (backStack.isNotEmpty()) {
