@@ -270,6 +270,14 @@ fun LauncherSettingsScreen(
                         summary = stringResource(R.string.settings_launcher_swap_anim_enabled_summary)
                     )
 
+                    SwitchSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Middle,
+                        unit = AllSettings.launcherPageSlideEnabled,
+                        title = stringResource(R.string.settings_launcher_page_slide_enabled_title),
+                        summary = stringResource(R.string.settings_launcher_page_slide_enabled_summary)
+                    )
+
                     IntSliderSettingsCard(
                         modifier = Modifier.fillMaxWidth(),
                         position = CardPosition.Bottom,

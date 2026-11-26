@@ -1551,4 +1551,8 @@
     <string name="settings_ray_startup_too_long">Durasi video lebih dari 10 detik.</string>
     <string name="settings_ray_startup_invalid">File bukan video yang bisa diputar.</string>
     <string name="game_log_keep_open">Biarkan log tetap terbuka</string>
+    <string name="settings_launcher_swap_anim_enabled_title">Aktifkan animasi komponen</string>
+    <string name="settings_launcher_swap_anim_enabled_summary">Putar animasi komponen saat konten berganti</string>
+    <string name="settings_launcher_page_slide_enabled_title">Aktifkan animasi geser halaman</string>
+    <string name="settings_launcher_page_slide_enabled_summary">Geser saat berpindah antara halaman Beranda, Unduhan, dan Pengaturan</string>
 </resources>

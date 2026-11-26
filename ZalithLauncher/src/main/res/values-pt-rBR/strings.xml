@@ -1508,8 +1508,8 @@
     <string name="renderer_config_mg_fsr1_quality">Qualidade</string>
     <string name="renderer_config_mg_fsr1_balanced">Balanceado</string>
     <string name="renderer_config_mg_fsr1_performance">Desempenho</string>
-    <string name="settings_launcher_swap_anim_enabled_title">Ativar animação de transição de página</string>
-    <string name="settings_launcher_swap_anim_enabled_summary">Se deve reproduzir animações de transição ao trocar de páginas</string>
+    <string name="settings_launcher_swap_anim_enabled_title">Ativar animação de componentes</string>
+    <string name="settings_launcher_swap_anim_enabled_summary">Se os componentes devem ser animados quando o conteúdo mudar</string>
     <string name="about_sponsors_title">Patrocinadores do Launcher</string>
     <string name="about_sponsors_summary">Agradecemos a todos os patrocinadores que apoiam %s</string>
     <string name="sponsors_dialog_title">Patrocinadores deste mês</string>
@@ -1525,4 +1525,6 @@
     <string name="renderer_config_mg_multidraw_compute">Shader de Computação</string>
     <string name="generic_retry">Tentar novamente</string>
     <string name="main_nav_home">Início</string>
+    <string name="settings_launcher_page_slide_enabled_title">Ativar animação de deslizamento de página</string>
+    <string name="settings_launcher_page_slide_enabled_summary">Deslizar entre as páginas Início, Download e Configurações</string>
 </resources>

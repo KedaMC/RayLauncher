@@ -2147,10 +2147,10 @@
     <string name="settings_launcher_animate_speed_title">Animation Speed</string>
     <!-- Description of the animation speed setting in Launcher settings -->
     <string name="settings_launcher_animate_speed_summary">Adjust the global animation speed multiplier</string>
-    <!-- Title of the page transition animation toggle in Launcher settings -->
-    <string name="settings_launcher_swap_anim_enabled_title">Enable page transition animation</string>
-    <!-- Description of the page transition animation toggle -->
-    <string name="settings_launcher_swap_anim_enabled_summary">Whether to play transition animations when switching pages</string>
+    <!-- Title of the component animation toggle in Launcher settings -->
+    <string name="settings_launcher_swap_anim_enabled_title">Enable component animation</string>
+    <!-- Description of the component animation toggle -->
+    <string name="settings_launcher_swap_anim_enabled_summary">Whether components animate when content changes</string>
     <!-- Title of the log retention days slider in Launcher settings -->
     <string name="settings_launcher_log_retention_days_title">Log Retention Days</string>
     <!-- Description of the log retention days setting in Launcher settings -->
@@ -3105,4 +3105,6 @@
     <string name="settings_ray_startup_too_long">The video is longer than 10 seconds.</string>
     <string name="settings_ray_startup_invalid">The file is not a playable video.</string>
     <string name="game_log_keep_open">Keep log open</string>
+    <string name="settings_launcher_page_slide_enabled_title">Enable page slide animation</string>
+    <string name="settings_launcher_page_slide_enabled_summary">Slide between the Home, Download and Settings pages</string>
 </resources>

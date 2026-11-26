@@ -173,7 +173,10 @@ class PageSlideTracker {
     fun update(key: TitledNavKey?) {
         if (key == currentKey) return
         val newIndex = pageIndexOf(key)
-        direction = if (currentIndex >= 0 && newIndex >= 0 && currentIndex != newIndex) {
+        //With the slide disabled this is an ordinary swap, so components keep their own animation
+        direction = if (AllSettings.launcherPageSlideEnabled.getValue() &&
+            currentIndex >= 0 && newIndex >= 0 && currentIndex != newIndex
+        ) {
             if (newIndex > currentIndex) 1 else -1
         } else {
             0
@@ -197,7 +200,7 @@ fun <T : Any> rememberPageSlideSpec(tracker: PageSlideTracker): AnimatedContentT
     return remember(fallback, tracker) {
         val spec: AnimatedContentTransitionScope<Scene<T>>.() -> ContentTransform = {
             val dir = tracker.direction()
-            if (dir == 0 || !AllSettings.launcherSwapAnimEnabled.state) {
+            if (dir == 0) {
                 fallback(this)
             } else {
                 val slide = tween<IntOffset>(durationMillis = PAGE_SLIDE_MILLIS, easing = EaseOutQuint)

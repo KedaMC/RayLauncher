@@ -353,6 +353,11 @@ object AllSettings : SettingsRegistry() {
     val launcherSwapAnimEnabled = boolSetting("launcherSwapAnimEnabled", true)
 
     /**
+     * Full-page slide between the main pages
+     */
+    val launcherPageSlideEnabled = boolSetting("launcherPageSlideEnabled", true)
+
+    /**
      * 动画速度
      */
     val launcherAnimateSpeedLevel = intSetting("launcherAnimateSpeedLevel", 10, 1..30)

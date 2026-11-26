@@ -1025,8 +1025,8 @@
     <string name="settings_launcher_language">語言</string>
     <string name="settings_launcher_animate_speed_title">動畫速度</string>
     <string name="settings_launcher_animate_speed_summary">調整啟動器動畫的速度倍率</string>
-    <string name="settings_launcher_swap_anim_enabled_title">啟用頁面切換動畫</string>
-    <string name="settings_launcher_swap_anim_enabled_summary">切換頁面時，是否播放過渡動畫</string>
+    <string name="settings_launcher_swap_anim_enabled_title">啟用元件動畫</string>
+    <string name="settings_launcher_swap_anim_enabled_summary">內容切換時，是否播放元件動畫</string>
     <!--  關於  -->
     <string name="about_launcher_title">關於啟動器</string>
     <string name="about_launcher_version">啟動器版本：%s</string>
@@ -1554,4 +1554,6 @@
     <string name="festivals_halloween">萬聖節快樂！</string>
     <string name="festivals_valentines">情人節快樂！</string>
     <string name="main_nav_home">主頁</string>
+    <string name="settings_launcher_page_slide_enabled_title">啟用頁面滑動動畫</string>
+    <string name="settings_launcher_page_slide_enabled_summary">在首頁、下載和設定頁面之間切換時滑動</string>
 </resources>

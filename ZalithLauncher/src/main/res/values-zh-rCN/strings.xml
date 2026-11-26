@@ -1121,8 +1121,8 @@
     <string name="settings_launcher_language">语言</string>
     <string name="settings_launcher_animate_speed_title">动画速度</string>
     <string name="settings_launcher_animate_speed_summary">调整启动器动画的速度倍率</string>
-    <string name="settings_launcher_swap_anim_enabled_title">启用页面切换动画</string>
-    <string name="settings_launcher_swap_anim_enabled_summary">切换页面时，是否播放过渡动画</string>
+    <string name="settings_launcher_swap_anim_enabled_title">启用组件动画</string>
+    <string name="settings_launcher_swap_anim_enabled_summary">内容切换时，是否播放组件动画</string>
     <string name="settings_launcher_log_retention_days_title">日志保留天数</string>
     <string name="settings_launcher_log_retention_days_summary">设置启动器的日志保留天数，超过此天数的日志将被自动删除</string>
     <string name="settings_launcher_log_share_title">分享启动器日志</string>
@@ -1560,4 +1560,6 @@
     <string name="guide_joystick_events_events_text1">可触发的事件与普通按钮一致，自由度很高</string>
     <string name="guide_joystick_events_events_text2">若只想用于控制游戏，编辑“按键”分区的实际键值绑定即可</string>
     <string name="main_nav_home">主页</string>
+    <string name="settings_launcher_page_slide_enabled_title">启用页面滑动动画</string>
+    <string name="settings_launcher_page_slide_enabled_summary">在主页、下载和设置页面之间切换时滑动</string>
 </resources>
