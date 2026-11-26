@@ -1699,6 +1699,7 @@
     <string name="settings_tab_game">Game</string>
     <!-- Name of the Controls category on the settings screen and the title of its page -->
     <string name="settings_tab_control">Controls</string>
+    <string name="settings_tab_ray" translatable="false">Ray</string>
     <!-- Name of the Gamepad category on the settings screen and the title of its page -->
     <string name="settings_tab_gamepad">Gamepad</string>
     <!-- Name of the Launcher category on the settings screen and the title of its page -->
