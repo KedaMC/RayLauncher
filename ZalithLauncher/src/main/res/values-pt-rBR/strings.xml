@@ -695,7 +695,7 @@
     <string name="settings_label_ignore_if_blank">Deixe em branco para ignorar</string>
     <string name="settings_tab_renderer">Renderizador</string>
     <string name="settings_tab_game">Jogo</string>
-    <string name="settings_tab_control">Controles</string>
+    <string name="settings_tab_control">Mouse</string>
     <string name="settings_tab_gamepad">Controle Físico</string>
     <string name="settings_tab_launcher">Launcher</string>
     <string name="settings_tab_java_manage">Java</string>

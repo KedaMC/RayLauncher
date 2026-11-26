@@ -897,7 +897,7 @@
     <string name="settings_label_ignore_if_blank">留白则忽略此设置</string>
     <string name="settings_tab_renderer">渲染设置</string>
     <string name="settings_tab_game">游戏设置</string>
-    <string name="settings_tab_control">控制设置</string>
+    <string name="settings_tab_control">鼠标</string>
     <string name="settings_tab_gamepad">手柄设置</string>
     <string name="settings_tab_launcher">启动器设置</string>
     <string name="settings_tab_java_manage">Java 管理</string>

@@ -803,7 +803,7 @@
     <string name="settings_label_ignore_if_blank">留白則忽略此設定</string>
     <string name="settings_tab_renderer">渲染設定</string>
     <string name="settings_tab_game">遊戲設定</string>
-    <string name="settings_tab_control">控制設定</string>
+    <string name="settings_tab_control">滑鼠</string>
     <string name="settings_tab_gamepad">手把設定</string>
     <string name="settings_tab_launcher">啟動器設定</string>
     <string name="settings_tab_java_manage">Java 管理</string>

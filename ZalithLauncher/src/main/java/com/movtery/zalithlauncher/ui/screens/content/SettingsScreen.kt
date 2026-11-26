@@ -117,7 +117,7 @@ fun SettingsScreen(
 private val settingItems = listOf(
     CategoryItem(NormalNavKey.Settings.Renderer, { CategoryIcon(R.drawable.ic_video_settings, R.string.settings_tab_renderer) }, R.string.settings_tab_renderer),
     CategoryItem(NormalNavKey.Settings.Game, { CategoryIcon(R.drawable.ic_rocket_launch_filled, R.string.settings_tab_game) }, R.string.settings_tab_game),
-    CategoryItem(NormalNavKey.Settings.Control, { CategoryIcon(R.drawable.ic_videogame_asset_outlined, R.string.settings_tab_control) }, R.string.settings_tab_control),
+    CategoryItem(NormalNavKey.Settings.Control, { CategoryIcon(R.drawable.ic_mouse_outlined, R.string.settings_tab_control) }, R.string.settings_tab_control),
     CategoryItem(NormalNavKey.Settings.Ray, { CategoryIcon(R.drawable.ic_flare, R.string.settings_tab_ray) }, R.string.settings_tab_ray),
     CategoryItem(NormalNavKey.Settings.Launcher, { CategoryIcon(R.drawable.ic_setting_launcher, R.string.settings_tab_launcher) }, R.string.settings_tab_launcher),
     CategoryItem(NormalNavKey.Settings.JavaManager, { CategoryIcon(R.drawable.ic_java, R.string.settings_tab_java_manage) }, R.string.settings_tab_java_manage, division = true),

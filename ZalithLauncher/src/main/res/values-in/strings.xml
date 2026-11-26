@@ -459,7 +459,7 @@
     <string name="settings_tab_java_manage">Java</string>
     <string name="settings_tab_control_manage">Kontrol</string>
     <string name="settings_tab_info_about">Tentang</string>
-    <string name="settings_tab_control">Kontrol</string>
+    <string name="settings_tab_control">Mouse</string>
     <string name="settings_renderer_global_vulkan_driver_title">Driver Vulkan</string>
     <string name="settings_renderer_global_renderer_summary">Perender bawaan global memakai lapisan translasi pustaka dinamis supaya game bisa jalan dengan lancar di perangkat mobile</string>
     <string name="settings_renderer_resolution_scale_title">Skala Resolusi</string>
