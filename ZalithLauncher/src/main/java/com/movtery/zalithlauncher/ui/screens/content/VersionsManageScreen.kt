@@ -304,7 +304,7 @@ fun VersionsManageScreen(
                     viewModel.resortVersions()
                 },
                 onInstall = {
-                    backScreenViewModel.navigateToDownload()
+                    backScreenViewModel.navigateToDownload(backScreenViewModel.downloadGameScreen)
                 },
                 onOpenFileManager = {
                     eventViewModel.sendEvent(
