@@ -20,6 +20,7 @@ package com.movtery.zalithlauncher.ui.activities
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -34,6 +35,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.core.graphics.drawable.toDrawable
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -55,6 +57,7 @@ import com.movtery.zalithlauncher.notification.NotificationManager
 import com.movtery.zalithlauncher.path.PathManager
 import com.movtery.zalithlauncher.path.URL_SUPPORT
 import com.movtery.zalithlauncher.setting.AllSettings
+import com.movtery.zalithlauncher.startup.StartupTransition
 import com.movtery.zalithlauncher.ui.AndroidStringText
 import com.movtery.zalithlauncher.ui.androidText
 import com.movtery.zalithlauncher.ui.base.BaseAppCompatActivity
@@ -74,6 +77,7 @@ import com.movtery.zalithlauncher.ui.screens.main.MainScreen
 import com.movtery.zalithlauncher.ui.screens.main.crashlogs.LogShareMenu
 import com.movtery.zalithlauncher.ui.screens.main.crashlogs.LogShareMenuOperation
 import com.movtery.zalithlauncher.ui.screens.main.crashlogs.ShareLinkOperation
+import com.movtery.zalithlauncher.ui.screens.splash.StartupRevealHost
 import com.movtery.zalithlauncher.ui.theme.ZalithLauncherTheme
 import com.movtery.zalithlauncher.ui.theme.festivals.FestivalEffects
 import com.movtery.zalithlauncher.ui.theme.festivals.FestivalTapObserver
@@ -81,6 +85,7 @@ import com.movtery.zalithlauncher.ui.toAndroidString
 import com.movtery.zalithlauncher.ui.vulkan_checker.VCOperation
 import com.movtery.zalithlauncher.ui.vulkan_checker.VulkanChecker
 import com.movtery.zalithlauncher.upgrade.TooFrequentOperationException
+import com.movtery.zalithlauncher.utils.animation.SwapTimeline
 import com.movtery.zalithlauncher.utils.compareLangTag
 import com.movtery.zalithlauncher.utils.copyText
 import com.movtery.zalithlauncher.utils.festival.getTodayFestivals
@@ -311,206 +316,216 @@ class MainActivity : BaseAppCompatActivity() {
             containsChinese = isChinese(this@MainActivity)
         )
 
-        setContent {
-            ZalithLauncherTheme(
-                backgroundViewModel = backgroundViewModel,
-                festivals = festivals
-            ) {
-                    //Liquid Glass: dialogs blur this whole page (wallpaper + screen UI), recorded only while one is open
-                    Box(modifier = Modifier.fillMaxSize().glassPageCapture()) {
-                        Background(
-                            modifier = Modifier.fillMaxSize(),
-                            viewModel = backgroundViewModel
-                        )
+        //Coming from the startup page: fade in from black, without entrance animations
+        val reveal = savedInstanceState == null &&
+                intent.getBooleanExtra(StartupTransition.EXTRA_REVEAL, false)
+        if (reveal) {
+            SwapTimeline.entranceSuppressed = true
+            window.setBackgroundDrawable(Color.BLACK.toDrawable())
+        }
 
-                        MainScreen(
-                            screenBackStackModel = screenBackStackModel,
+        setContent {
+            StartupRevealHost(reveal = reveal) {
+                ZalithLauncherTheme(
+                    backgroundViewModel = backgroundViewModel,
+                    festivals = festivals
+                ) {
+                        //Liquid Glass: dialogs blur this whole page (wallpaper + screen UI), recorded only while one is open
+                        Box(modifier = Modifier.fillMaxSize().glassPageCapture()) {
+                            Background(
+                                modifier = Modifier.fillMaxSize(),
+                                viewModel = backgroundViewModel
+                            )
+
+                            MainScreen(
+                                screenBackStackModel = screenBackStackModel,
+                                eventViewModel = eventViewModel,
+                                modpackImportViewModel = modpackImportViewModel,
+                                modifyVersionViewModel = modifyVersionViewModel,
+                                submitError = {
+                                    errorViewModel.showError(it)
+                                }
+                            )
+
+                            //节日彩蛋效果层
+                            FestivalEffects(
+                                modifier = Modifier.fillMaxSize(),
+                                festivals = festivals
+                            )
+                        }
+
+                        //Message dialogs requested from non-Compose code (errors, permissions, links)
+                        GlobalDialogHost()
+
+                        //启动游戏操作流程
+                        LaunchGameOperation(
+                            activity = this@MainActivity,
                             eventViewModel = eventViewModel,
-                            modpackImportViewModel = modpackImportViewModel,
-                            modifyVersionViewModel = modifyVersionViewModel,
+                            launchGameViewModel = launchGameViewModel,
+                            exitActivity = {
+                                this@MainActivity.finish()
+                            },
+                            ensureVulkanSupported = vulkanCheckerViewModel::ensureSupported,
                             submitError = {
                                 errorViewModel.showError(it)
+                            },
+                            toAccountManageScreen = { menu ->
+                                screenBackStackModel.mainScreen.navigateTo(
+                                    screenKey = NormalNavKey.AccountManager(menu)
+                                )
+                            },
+                            toVersionManageScreen = {
+                                screenBackStackModel.mainScreen.removeAndNavigateTo(
+                                    remove = NestedNavKey.VersionSettings::class,
+                                    screenKey = NormalNavKey.VersionsManager
+                                )
+                            },
+                            navigateToWeb = { url ->
+                                screenBackStackModel.mainScreen.backStack.navigateToWeb(url)
+                            },
+                            backToMain = {
+                                screenBackStackModel.mainScreen.clearWith(NormalNavKey.LauncherMain)
+                            },
+                            checkIfInWebScreen = {
+                                screenBackStackModel.mainScreen.currentKey is NormalNavKey.WebScreen
                             }
                         )
 
-                        //节日彩蛋效果层
-                        FestivalEffects(
-                            modifier = Modifier.fillMaxSize(),
-                            festivals = festivals
-                        )
-                    }
-
-                    //Message dialogs requested from non-Compose code (errors, permissions, links)
-                    GlobalDialogHost()
-
-                    //启动游戏操作流程
-                    LaunchGameOperation(
-                        activity = this@MainActivity,
-                        eventViewModel = eventViewModel,
-                        launchGameViewModel = launchGameViewModel,
-                        exitActivity = {
-                            this@MainActivity.finish()
-                        },
-                        ensureVulkanSupported = vulkanCheckerViewModel::ensureSupported,
-                        submitError = {
-                            errorViewModel.showError(it)
-                        },
-                        toAccountManageScreen = { menu ->
-                            screenBackStackModel.mainScreen.navigateTo(
-                                screenKey = NormalNavKey.AccountManager(menu)
+                        //启动游戏流程展示
+                        val launchFlow by launchGameViewModel.launchFlow.collectAsStateWithLifecycle()
+                        val flow = launchFlow
+                        if (flow != null) {
+                            val launchTasks by flow.tasksFlow.collectAsStateWithLifecycle()
+                            TitleTaskFlowDialog(
+                                title = stringResource(R.string.main_launch_game),
+                                tasks = launchTasks,
+                                onCancel = {
+                                    launchGameViewModel.cancel()
+                                }
                             )
-                        },
-                        toVersionManageScreen = {
-                            screenBackStackModel.mainScreen.removeAndNavigateTo(
-                                remove = NestedNavKey.VersionSettings::class,
-                                screenKey = NormalNavKey.VersionsManager
-                            )
-                        },
-                        navigateToWeb = { url ->
-                            screenBackStackModel.mainScreen.backStack.navigateToWeb(url)
-                        },
-                        backToMain = {
-                            screenBackStackModel.mainScreen.clearWith(NormalNavKey.LauncherMain)
-                        },
-                        checkIfInWebScreen = {
-                            screenBackStackModel.mainScreen.currentKey is NormalNavKey.WebScreen
+                        }
+                    ModpackImportOperation(
+                        operation = modpackImportViewModel.importOperation,
+                        changeOperation = { modpackImportViewModel.importOperation = it },
+                        importer = modpackImportViewModel.importer,
+                        onCancel = {
+                            modpackImportViewModel.cancel()
+                            lifecycleScope.launch {
+                                keepScreen(false)
+                            }
                         }
                     )
 
-                    //启动游戏流程展示
-                    val launchFlow by launchGameViewModel.launchFlow.collectAsStateWithLifecycle()
-                    val flow = launchFlow
-                    if (flow != null) {
-                        val launchTasks by flow.tasksFlow.collectAsStateWithLifecycle()
-                        TitleTaskFlowDialog(
-                            title = stringResource(R.string.main_launch_game),
-                            tasks = launchTasks,
-                            onCancel = {
-                                launchGameViewModel.cancel()
+                    //用户确认版本名称 操作流程
+                    ModpackVersionNameOperation(
+                        operation = modpackImportViewModel.versionNameOperation,
+                        onConfirmVersionName = { name ->
+                            modpackImportViewModel.confirmVersionName(name)
+                        },
+                        onCancel = {
+                            modpackImportViewModel.cancel()
+                        }
+                    )
+
+                    //用户确认使用移动网络 操作流程
+                    ModpackConfirmUseMobileDataOperation(
+                        operation = modpackImportViewModel.confirmMobileDataOperation,
+                        onConfirmUse = { use ->
+                            modpackImportViewModel.confirmUseMobileData(use)
+                        }
+                    )
+
+                    //游戏日志分享菜单
+                    val logFile = logShareViewModel.currentLogFile
+                    if (logShareViewModel.showMenu && logFile != null) {
+                        LogShareMenu(
+                            operation = LogShareMenuOperation.ShowMenu,
+                            onChange = { operation ->
+                                if (operation == LogShareMenuOperation.None) {
+                                    logShareViewModel.closeMenu()
+                                }
+                            },
+                            onView = {
+                                screenBackStackModel.mainScreen.backStack.navigateToLogView(
+                                    logPath = logFile.absolutePath
+                                )
+                                logShareViewModel.closeMenu()
+                            },
+                            onShare = {
+                                shareFile(this@MainActivity, logFile)
+                                logShareViewModel.closeMenu()
+                            },
+                            canUpload = logsUploadViewModel.canUpload,
+                            onUpload = {
+                                logsUploadViewModel.operation = ShareLinkOperation.Tip
+                                logShareViewModel.closeMenu()
                             }
                         )
                     }
-                ModpackImportOperation(
-                    operation = modpackImportViewModel.importOperation,
-                    changeOperation = { modpackImportViewModel.importOperation = it },
-                    importer = modpackImportViewModel.importer,
-                    onCancel = {
-                        modpackImportViewModel.cancel()
-                        lifecycleScope.launch {
-                            keepScreen(false)
-                        }
-                    }
-                )
 
-                //用户确认版本名称 操作流程
-                ModpackVersionNameOperation(
-                    operation = modpackImportViewModel.versionNameOperation,
-                    onConfirmVersionName = { name ->
-                        modpackImportViewModel.confirmVersionName(name)
-                    },
-                    onCancel = {
-                        modpackImportViewModel.cancel()
-                    }
-                )
-
-                //用户确认使用移动网络 操作流程
-                ModpackConfirmUseMobileDataOperation(
-                    operation = modpackImportViewModel.confirmMobileDataOperation,
-                    onConfirmUse = { use ->
-                        modpackImportViewModel.confirmUseMobileData(use)
-                    }
-                )
-
-                //游戏日志分享菜单
-                val logFile = logShareViewModel.currentLogFile
-                if (logShareViewModel.showMenu && logFile != null) {
-                    LogShareMenu(
-                        operation = LogShareMenuOperation.ShowMenu,
-                        onChange = { operation ->
-                            if (operation == LogShareMenuOperation.None) {
-                                logShareViewModel.closeMenu()
-                            }
-                        },
-                        onView = {
-                            screenBackStackModel.mainScreen.backStack.navigateToLogView(
-                                logPath = logFile.absolutePath
-                            )
-                            logShareViewModel.closeMenu()
-                        },
-                        onShare = {
-                            shareFile(this@MainActivity, logFile)
-                            logShareViewModel.closeMenu()
-                        },
-                        canUpload = logsUploadViewModel.canUpload,
+                    ShareLinkOperation(
+                        operation = logsUploadViewModel.operation,
+                        onChange = { logsUploadViewModel.operation = it },
+                        onUploadChancel = { logsUploadViewModel.cancel() },
                         onUpload = {
-                            logsUploadViewModel.operation = ShareLinkOperation.Tip
-                            logShareViewModel.closeMenu()
+                            logFile?.let { file ->
+                                logsUploadViewModel.upload(file) { link ->
+                                    openLink(link)
+                                    copyText(COPY_LABEL_LINK, link, this@MainActivity)
+                                }
+                            }
+                        }
+                    )
+
+                    //检查更新操作流程
+                    LauncherUpgradeOperation(
+                        operation = launcherUpgradeViewModel.operation,
+                        onChanged = { launcherUpgradeViewModel.operation = it },
+                        onIgnoredClick = { ver ->
+                            AllSettings.lastIgnoredVersion.save(ver)
+                        },
+                        onLinkClick = { eventViewModel.sendEvent(EventViewModel.Event.OpenLink(it)) }
+                    )
+
+                    //当月赞助者对话框 / 上月赞助者结算报告
+                    SponsorsDialog(
+                        viewModel = sponsorsViewModel,
+                        onSupportClick = {
+                            eventViewModel.sendEvent(EventViewModel.Event.OpenLink(URL_SUPPORT))
+                        }
+                    )
+
+                    //版本修改操作流程
+                    ModifyVersionOperation(
+                        operation = modifyVersionViewModel.installOperation,
+                        changeOperation = { modifyVersionViewModel.installOperation = it },
+                        installer = modifyVersionViewModel.installer,
+                        onModify = { payload ->
+                            modifyVersionViewModel.modify(this@MainActivity, payload)
+                            //任务开始执行，立刻返回主界面，不停留在可能失效的版本设置屏幕
+                            screenBackStackModel.mainScreen.clearWith(NormalNavKey.LauncherMain)
+                        },
+                        onCancel = {
+                            modifyVersionViewModel.cancel()
+                        }
+                    )
+
+                    val vcOperation by vulkanCheckerViewModel.vcOperation.collectAsStateWithLifecycle()
+                    VulkanChecker(
+                        operation = vcOperation,
+                        onChange = {
+                            vulkanCheckerViewModel.changeOperation(it)
+                        },
+                        startCheck = { version ->
+                            eventViewModel.sendEvent(
+                                EventViewModel.Event.VulkanCheck(version)
+                            )
+                        },
+                        confirmResult = {
+                            vulkanCheckerViewModel.resumeCont()
                         }
                     )
                 }
-
-                ShareLinkOperation(
-                    operation = logsUploadViewModel.operation,
-                    onChange = { logsUploadViewModel.operation = it },
-                    onUploadChancel = { logsUploadViewModel.cancel() },
-                    onUpload = {
-                        logFile?.let { file ->
-                            logsUploadViewModel.upload(file) { link ->
-                                openLink(link)
-                                copyText(COPY_LABEL_LINK, link, this@MainActivity)
-                            }
-                        }
-                    }
-                )
-
-                //检查更新操作流程
-                LauncherUpgradeOperation(
-                    operation = launcherUpgradeViewModel.operation,
-                    onChanged = { launcherUpgradeViewModel.operation = it },
-                    onIgnoredClick = { ver ->
-                        AllSettings.lastIgnoredVersion.save(ver)
-                    },
-                    onLinkClick = { eventViewModel.sendEvent(EventViewModel.Event.OpenLink(it)) }
-                )
-
-                //当月赞助者对话框 / 上月赞助者结算报告
-                SponsorsDialog(
-                    viewModel = sponsorsViewModel,
-                    onSupportClick = {
-                        eventViewModel.sendEvent(EventViewModel.Event.OpenLink(URL_SUPPORT))
-                    }
-                )
-
-                //版本修改操作流程
-                ModifyVersionOperation(
-                    operation = modifyVersionViewModel.installOperation,
-                    changeOperation = { modifyVersionViewModel.installOperation = it },
-                    installer = modifyVersionViewModel.installer,
-                    onModify = { payload ->
-                        modifyVersionViewModel.modify(this@MainActivity, payload)
-                        //任务开始执行，立刻返回主界面，不停留在可能失效的版本设置屏幕
-                        screenBackStackModel.mainScreen.clearWith(NormalNavKey.LauncherMain)
-                    },
-                    onCancel = {
-                        modifyVersionViewModel.cancel()
-                    }
-                )
-
-                val vcOperation by vulkanCheckerViewModel.vcOperation.collectAsStateWithLifecycle()
-                VulkanChecker(
-                    operation = vcOperation,
-                    onChange = {
-                        vulkanCheckerViewModel.changeOperation(it)
-                    },
-                    startCheck = { version ->
-                        eventViewModel.sendEvent(
-                            EventViewModel.Event.VulkanCheck(version)
-                        )
-                    },
-                    confirmResult = {
-                        vulkanCheckerViewModel.resumeCont()
-                    }
-                )
             }
         }
     }

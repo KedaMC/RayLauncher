@@ -3091,4 +3091,17 @@
     <string name="settings_launcher_music_visualizer_permission_summary">Lets the visualizer follow the audio of other apps (microphone permission, no audio is recorded). Without it the visualizer stays static</string>
     <string name="settings_launcher_music_visualizer_permission_granted">Allowed</string>
     <string name="settings_launcher_music_remove">Remove music card</string>
+    <string name="startup_ready">Ready!</string>
+    <string name="settings_ray_startup_enable">Enable Animation</string>
+    <string name="settings_ray_startup_enable_summary">Play the imported video when the launcher starts</string>
+    <string name="settings_ray_startup_fade_in">Fade In Duration</string>
+    <string name="settings_ray_startup_fade_out">Fade Out Duration</string>
+    <string name="settings_ray_startup_import">Import video</string>
+    <string name="settings_ray_startup_import_summary">Choose a startup animation video, up to 10 seconds</string>
+    <string name="settings_ray_startup_imported">A video is imported, tap to replace it</string>
+    <string name="settings_ray_startup_remove">Remove video</string>
+    <string name="settings_ray_startup_importing">Importing video…</string>
+    <string name="settings_ray_startup_import_failed">Failed to import the video</string>
+    <string name="settings_ray_startup_too_long">The video is longer than 10 seconds.</string>
+    <string name="settings_ray_startup_invalid">The file is not a playable video.</string>
 </resources>

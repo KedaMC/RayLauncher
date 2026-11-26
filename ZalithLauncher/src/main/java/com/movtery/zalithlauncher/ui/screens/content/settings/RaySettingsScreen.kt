@@ -109,6 +109,15 @@ fun RaySettingsScreen(
                 }
             }
 
+            animatedItem { ctx ->
+                StartupAnimationSettings(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animated(ctx),
+                    submitError = submitError
+                )
+            }
+
             //Decoration overlay (image/video from the gallery above the UI)
             animatedItem { ctx ->
                 OverlaySettings(

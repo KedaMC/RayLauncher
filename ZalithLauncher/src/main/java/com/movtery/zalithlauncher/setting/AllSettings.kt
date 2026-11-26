@@ -358,6 +358,21 @@ object AllSettings : SettingsRegistry() {
     val launcherActionMenuSide = enumSetting("launcherActionMenuSide", ActionMenuSide.END)
 
     /**
+     * Play the imported video at startup
+     */
+    val startupAnimationEnabled = boolSetting("startupAnimationEnabled", true)
+
+    /**
+     * Startup fade in duration, in tenths of a second
+     */
+    val startupFadeInDuration = intSetting("startupFadeInDuration", 5, 0..30)
+
+    /**
+     * Startup fade out duration, in tenths of a second
+     */
+    val startupFadeOutDuration = intSetting("startupFadeOutDuration", 5, 0..30)
+
+    /**
      * Music Card source: local files or music from other apps
      */
     val musicCardSource = enumSetting("musicCardSource", MusicSourceType.LOCAL)

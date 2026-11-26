@@ -26,6 +26,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -36,6 +38,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultRenderersFactory
@@ -50,6 +53,8 @@ import com.movtery.zalithlauncher.R
  * @param loop 是否循环播放视频
  * @param muted 是否开启静音
  * @param volume 音量
+ * @param onFirstFrame called when the first frame is on screen
+ * @param onFinished called when playback ended or failed
  */
 @OptIn(UnstableApi::class)
 @Composable
@@ -61,7 +66,9 @@ fun VideoPlayer(
     muted: Boolean = true,
     @FloatRange(from = 0.0, to = 1.0) volume: Float = if (muted) 0.0f else 1.0f,
     resizeMode: Int = AspectRatioFrameLayout.RESIZE_MODE_ZOOM,
-    refreshTrigger: Any? = null
+    refreshTrigger: Any? = null,
+    onFirstFrame: () -> Unit = {},
+    onFinished: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val player = remember {
@@ -88,6 +95,20 @@ fun VideoPlayer(
             this.player = player
             this.resizeMode = resizeMode
         }
+    }
+
+    val currentOnFirstFrame by rememberUpdatedState(onFirstFrame)
+    val currentOnFinished by rememberUpdatedState(onFinished)
+    DisposableEffect(player) {
+        val listener = object : Player.Listener {
+            override fun onRenderedFirstFrame() = currentOnFirstFrame()
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                if (playbackState == Player.STATE_ENDED) currentOnFinished()
+            }
+            override fun onPlayerError(error: PlaybackException) = currentOnFinished()
+        }
+        player.addListener(listener)
+        onDispose { player.removeListener(listener) }
     }
 
     LaunchedEffect(videoUri, refreshTrigger) {

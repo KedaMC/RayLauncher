@@ -1537,4 +1537,17 @@
     <string name="settings_launcher_music_visualizer_permission_summary">Agar visualizer mengikuti audio aplikasi lain (izin mikrofon, tidak ada audio yang direkam). Tanpa izin ini visualizer tetap statis</string>
     <string name="settings_launcher_music_visualizer_permission_granted">Diizinkan</string>
     <string name="settings_launcher_music_remove">Hapus kartu musik</string>
+    <string name="startup_ready">Ready!</string>
+    <string name="settings_ray_startup_enable">Aktifkan Animasi</string>
+    <string name="settings_ray_startup_enable_summary">Putar video yang diimpor saat launcher dibuka</string>
+    <string name="settings_ray_startup_fade_in">Durasi Fade In</string>
+    <string name="settings_ray_startup_fade_out">Durasi Fade Out</string>
+    <string name="settings_ray_startup_import">Impor video</string>
+    <string name="settings_ray_startup_import_summary">Pilih video animasi startup, maksimal 10 detik</string>
+    <string name="settings_ray_startup_imported">Video sudah diimpor, ketuk untuk mengganti</string>
+    <string name="settings_ray_startup_remove">Hapus video</string>
+    <string name="settings_ray_startup_importing">Mengimpor video…</string>
+    <string name="settings_ray_startup_import_failed">Gagal mengimpor video</string>
+    <string name="settings_ray_startup_too_long">Durasi video lebih dari 10 detik.</string>
+    <string name="settings_ray_startup_invalid">File bukan video yang bisa diputar.</string>
 </resources>
