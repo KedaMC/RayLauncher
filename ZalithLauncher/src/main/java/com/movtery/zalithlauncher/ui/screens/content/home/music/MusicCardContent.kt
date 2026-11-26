@@ -32,6 +32,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -101,6 +102,9 @@ import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
 import com.movtery.zalithlauncher.ui.components.MarqueeText
 import kotlinx.coroutines.delay
 
+/** Height of the artwork, track info and visualizer row */
+private val HEADER_HEIGHT = 88.dp
+
 private const val VISUALIZER_ROWS = 17
 private const val VISUALIZER_FRAME_NANOS = 32_000_000L
 
@@ -169,7 +173,10 @@ fun CardState.MusicCardContent() {
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                //Fixed height: long status texts must never take space from the playback controls
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(HEADER_HEIGHT),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -181,7 +188,7 @@ fun CardState.MusicCardContent() {
                 MusicVisualizer(
                     modifier = Modifier
                         .width(54.dp)
-                        .height(88.dp)
+                        .height(HEADER_HEIGHT)
                         .then(
                             if (needsAudioPermission) {
                                 Modifier.clickable(
@@ -213,7 +220,7 @@ private fun MusicArtworkView(music: MusicState) {
     val accent = mediaAccent
     Box(
         modifier = Modifier
-            .size(88.dp)
+            .size(HEADER_HEIGHT)
             .clip(shape)
             .background(accent.copy(alpha = 0.18f)),
         contentAlignment = Alignment.Center
@@ -295,6 +302,8 @@ private fun TrackInfo(
                 val shizukuState = music.shizukuState
                 StatusText(
                     title = stringResource(R.string.music_card_shizuku_title),
+                    //Leaves room for the button below
+                    summaryMaxLines = 1,
                     summary = stringResource(
                         when (shizukuState) {
                             ShizukuState.NOT_INSTALLED -> R.string.music_card_shizuku_not_installed
@@ -304,6 +313,8 @@ private fun TrackInfo(
                     )
                 )
                 TextButton(
+                    modifier = Modifier.height(32.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp),
                     onClick = {
                         if (shizukuState == ShizukuState.PERMISSION_NEEDED) {
                             ShizukuAccess.requestPermission(context)
@@ -334,18 +345,16 @@ private fun TrackInfo(
 }
 
 @Composable
-private fun StatusText(title: String, summary: String) {
-    Text(
+private fun StatusText(title: String, summary: String, summaryMaxLines: Int = 3) {
+    MarqueeText(
         text = title,
-        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-        maxLines = 2,
-        overflow = TextOverflow.Ellipsis
+        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
     )
     Text(
         modifier = Modifier.alpha(0.7f),
         text = summary,
         style = MaterialTheme.typography.bodySmall,
-        maxLines = 3,
+        maxLines = summaryMaxLines,
         overflow = TextOverflow.Ellipsis
     )
 }
