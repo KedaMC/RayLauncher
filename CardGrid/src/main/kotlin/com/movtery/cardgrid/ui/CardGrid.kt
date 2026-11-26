@@ -378,6 +378,7 @@ private fun CardGridGlowEffect(state: CardGridState, modifier: Modifier = Modifi
         val endCol = ceil((previewRect.right + fadePx) / cell).toInt().coerceAtMost(columns)
         val startRow = floor((previewRect.top - fadePx) / cell).toInt().coerceAtLeast(0)
         val endRow = ceil((previewRect.bottom + fadePx) / cell).toInt()
+            .coerceAtMost(state.workspace?.rows ?: Int.MAX_VALUE)
 
         // 线段到预览矩形的距离越远，透明度越低（smoothstep 衰减）
         fun segmentAlpha(seg: Rect): Float {
@@ -510,6 +511,8 @@ private suspend fun AwaitPointerEventScope.awaitLongPressOrAbort(
         withTimeout(timeoutMillis) {
             while (true) {
                 val event = awaitPointerEvent()
+                // A second finger means a pinch, not a long press
+                if (event.changes.count { it.pressed } > 1) return@withTimeout
                 val change = event.changes.firstOrNull { it.id == pointerId } ?: continue
                 if (!change.pressed) return@withTimeout
                 if ((change.position - startPosition).getDistance() > slopPx) return@withTimeout

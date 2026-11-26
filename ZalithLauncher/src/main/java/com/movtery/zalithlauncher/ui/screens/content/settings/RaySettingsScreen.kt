@@ -36,6 +36,7 @@ import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.EnumSettin
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
 import com.movtery.zalithlauncher.ui.screens.content.home.overlay.OverlayCardManager
+import com.movtery.zalithlauncher.ui.screens.content.home.visualizer.VisualizerCardManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -128,6 +129,15 @@ fun RaySettingsScreen(
                 )
             }
 
+            //Spectrum visualizer cards
+            animatedItem { ctx ->
+                VisualizerSettings(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animated(ctx)
+                )
+            }
+
             //Music card
             animatedItem { ctx ->
                 MusicSettings(
@@ -195,6 +205,30 @@ private fun OverlaySettings(
             summary = if (cards.isEmpty()) stringResource(R.string.settings_launcher_overlay_none) else null,
             enabled = cards.isNotEmpty(),
             onClick = { OverlayCardManager.removeAll() }
+        )
+    }
+}
+
+@Composable
+private fun VisualizerSettings(modifier: Modifier = Modifier) {
+    val cardIds by VisualizerCardManager.cardIds.collectAsStateWithLifecycle()
+
+    SettingsCardColumn(modifier = modifier) {
+        SettingsCard(
+            modifier = Modifier.fillMaxWidth(),
+            position = CardPosition.Top,
+            title = stringResource(R.string.settings_ray_visualizer_add),
+            summary = stringResource(R.string.settings_ray_visualizer_add_summary),
+            onClick = { VisualizerCardManager.addCard() }
+        )
+
+        SettingsCard(
+            modifier = Modifier.fillMaxWidth(),
+            position = CardPosition.Bottom,
+            title = stringResource(R.string.settings_ray_visualizer_remove_all),
+            summary = stringResource(R.string.settings_ray_visualizer_count, cardIds.size),
+            enabled = cardIds.isNotEmpty(),
+            onClick = { VisualizerCardManager.removeAll() }
         )
     }
 }

@@ -57,7 +57,9 @@ object MusicManager {
 
     private var local: LocalMusicSource? = null
     private var external: ExternalMusicSource? = null
-    private var capture: ExternalSpectrumCapture? = null
+    private val capture = ExternalSpectrumCapture()
+    /** Visible spectrum visualizer cards, independent of the Music Card */
+    private var spectrumUsers = 0
     private var shizukuSubscription: AutoCloseable? = null
 
     private var source = MusicSourceType.LOCAL
@@ -72,7 +74,6 @@ object MusicManager {
         scope = newScope
         if (local == null) local = LocalMusicSource(appContext, ::publish)
         external = ExternalMusicSource(appContext, ::publish)
-        capture = ExternalSpectrumCapture()
         //Shizuku can start, stop or answer the permission dialog at any time
         shizukuSubscription = ShizukuAccess.subscribe { Handler(Looper.getMainLooper()).post(::refresh) }
         source = AllSettings.musicCardSource.getValue()
@@ -103,11 +104,10 @@ object MusicManager {
         shizukuSubscription = null
         local?.setAnalysisEnabled(false)
         external?.stop()
-        capture?.stop()
         external = null
-        capture = null
         AudioSpectrumBus.clear()
         _state.value = MusicState()
+        updateCapture()
     }
 
     /** The app is on the screen: start listening */
@@ -125,9 +125,22 @@ object MusicManager {
         started = false
         local?.setAnalysisEnabled(false)
         external?.stop()
-        capture?.stop()
         AudioSpectrumBus.clear()
         publish()
+        updateCapture()
+    }
+
+    /** A spectrum visualizer became visible */
+    fun startSpectrum() {
+        spectrumUsers++
+        updateCapture()
+    }
+
+    /** A spectrum visualizer left the screen */
+    fun stopSpectrum() {
+        if (spectrumUsers == 0) return
+        spectrumUsers--
+        updateCapture()
     }
 
     /** Pauses local playback, used when a game or a jar is about to run */
@@ -150,6 +163,7 @@ object MusicManager {
 
     /** Re-reads the Shizuku and microphone state, used when the user comes back to the app */
     fun refresh() {
+        updateCapture()
         if (users == 0) return
         if (started && source == MusicSourceType.BACKGROUND) external?.refresh()
         publish()
@@ -162,7 +176,6 @@ object MusicManager {
         when (newSource) {
             MusicSourceType.LOCAL -> {
                 external?.stop()
-                capture?.stop()
             }
             MusicSourceType.BACKGROUND -> {
                 local?.pause()
@@ -179,19 +192,23 @@ object MusicManager {
             MusicSourceType.BACKGROUND -> external?.snapshot()
         } ?: return
         _state.value = snapshot
-        updateCapture(snapshot)
+        updateCapture()
     }
 
     /**
-     * The system visualizer is only needed for the music of other apps, only while it plays,
-     * and only when the RECORD_AUDIO permission was granted.
+     * The system visualizer is needed while a spectrum visualizer is visible, or while the Music Card
+     * shows the music of another app that plays. The local player measures its own audio, so the system
+     * visualizer rests while it plays. It needs the RECORD_AUDIO permission.
      */
-    private fun updateCapture(snapshot: MusicState) {
-        val capture = capture ?: return
-        val wanted = started &&
+    private fun updateCapture() {
+        val snapshot = _state.value
+        val localPlaying = users > 0 && source == MusicSourceType.LOCAL && snapshot.isPlaying
+        val forCard = started &&
                 source == MusicSourceType.BACKGROUND &&
                 snapshot.status == MusicStatus.READY &&
-                snapshot.isPlaying &&
+                snapshot.isPlaying
+        val wanted = (forCard || spectrumUsers > 0) &&
+                !localPlaying &&
                 hasRecordAudioPermission(appContext)
         if (wanted) {
             capture.start()

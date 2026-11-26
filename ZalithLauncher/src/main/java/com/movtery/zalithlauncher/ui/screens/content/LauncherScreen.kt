@@ -101,11 +101,13 @@ import com.movtery.zalithlauncher.ui.screens.content.elements.PlayerFace
 import com.movtery.zalithlauncher.ui.screens.content.elements.VersionIconImage
 import com.movtery.cardgrid.model.CardState
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.derivedStateOf
 import com.movtery.zalithlauncher.ui.screens.content.home.HomeGrid
 import com.movtery.zalithlauncher.ui.screens.content.home.LocalHomeGridState
 import com.movtery.zalithlauncher.ui.screens.content.home.server.LocalServerCardQuickPlay
 import com.movtery.zalithlauncher.ui.screens.content.home.version.LocalHomeCardLauncher
 import com.movtery.zalithlauncher.ui.screens.content.home.version.LocalHomeCardVersionSettings
+import com.movtery.zalithlauncher.ui.screens.content.home.workspace.LocalWorkspaceCamera
 import com.movtery.zalithlauncher.ui.theme.itemColor
 import com.movtery.zalithlauncher.viewmodel.ScreenBackStackViewModel
 import kotlinx.coroutines.Dispatchers
@@ -194,8 +196,14 @@ fun CardState.LaunchCardContent(cardId: String) {
     val account by AccountsManager.currentAccountFlow.collectAsStateWithLifecycle()
 
     //The skin preview turns towards the middle of the screen
-    val onRight = gridState?.cards?.firstOrNull { it.id == cardId }?.layout
-        ?.let { it.x + it.width / 2f > columns / 2f } ?: true
+    val camera = LocalWorkspaceCamera.current
+    val onRight by remember(gridState, camera, cardId) {
+        derivedStateOf {
+            val layout = gridState?.cards?.firstOrNull { it.id == cardId }?.layout
+            if (gridState == null || camera == null || layout == null) true
+            else camera.toViewport(gridState.rectFor(layout)).center.x > camera.viewport.width / 2f
+        }
+    }
 
     if (spanHeight >= LaunchCardTallRows && spanWidth >= 10) {
         ActionMenuTallerContent(

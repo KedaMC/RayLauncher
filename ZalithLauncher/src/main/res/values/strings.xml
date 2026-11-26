@@ -3107,4 +3107,10 @@
     <string name="game_log_keep_open">Keep log open</string>
     <string name="settings_launcher_page_slide_enabled_title">Enable page slide animation</string>
     <string name="settings_launcher_page_slide_enabled_summary">Slide between the Home, Download and Settings pages</string>
+    <string name="home_workspace_reset_view">Reset view</string>
+    <string name="visualizer_card_permission">Tap to allow audio access</string>
+    <string name="settings_ray_visualizer_add">Add Spectrum Visualizer</string>
+    <string name="settings_ray_visualizer_add_summary">Add a visualizer card to the home screen</string>
+    <string name="settings_ray_visualizer_remove_all">Remove all visualizers</string>
+    <string name="settings_ray_visualizer_count">%1$d on the home screen</string>
 </resources>

@@ -30,6 +30,11 @@ import androidx.compose.ui.platform.LocalDensity
 import com.movtery.zalithlauncher.setting.enums.ActionMenuSide
 import kotlinx.coroutines.flow.first
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animate
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
+import kotlinx.coroutines.launch
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -47,9 +52,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import com.movtery.zalithlauncher.ui.components.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -62,13 +65,12 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -79,7 +81,6 @@ import com.movtery.cardgrid.model.CardRect
 import com.movtery.cardgrid.state.CardGridState
 import com.movtery.cardgrid.state.CardSeed
 import com.movtery.cardgrid.ui.CardGrid
-import com.movtery.cardgrid.ui.CardGridAutoScroll
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.ui.screens.content.elements.backgroundGlass
@@ -88,10 +89,17 @@ import com.movtery.zalithlauncher.ui.screens.content.home.overlay.OverlayCardMan
 import com.movtery.zalithlauncher.ui.screens.content.home.server.ServerCardManager
 import com.movtery.zalithlauncher.ui.screens.content.home.server.ServerCardSettingsHost
 import com.movtery.zalithlauncher.ui.screens.content.home.version.VersionCardManager
+import com.movtery.zalithlauncher.ui.screens.content.home.visualizer.VisualizerCardManager
+import com.movtery.zalithlauncher.ui.screens.content.home.workspace.HomeWorkspace
+import com.movtery.zalithlauncher.ui.screens.content.home.workspace.LocalWorkspaceCamera
+import com.movtery.zalithlauncher.ui.screens.content.home.workspace.MAX_WORKSPACE_ZOOM
+import com.movtery.zalithlauncher.ui.screens.content.home.workspace.WorkspaceCamera
+import com.movtery.zalithlauncher.ui.screens.content.home.workspace.WorkspaceCanvas
 import com.movtery.zalithlauncher.ui.theme.cardColor
 import com.movtery.zalithlauncher.ui.theme.onCardColor
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 
 /** The home grid state, for cards that need to know where they sit on the grid */
 val LocalHomeGridState = staticCompositionLocalOf<CardGridState?> { null }
@@ -104,7 +112,7 @@ private sealed interface HomeCardOperation {
 }
 
 /**
- * 主页网格：系统卡片列 + 卡片网格库容器，
+ * 主页网格：自由画布上的卡片网格，
  * 负责布局的播种、持久化、卡片记录同步与服务器卡片的可见性上报。
  */
 @Composable
@@ -113,15 +121,14 @@ fun HomeGrid(
     isVisible: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val scrollState = rememberScrollState()
     val density = LocalDensity.current
-    //Edge to edge: the grid fills the whole screen, including the strip at the top and the area next to the front
-    //camera. Only the system bars keep the cards clear on the sides and bottom (they are hidden in immersive mode,
-    //so this is normally 0); the display cutout is deliberately ignored. Nothing is reserved at the top either,
-    //the cards start at the very top and the top bar floats over them
+    val camera = remember(density.density) { WorkspaceCamera(density.density) }
+    val scope = rememberCoroutineScope()
+    //Edge to edge: the canvas fills the whole screen, including the strip at the top and the area next to the
+    //front camera. Only the system bars keep it clear on the sides and bottom (they are hidden in immersive mode,
+    //so this is normally 0); the display cutout is deliberately ignored and the top bar floats over the canvas
     val windowInsets = WindowInsets.systemBars
-    val topClear = 0.dp
-    val gridPaddingDp = 6.dp
+    val gridPadding = 6.dp
     //长按调整工具栏触发的卡片操作
     var operation by remember { mutableStateOf<HomeCardOperation>(HomeCardOperation.None) }
 
@@ -170,6 +177,7 @@ fun HomeGrid(
             ServerCardManager.removeCard(cardId)
             OverlayCardManager.removeCard(cardId)
             MusicCardManager.removeCard(cardId)
+            VisualizerCardManager.removeCard(cardId)
         }
     }
 
@@ -216,27 +224,41 @@ fun HomeGrid(
             }
     }
 
-    // Launch card: always on the grid. A missing one (first run, or a layout from before it became a card)
-    // is placed on the side the launch panel was docked to, over the visible height
+    // Launch card: always on the grid. A missing one (first run) is placed at the bottom of the starting
+    // view, on the side the launch panel was docked to
     LaunchedEffect(state) {
-        snapshotFlow { state.isLayoutReady && state.viewportHeightPx > 0f }.first { it }
+        snapshotFlow { state.isLayoutReady && camera.viewport != Size.Zero }.first { it }
         if (state.cards.any { it.type.typeId == HomeCards.LAUNCH_CARD_TYPE_ID }) return@LaunchedEffect
         val type = HomeCards.launchCardType()
-        val columns = state.geometry.columns
-        val limits = type.limits.clampedFor(columns)
-        val width = (columns * 3 / 10).coerceIn(limits.minWidth, limits.maxWidth)
-        val usablePx = state.viewportHeightPx - with(density) { (topClear + gridPaddingDp * 2).toPx() } -
-                windowInsets.getBottom(density)
-        // Hug the panel (minimum height) and dock it to the bottom of the visible area
-        val rows = (usablePx / state.cellPx).toInt()
-        val height = limits.minHeight
-        val y = (rows - height).coerceAtLeast(0)
-        val x = if (AllSettings.launcherActionMenuSide.getValue() == ActionMenuSide.START) 0 else columns - width
+        val visibleColumns = (camera.viewport.width / state.cellPx).toInt().coerceAtMost(HomeWorkspace.columns)
+        val visibleRows = (camera.viewport.height / state.cellPx).toInt().coerceAtMost(HomeWorkspace.rows)
+        val width = type.defaultSpan.x
+        val height = type.limits.minHeight
+        val y = (visibleRows - height).coerceAtLeast(0)
+        val x = if (AllSettings.launcherActionMenuSide.getValue() == ActionMenuSide.START) 0
+        else (visibleColumns - width).coerceAtLeast(0)
         state.addCard(
             type = type,
             id = HomeCards.LAUNCH_CARD_ID,
             preferred = CardRect(id = HomeCards.LAUNCH_CARD_ID, x = x, y = y, width = width, height = height)
         )
+    }
+
+    // Spectrum visualizer cards follow their records, in both directions
+    LaunchedEffect(Unit) {
+        snapshotFlow { state.isLayoutReady to state.cards.size }
+            .combine(VisualizerCardManager.cardIds) { (ready, _), ids -> ids.takeIf { ready } }
+            .filterNotNull()
+            .collect { ids ->
+                ids.forEach { id ->
+                    if (state.cards.none { it.id == id }) {
+                        state.addCard(HomeCards.visualizerCardType(), id)
+                    }
+                }
+                state.cards
+                    .filter { it.type.typeId == HomeCards.VISUALIZER_CARD_TYPE_ID && it.id !in ids }
+                    .forEach { state.removeCard(it.id) }
+            }
     }
 
     // 与服务器卡片记录保持同步：记录存在而网格缺卡时补齐
@@ -264,15 +286,14 @@ fun HomeGrid(
     }
     LaunchedEffect(state) {
         snapshotFlow {
-            val top = state.viewportTopPx
-            val bottom = top + state.viewportHeightPx
-            if (!isVisibleState.value || !resumed || bottom <= 0f) {
+            val view = Rect(Offset.Zero, camera.viewport)
+            if (!isVisibleState.value || !resumed || view.isEmpty) {
                 emptySet()
             } else {
                 state.cards.mapNotNullTo(mutableSetOf()) { card ->
                     if (card.type.typeId != HomeCards.SERVER_CARD_TYPE_ID) return@mapNotNullTo null
-                    val rect = state.rootRectOf(card)
-                    if (rect.bottom >= top && rect.top <= bottom) card.id else null
+                    val rect = camera.toViewport(state.rectFor(card.layout))
+                    if (rect.overlaps(view)) card.id else null
                 }
             }
         }.distinctUntilChanged().collect { ids ->
@@ -281,44 +302,22 @@ fun HomeGrid(
     }
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .onGloballyPositioned { coordinates ->
-                state.onViewportPositioned(
-                    topPx = coordinates.positionInRoot().y,
-                    heightPx = coordinates.size.height.toFloat()
-                )
-            }
+        modifier = modifier.fillMaxSize()
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-                .windowInsetsPadding(
-                    windowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)
-                )
-                .padding(start = gridPaddingDp, end = gridPaddingDp, bottom = gridPaddingDp, top = topClear),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+        CompositionLocalProvider(
+            LocalHomeGridState provides state,
+            LocalWorkspaceCamera provides camera
         ) {
-            val systemCards = HomeCards.systemCards()
-            if (!systemCards.isEmpty()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 6.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    systemCards.forEach { systemCard ->
-                        key(systemCard.id) {
-                            Box(modifier = Modifier.padding(horizontal = 6.dp)) {
-                                systemCard.content()
-                            }
-                        }
-                    }
-                }
-            }
-
-            CompositionLocalProvider(LocalHomeGridState provides state) {
+            WorkspaceCanvas(
+                state = state,
+                camera = camera,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .windowInsetsPadding(
+                        windowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)
+                    )
+                    .padding(all = gridPadding)
+            ) {
                 CardGrid(
                     state = state,
                     containerColor = cardColor(),
@@ -333,10 +332,46 @@ fun HomeGrid(
                 )
             }
         }
-        CardGridAutoScroll(
-            state = state,
-            scrollState = scrollState
-        )
+
+        val systemCards = HomeCards.systemCards()
+        if (!systemCards.isEmpty()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(all = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                systemCards.forEach { systemCard ->
+                    key(systemCard.id) { systemCard.content() }
+                }
+            }
+        }
+
+        //Back to the starting view
+        AnimatedVisibility(
+            visible = !camera.isHome && !state.isAdjusting,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .navigationBarsPadding()
+                .padding(all = 9.dp)
+        ) {
+            ResetViewButton(
+                onClick = {
+                    val fromScale = camera.scale
+                    val fromOffset = camera.offset
+                    scope.launch {
+                        animate(0f, 1f) { progress, _ ->
+                            camera.set(
+                                scale = fromScale + (MAX_WORKSPACE_ZOOM - fromScale) * progress,
+                                offset = fromOffset * (1f - progress)
+                            )
+                        }
+                    }
+                }
+            )
+        }
 
         //调整态底部操作栏
         AnimatedVisibility(
@@ -374,6 +409,26 @@ private fun HomeCardOperation(
             ServerCardSettingsHost(
                 cardId = operation.cardId,
                 onDismiss = { onChange(HomeCardOperation.None) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun ResetViewButton(onClick: () -> Unit) {
+    Surface(
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        shadowElevation = 3.dp
+    ) {
+        IconButton(
+            modifier = Modifier.size(40.dp),
+            onClick = onClick
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_center_focus),
+                contentDescription = stringResource(R.string.home_workspace_reset_view)
             )
         }
     }

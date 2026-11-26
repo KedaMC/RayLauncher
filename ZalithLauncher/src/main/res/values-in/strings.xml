@@ -1555,4 +1555,10 @@
     <string name="settings_launcher_swap_anim_enabled_summary">Putar animasi komponen saat konten berganti</string>
     <string name="settings_launcher_page_slide_enabled_title">Aktifkan animasi geser halaman</string>
     <string name="settings_launcher_page_slide_enabled_summary">Geser saat berpindah antara halaman Beranda, Unduhan, dan Pengaturan</string>
+    <string name="home_workspace_reset_view">Atur ulang tampilan</string>
+    <string name="visualizer_card_permission">Ketuk untuk mengizinkan akses audio</string>
+    <string name="settings_ray_visualizer_add">Tambah Spectrum Visualizer</string>
+    <string name="settings_ray_visualizer_add_summary">Tambahkan kartu visualizer ke halaman utama</string>
+    <string name="settings_ray_visualizer_remove_all">Hapus semua visualizer</string>
+    <string name="settings_ray_visualizer_count">%1$d di halaman utama</string>
 </resources>

@@ -43,6 +43,7 @@ import com.movtery.zalithlauncher.ui.screens.content.home.music.MusicCardContent
 import com.movtery.zalithlauncher.ui.screens.content.home.overlay.OverlayCardContent
 import com.movtery.zalithlauncher.ui.screens.content.home.server.ServerCardContent
 import com.movtery.zalithlauncher.ui.screens.content.home.version.VersionCardContent
+import com.movtery.zalithlauncher.ui.screens.content.home.visualizer.VisualizerCardContent
 
 /** 系统卡片（不可变更），由启动器自行提供并绘制在网格之外 */
 class SystemCard(val id: String, val content: @Composable () -> Unit)
@@ -68,6 +69,9 @@ object HomeCards {
     /** Music card type id */
     const val MUSIC_CARD_TYPE_ID = "music_card"
 
+    /** Spectrum visualizer card type id */
+    const val VISUALIZER_CARD_TYPE_ID = "visualizer_card"
+
     /** Launch card (account, version, launch button) type id */
     const val LAUNCH_CARD_TYPE_ID = "launch_card"
 
@@ -75,15 +79,15 @@ object HomeCards {
     const val LAUNCH_CARD_ID = "launch_card"
 
     /** Rows the compact launch panel needs, so the card box hugs the panel at its minimum size */
-    const val LAUNCH_CARD_MIN_ROWS = 11
+    const val LAUNCH_CARD_MIN_ROWS = 6
 
     private val versionCardType = CardType(
         typeId = VERSION_CARD_TYPE_ID,
-        defaultSpan = IntOffset(10, 6),
+        defaultSpan = IntOffset(5, 3),
         limits = CardLimits(
-            minWidth = 10,
-            minHeight = 4,
-            maxHeight = 12
+            minWidth = 5,
+            minHeight = 2,
+            maxHeight = 6
         ),
         content = { cardId ->
             VersionCardContent(cardId)
@@ -93,11 +97,11 @@ object HomeCards {
     /** 服务器卡片类型 */
     private val serverCardType = CardType(
         typeId = SERVER_CARD_TYPE_ID,
-        defaultSpan = IntOffset(10, 6),
+        defaultSpan = IntOffset(5, 3),
         limits = CardLimits(
-            minWidth = 10,
-            minHeight = 4,
-            maxHeight = 12
+            minWidth = 5,
+            minHeight = 2,
+            maxHeight = 6
         ),
         content = { cardId ->
             ServerCardContent(cardId)
@@ -107,11 +111,11 @@ object HomeCards {
     /** 装饰叠加卡片类型：无底色，图片/视频直接铺满卡片 */
     private val overlayCardType = CardType(
         typeId = OVERLAY_CARD_TYPE_ID,
-        defaultSpan = IntOffset(10, 8),
+        defaultSpan = IntOffset(5, 4),
         limits = CardLimits(
-            minWidth = 4,
-            minHeight = 4,
-            maxHeight = 40
+            minWidth = 2,
+            minHeight = 2,
+            maxHeight = 20
         ),
         transparent = true,
         content = { cardId ->
@@ -122,11 +126,11 @@ object HomeCards {
     /** Music card: album artwork, track info, audio visualizer and playback controls */
     private val musicCardType = CardType(
         typeId = MUSIC_CARD_TYPE_ID,
-        defaultSpan = IntOffset(18, 8),
+        defaultSpan = IntOffset(9, 4),
         limits = CardLimits(
-            minWidth = 14,
-            minHeight = 7,
-            maxHeight = 12
+            minWidth = 7,
+            minHeight = 4,
+            maxHeight = 6
         ),
         content = { _ ->
             MusicCardContent()
@@ -139,11 +143,11 @@ object HomeCards {
      */
     private val launchCardType = CardType(
         typeId = LAUNCH_CARD_TYPE_ID,
-        defaultSpan = IntOffset(12, LAUNCH_CARD_MIN_ROWS),
+        defaultSpan = IntOffset(6, LAUNCH_CARD_MIN_ROWS),
         limits = CardLimits(
-            minWidth = 10,
+            minWidth = 5,
             minHeight = LAUNCH_CARD_MIN_ROWS,
-            maxHeight = 80
+            maxHeight = 32
         ),
         transparent = true,
         removable = false,
@@ -151,6 +155,23 @@ object HomeCards {
             LaunchCardContent(cardId)
         }
     )
+
+    /** Spectrum visualizer of the audio that is playing, independent of the Music card */
+    private val visualizerCardType = CardType(
+        typeId = VISUALIZER_CARD_TYPE_ID,
+        defaultSpan = IntOffset(6, 3),
+        limits = CardLimits(
+            minWidth = 2,
+            minHeight = 2,
+            maxHeight = 32
+        ),
+        content = { _ ->
+            VisualizerCardContent()
+        }
+    )
+
+    /** Spectrum visualizer card type */
+    fun visualizerCardType(): CardType = visualizerCardType
 
     /** 版本卡片类型 */
     fun versionCardType(): CardType = versionCardType
@@ -168,7 +189,7 @@ object HomeCards {
     fun launchCardType(): CardType = launchCardType
 
     /** 用户卡片类型注册表 */
-    val userCardTypes: List<CardType> = listOf(versionCardType, serverCardType, overlayCardType, musicCardType, launchCardType)
+    val userCardTypes: List<CardType> = listOf(versionCardType, serverCardType, overlayCardType, musicCardType, launchCardType, visualizerCardType)
 
     /** 系统卡片（不可变更） */
     fun systemCards(): List<SystemCard> = buildList {

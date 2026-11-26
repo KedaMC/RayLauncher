@@ -127,6 +127,7 @@ import com.movtery.zalithlauncher.ui.screens.content.VersionsManageScreen
 import com.movtery.zalithlauncher.ui.screens.content.WebViewScreen
 import com.movtery.zalithlauncher.ui.screens.content.addoninfo.AddonInfoScreen
 import com.movtery.zalithlauncher.ui.screens.content.navigateToDownload
+import com.movtery.zalithlauncher.ui.screens.content.home.workspace.HomeWorkspace
 import com.movtery.zalithlauncher.ui.screens.navigateTo
 import com.movtery.zalithlauncher.ui.screens.onBack
 import com.movtery.zalithlauncher.ui.theme.backgroundColor
@@ -559,7 +560,7 @@ private fun NavigationUI(
         }
     }
     //主页网格状态随主导航存活，离开主页再返回时不会重建、重播种与重放入场动画
-    val homeGridState = rememberCardGridState()
+    val homeGridState = rememberCardGridState(HomeWorkspace)
 
     LaunchedEffect(currentKey) {
         screenBackStackModel.mainScreen.currentKey = currentKey
