@@ -79,7 +79,7 @@ object HomeCards {
     const val LAUNCH_CARD_ID = "launch_card"
 
     /** Rows the compact launch panel needs, so the card box hugs the panel at its minimum size */
-    const val LAUNCH_CARD_MIN_ROWS = 6
+    const val LAUNCH_CARD_MIN_ROWS = 5
 
     private val versionCardType = CardType(
         typeId = VERSION_CARD_TYPE_ID,

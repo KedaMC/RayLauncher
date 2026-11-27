@@ -28,7 +28,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalDensity
 import com.movtery.zalithlauncher.setting.enums.ActionMenuSide
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.delay
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animate
 import androidx.compose.ui.geometry.Offset
@@ -111,6 +112,9 @@ private sealed interface HomeCardOperation {
     /** 打开服务器卡片的设置对话框 */
     data class ServerCardSettings(val cardId: String) : HomeCardOperation
 }
+
+/** How long the viewport must stay unchanged before a missing launch card is placed */
+private const val LAUNCH_CARD_PLACE_DELAY_MS = 500L
 
 /**
  * 主页网格：自由画布上的卡片网格，
@@ -225,22 +229,27 @@ fun HomeGrid(
     }
 
     // Launch card: always on the grid. A missing one (first run) is placed at the bottom of the starting
-    // view, on the side the launch panel was docked to
-    LaunchedEffect(state) {
-        snapshotFlow { state.isLayoutReady && camera.viewport != Size.Zero }.first { it }
-        if (state.cards.any { it.type.typeId == HomeCards.LAUNCH_CARD_TYPE_ID }) return@LaunchedEffect
-        val type = HomeCards.launchCardType()
-        val (visibleColumns, visibleRows) = state.visibleCells.let { it.x to it.y }
-        val width = type.defaultSpan.x
-        val height = type.limits.minHeight
-        val y = (visibleRows - height).coerceAtLeast(0)
-        val x = if (AllSettings.launcherActionMenuSide.getValue() == ActionMenuSide.START) 0
-        else (visibleColumns - width).coerceAtLeast(0)
-        state.addCard(
-            type = type,
-            id = HomeCards.LAUNCH_CARD_ID,
-            preferred = CardRect(id = HomeCards.LAUNCH_CARD_ID, x = x, y = y, width = width, height = height)
-        )
+    // view, on the side the launch panel was docked to (right by default). The window can still be resizing
+    // right after the first start, so the card is only placed once a landscape viewport has settled
+    LaunchedEffect(state, camera) {
+        snapshotFlow { camera.viewport.takeIf { state.isLayoutReady && it.width > it.height } }
+            .filterNotNull()
+            .collectLatest {
+                if (state.cards.any { it.type.typeId == HomeCards.LAUNCH_CARD_TYPE_ID }) return@collectLatest
+                delay(LAUNCH_CARD_PLACE_DELAY_MS)
+                val type = HomeCards.launchCardType()
+                val (visibleColumns, visibleRows) = state.visibleCells.let { it.x to it.y }
+                val width = type.defaultSpan.x
+                val height = type.limits.minHeight
+                val y = (visibleRows - height).coerceAtLeast(0)
+                val x = if (AllSettings.launcherActionMenuSide.getValue() == ActionMenuSide.START) 0
+                else (visibleColumns - width).coerceAtLeast(0)
+                state.addCard(
+                    type = type,
+                    id = HomeCards.LAUNCH_CARD_ID,
+                    preferred = CardRect(id = HomeCards.LAUNCH_CARD_ID, x = x, y = y, width = width, height = height)
+                )
+            }
     }
 
     // Spectrum visualizer cards follow their records, in both directions
@@ -490,19 +499,22 @@ private fun AdjustingBar(
                 Spacer(Modifier.width(2.dp))
             }
 
-            IconButton(
-                modifier = Modifier.size(34.dp),
-                enabled = adjustingId != null && isRemovable,
-                onClick = { adjustingId?.let(state::removeCard) }
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_delete_filled),
-                    tint = MaterialTheme.colorScheme.error,
-                    contentDescription = stringResource(R.string.generic_delete)
-                )
-            }
+            //Cards that can not be removed (the launch card) get no delete button at all
+            if (isRemovable) {
+                IconButton(
+                    modifier = Modifier.size(34.dp),
+                    enabled = adjustingId != null,
+                    onClick = { adjustingId?.let(state::removeCard) }
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_delete_filled),
+                        tint = MaterialTheme.colorScheme.error,
+                        contentDescription = stringResource(R.string.generic_delete)
+                    )
+                }
 
-            Spacer(Modifier.width(2.dp))
+                Spacer(Modifier.width(2.dp))
+            }
 
             IconButton(
                 modifier = Modifier.size(34.dp),

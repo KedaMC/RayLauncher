@@ -253,8 +253,8 @@ private fun ContentMenu(
     }
 }
 
-private val PanelPadding = 10.dp
-private val PanelSpacing = 8.dp
+private val PanelPadding = 8.dp
+private val PanelSpacing = 6.dp
 private val PanelInnerShape
     @Composable get() = MaterialTheme.shapes.large
 
@@ -294,8 +294,8 @@ private fun PanelIconBox(
 ) {
     Box(
         modifier = modifier
-            .size(44.dp)
-            .clip(RoundedCornerShape(14.dp))
+            .size(36.dp)
+            .clip(RoundedCornerShape(12.dp))
             .background(LocalContentColor.current.copy(alpha = 0.1f)),
         contentAlignment = Alignment.Center
     ) {
@@ -317,7 +317,7 @@ private fun AccountCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 10.dp, vertical = 8.dp),
+                .padding(horizontal = 8.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
@@ -325,7 +325,7 @@ private fun AccountCard(
                 if (account != null) {
                     PlayerFace(
                         account = account,
-                        avatarSize = 32.dp,
+                        avatarSize = 26.dp,
                         refreshKey = refreshKey
                     )
                 } else {
@@ -339,7 +339,7 @@ private fun AccountCard(
 
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
+                verticalArrangement = Arrangement.Center
             ) {
                 Text(
                     modifier = Modifier.basicMarquee(iterations = Int.MAX_VALUE),
@@ -398,7 +398,7 @@ private fun InstanceCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 6.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
+                    .padding(horizontal = 4.dp, vertical = 2.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
@@ -520,41 +520,28 @@ private fun LauncherPanel(
     toAccountManageScreen: () -> Unit,
     toVersionManageScreen: () -> Unit,
     toVersionSettingsScreen: () -> Unit,
-    fillHeight: Boolean = false,
 ) {
     BackgroundCard(
         modifier = modifier,
         shape = MaterialTheme.shapes.extraLarge,
         liquidGlass = true
     ) {
-        //When filling the card, spare height is split between the rows and each row keeps half the
-        //panel spacing around it, so the panel always matches the card box
-        val rowModifier = if (fillHeight) Modifier.padding(vertical = PanelSpacing / 2) else Modifier
         Column(
-            modifier = if (fillHeight) {
-                Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = PanelPadding, vertical = PanelPadding - PanelSpacing / 2)
-            } else {
-                Modifier
-                    .fillMaxWidth()
-                    .padding(PanelPadding)
-            },
-            verticalArrangement = if (fillHeight) Arrangement.SpaceBetween else Arrangement.spacedBy(PanelSpacing)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(PanelPadding),
+            verticalArrangement = Arrangement.spacedBy(PanelSpacing)
         ) {
             AccountCard(
-                modifier = rowModifier,
                 account = account,
                 onClick = toAccountManageScreen
             )
             InstanceCard(
-                modifier = rowModifier,
                 onLaunchGame = onLaunchGame,
                 toVersionManageScreen = toVersionManageScreen,
                 toVersionSettingsScreen = toVersionSettingsScreen
             )
             LaunchButton(
-                modifier = rowModifier,
                 onLaunchGame = onLaunchGame
             )
         }
@@ -570,16 +557,20 @@ private fun ActionMenuCardContent(
     toVersionManageScreen: () -> Unit,
     toVersionSettingsScreen: () -> Unit,
 ) {
-    //The panel fills the whole card, so the selection box of the card always matches the panel
-    LauncherPanel(
+    //The panel only takes the height of its content and sits at the bottom of the card box
+    Box(
         modifier = modifier,
-        account = account,
-        onLaunchGame = onLaunchGame,
-        toAccountManageScreen = toAccountManageScreen,
-        toVersionManageScreen = toVersionManageScreen,
-        toVersionSettingsScreen = toVersionSettingsScreen,
-        fillHeight = true
-    )
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        LauncherPanel(
+            modifier = Modifier.fillMaxWidth(),
+            account = account,
+            onLaunchGame = onLaunchGame,
+            toAccountManageScreen = toAccountManageScreen,
+            toVersionManageScreen = toVersionManageScreen,
+            toVersionSettingsScreen = toVersionSettingsScreen
+        )
+    }
 }
 
 @Composable
@@ -658,7 +649,7 @@ private fun VersionManagerLayout(
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (isRefreshing) {
-            Box(modifier = Modifier.fillMaxWidth().height(44.dp)) {
+            Box(modifier = Modifier.fillMaxWidth().height(36.dp)) {
                 LoadingIndicator(
                     modifier = Modifier
                         .size(24.dp)
@@ -670,8 +661,8 @@ private fun VersionManagerLayout(
                 VersionIconImage(
                     version = version,
                     modifier = Modifier
-                        .size(28.dp)
-                        .clip(RoundedCornerShape(8.dp))
+                        .size(24.dp)
+                        .clip(RoundedCornerShape(7.dp))
                 )
             }
             Spacer(modifier = Modifier.width(10.dp))
