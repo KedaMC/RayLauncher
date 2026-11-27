@@ -23,8 +23,6 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -59,72 +57,49 @@ import androidx.compose.ui.unit.dp
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.startup.InstallFailure
 import com.movtery.zalithlauncher.startup.StartupTransition
-import com.movtery.zalithlauncher.startup.StartupVideoLayout
 import com.movtery.zalithlauncher.viewmodel.StartupPhase
 import kotlinx.coroutines.delay
-import java.io.File
 import kotlin.time.Duration.Companion.milliseconds
 
 /** How long "Ready!" stays on screen before leaving */
 private const val READY_HOLD_MILLIS = 800
 
-/** Gives up on a video that does not render its first frame */
-private const val VIDEO_TIMEOUT_MILLIS = 3000
-
 /**
- * The startup page on a black background: the first install, component updates and the startup video.
+ * The startup page on a black background: the first install and component updates.
  * Everything fades in from and out to black.
- * @param video the startup animation, null for a plain black screen
  * @param onFinished called once, after the content has faded out
  */
 @Composable
 fun StartupScreen(
     phase: StartupPhase,
     isFirstInstall: Boolean,
-    video: File?,
     onInstall: () -> Unit,
     onFinished: () -> Unit
 ) {
-    val playingVideo = video.takeIf { phase == StartupPhase.Ready && !isFirstInstall }
-    var videoRendered by remember { mutableStateOf(false) }
     var leaving by remember { mutableStateOf(false) }
 
-    //A normal launch stays black until there is something to show
+    //A normal launch stays black unless components have to be installed
     val showInstaller = if (isFirstInstall) {
         phase != StartupPhase.Checking
     } else {
         phase == StartupPhase.Installing || phase is StartupPhase.Failed
     }
-    val contentReady = showInstaller || videoRendered
 
     LaunchedEffect(phase) {
         if (phase != StartupPhase.Ready) return@LaunchedEffect
-        if (isFirstInstall) {
-            delay(READY_HOLD_MILLIS.milliseconds)
-            leaving = true
-        } else if (video == null) {
-            leaving = true
-        }
-    }
-
-    if (playingVideo != null) {
-        LaunchedEffect(videoRendered) {
-            if (!videoRendered) {
-                delay(VIDEO_TIMEOUT_MILLIS.milliseconds)
-                leaving = true
-            }
-        }
+        if (isFirstInstall) delay(READY_HOLD_MILLIS.milliseconds)
+        leaving = true
     }
 
     val alpha = remember { Animatable(0f) }
     val currentOnFinished by rememberUpdatedState(onFinished)
-    LaunchedEffect(contentReady, leaving) {
+    LaunchedEffect(showInstaller, leaving) {
         if (leaving) {
             if (alpha.value > 0f) {
                 alpha.animateTo(0f, tween(StartupTransition.fadeOutMillis, easing = LinearEasing))
             }
             currentOnFinished()
-        } else if (contentReady) {
+        } else if (showInstaller) {
             alpha.animateTo(1f, tween(StartupTransition.fadeInMillis, easing = LinearEasing))
         }
     }
@@ -135,29 +110,7 @@ fun StartupScreen(
             .background(Color.Black),
         contentAlignment = Alignment.Center
     ) {
-        if (playingVideo != null) {
-            StartupVideo(
-                video = playingVideo,
-                layout = remember { StartupVideoLayout.load() },
-                onFirstFrame = { videoRendered = true },
-                onFinished = { leaving = true }
-            )
-            //The video fades through this black layer, tapping it skips the video
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .graphicsLayer { this.alpha = 1f - alpha.value }
-                    .background(Color.Black)
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clickable(
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() }
-                    ) { leaving = true }
-            )
-        } else if (showInstaller || isFirstInstall) {
+        if (showInstaller || isFirstInstall) {
             InstallerContent(
                 modifier = Modifier.graphicsLayer { this.alpha = alpha.value },
                 phase = phase,

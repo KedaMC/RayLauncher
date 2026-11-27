@@ -57,6 +57,7 @@ import com.movtery.zalithlauncher.notification.NotificationManager
 import com.movtery.zalithlauncher.path.PathManager
 import com.movtery.zalithlauncher.path.URL_SUPPORT
 import com.movtery.zalithlauncher.setting.AllSettings
+import com.movtery.zalithlauncher.startup.StartupAnimation
 import com.movtery.zalithlauncher.startup.StartupTransition
 import com.movtery.zalithlauncher.ui.AndroidStringText
 import com.movtery.zalithlauncher.ui.androidText
@@ -324,8 +325,12 @@ class MainActivity : BaseAppCompatActivity() {
             window.setBackgroundDrawable(Color.BLACK.toDrawable())
         }
 
+        val startupVideo = if (reveal && intent.getBooleanExtra(StartupTransition.EXTRA_PLAY_VIDEO, false)) {
+            StartupAnimation.videoToPlay()
+        } else null
+
         setContent {
-            StartupRevealHost(reveal = reveal) {
+            StartupRevealHost(reveal = reveal, video = startupVideo) {
                 ZalithLauncherTheme(
                     backgroundViewModel = backgroundViewModel,
                     festivals = festivals

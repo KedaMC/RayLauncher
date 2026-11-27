@@ -25,6 +25,9 @@ object StartupTransition {
     /** Intent extra: the main page has to be revealed from black without entrance animations */
     const val EXTRA_REVEAL = "EXTRA_STARTUP_REVEAL"
 
+    /** Intent extra: the main page plays the startup video while it is revealed */
+    const val EXTRA_PLAY_VIDEO = "EXTRA_STARTUP_PLAY_VIDEO"
+
     val fadeInMillis: Int
         get() = AllSettings.startupFadeInDuration.getValue() * 100
 

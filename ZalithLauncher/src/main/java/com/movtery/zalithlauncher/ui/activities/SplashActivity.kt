@@ -32,7 +32,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import com.movtery.zalithlauncher.startup.StartupAnimation
 import com.movtery.zalithlauncher.startup.StartupTransition
 import com.movtery.zalithlauncher.ui.base.BaseAppCompatActivity
 import com.movtery.zalithlauncher.ui.screens.splash.StartupScreen
@@ -63,15 +62,11 @@ class SplashActivity : BaseAppCompatActivity() {
         super.onCreate(savedInstanceState)
         window.setBackgroundDrawable(Color.BLACK.toDrawable())
 
-        //An external import goes straight to its task, without the startup video
-        val video = if (isExternalImport(intent)) null else StartupAnimation.videoToPlay()
-
         setContent {
             MaterialTheme(colorScheme = darkColorScheme()) {
                 StartupScreen(
                     phase = startupViewModel.phase,
                     isFirstInstall = startupViewModel.isFirstInstall,
-                    video = video,
                     onInstall = startupViewModel::install,
                     onFinished = ::finishSplash
                 )
@@ -103,7 +98,10 @@ class SplashActivity : BaseAppCompatActivity() {
         val import = pendingImportIntent ?: intent.takeIf { isExternalImport(it) }
 
         if (import == null || !handleImportIntent(import)) {
-            startMain(Intent(this, MainActivity::class.java))
+            //Only a normal launch plays the video: not the first install, nor an external import
+            val forward = Intent(this, MainActivity::class.java)
+                .putExtra(StartupTransition.EXTRA_PLAY_VIDEO, !startupViewModel.isFirstInstall)
+            startMain(forward)
         }
         closeWithoutAnimation()
     }

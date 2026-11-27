@@ -46,6 +46,10 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import com.movtery.zalithlauncher.R
+import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
+
+private const val NEAR_END_POLL_MILLIS = 30
 
 /**
  * 简单的沉浸式视频播放层
@@ -55,6 +59,7 @@ import com.movtery.zalithlauncher.R
  * @param volume 音量
  * @param onFirstFrame called when the first frame is on screen
  * @param onFinished called when playback ended or failed
+ * @param onNearEnd called once, [nearEndMillis] before the end (at most half of the video)
  */
 @OptIn(UnstableApi::class)
 @Composable
@@ -68,7 +73,9 @@ fun VideoPlayer(
     resizeMode: Int = AspectRatioFrameLayout.RESIZE_MODE_ZOOM,
     refreshTrigger: Any? = null,
     onFirstFrame: () -> Unit = {},
-    onFinished: () -> Unit = {}
+    onFinished: () -> Unit = {},
+    nearEndMillis: Long = 0L,
+    onNearEnd: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val player = remember {
@@ -115,6 +122,19 @@ fun VideoPlayer(
         val mediaItem = MediaItem.fromUri(videoUri)
         player.setMediaItem(mediaItem)
         player.prepare()
+    }
+
+    val currentOnNearEnd by rememberUpdatedState(onNearEnd)
+    val watchEnd = onNearEnd != null
+    LaunchedEffect(player, videoUri, watchEnd) {
+        if (!watchEnd) return@LaunchedEffect
+        while (true) {
+            delay(NEAR_END_POLL_MILLIS.milliseconds)
+            val duration = player.duration
+            if (duration == C.TIME_UNSET || !player.isPlaying) continue
+            if (duration - player.currentPosition <= minOf(nearEndMillis, duration / 2)) break
+        }
+        currentOnNearEnd?.invoke()
     }
 
     LaunchedEffect(autoPlay) {

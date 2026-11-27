@@ -38,7 +38,10 @@ fun StartupVideo(
     loop: Boolean = false,
     muted: Boolean = false,
     onFirstFrame: () -> Unit = {},
-    onFinished: () -> Unit = {}
+    onFinished: () -> Unit = {},
+    volume: Float = if (muted) 0f else 1f,
+    nearEndMillis: Long = 0L,
+    onNearEnd: (() -> Unit)? = null
 ) {
     Box(
         modifier = modifier
@@ -57,7 +60,10 @@ fun StartupVideo(
             muted = muted,
             resizeMode = layout.scale.resizeMode,
             onFirstFrame = onFirstFrame,
-            onFinished = onFinished
+            onFinished = onFinished,
+            volume = volume,
+            nearEndMillis = nearEndMillis,
+            onNearEnd = onNearEnd
         )
     }
 }
