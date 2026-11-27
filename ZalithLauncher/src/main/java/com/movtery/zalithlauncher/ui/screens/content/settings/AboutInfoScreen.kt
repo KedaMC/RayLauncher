@@ -67,7 +67,6 @@ import com.movtery.zalithlauncher.launcherName
 import com.movtery.zalithlauncher.library.LibraryInfo
 import com.movtery.zalithlauncher.library.libraryData
 import com.movtery.zalithlauncher.path.URL_COMMUNITY
-import com.movtery.zalithlauncher.path.URL_MCMOD
 import com.movtery.zalithlauncher.path.URL_SUPPORT
 import com.movtery.zalithlauncher.path.URL_WEBLATE
 import com.movtery.zalithlauncher.ui.base.BaseScreen
@@ -246,16 +245,6 @@ fun AboutInfoScreen(
                     text = stringResource(R.string.about_acknowledgements_hmcl_text, BuildKeys.LAUNCHER_SHORT_NAME),
                     openLicense = { openLicense(R.raw.hmcl_license) },
                     openLink = { openLink("https://github.com/HMCL-dev/HMCL") }
-                )
-            }
-            row("ack_mcmod", 1) { modifier, position ->
-                LinkIconItem(
-                    modifier = modifier,
-                    position = position,
-                    icon = painterResource(R.drawable.img_platform_mcmod),
-                    title = stringResource(R.string.about_acknowledgements_mcmod),
-                    text = stringResource(R.string.about_acknowledgements_mcmod_text, BuildKeys.LAUNCHER_SHORT_NAME),
-                    openLink = { openLink(URL_MCMOD) }
                 )
             }
             row("ack_mcim", 1) { modifier, position ->

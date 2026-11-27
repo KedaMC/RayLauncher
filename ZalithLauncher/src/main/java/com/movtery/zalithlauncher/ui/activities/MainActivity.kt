@@ -91,7 +91,6 @@ import com.movtery.zalithlauncher.utils.compareLangTag
 import com.movtery.zalithlauncher.utils.copyText
 import com.movtery.zalithlauncher.utils.festival.getTodayFestivals
 import com.movtery.zalithlauncher.utils.file.shareFile
-import com.movtery.zalithlauncher.utils.isChinese
 import com.movtery.zalithlauncher.utils.logging.Logger
 import com.movtery.zalithlauncher.utils.network.openLink
 import com.movtery.zalithlauncher.utils.network.openLinkInternal
@@ -313,9 +312,7 @@ class MainActivity : BaseAppCompatActivity() {
             }
         }
 
-        val festivals = getTodayFestivals(
-            containsChinese = isChinese(this@MainActivity)
-        )
+        val festivals = getTodayFestivals()
 
         //Coming from the startup page: fade in from black, without entrance animations
         val reveal = savedInstanceState == null &&

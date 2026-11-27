@@ -85,7 +85,6 @@ import com.movtery.zalithlauncher.game.download.addon.platform.PlatformClasses
 import com.movtery.zalithlauncher.game.download.addon.platform.PlatformDisplayLabel
 import com.movtery.zalithlauncher.game.download.addon.platform.PlatformFilterCode
 import com.movtery.zalithlauncher.game.download.addon.platform.PlatformSearchData
-import com.movtery.zalithlauncher.game.download.addon.utils.getMcmodTitle
 import com.movtery.zalithlauncher.game.version.mod.InstalledMod
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.ui.AndroidStringText
@@ -101,7 +100,6 @@ import com.movtery.zalithlauncher.ui.theme.onCardColor
 import com.movtery.zalithlauncher.utils.animation.getAnimateTween
 import com.movtery.zalithlauncher.utils.formatNumberByLocale
 import com.movtery.zalithlauncher.utils.string.isEmptyOrBlank
-import org.jackhuang.hmcl.addon.AddonProjectInfo
 
 sealed interface SearchAddonState {
     data object Searching: SearchAddonState
@@ -380,7 +378,7 @@ private fun ResultList(
     state: LazyListState = rememberLazyListState(),
     contentPadding: PaddingValues = PaddingValues(),
     classes: PlatformClasses,
-    data: List<Pair<PlatformSearchData, AddonProjectInfo?>>,
+    data: List<PlatformSearchData>,
     swapToDownload: (Platform, projectId: String, iconUrl: String?) -> Unit = { _, _, _ -> },
     installedInfo: ((Platform, projectId: String) -> InstalledMod?)? = null
 ) {
@@ -394,9 +392,9 @@ private fun ResultList(
         ) {
         items(
             items = data,
-            key = { (item, _) -> "${item.platform()}_${item.platformId()}" },
+            key = { item -> "${item.platform()}_${item.platformId()}" },
             contentType = { "project" }
-        ) { (item, mcmod) ->
+        ) { item ->
             val platform = remember(item) { item.platform() }
             val title = remember(item) { item.platformTitle() }
             val description = remember(item) { item.platformDescription() }
@@ -415,7 +413,7 @@ private fun ResultList(
                     .fillMaxWidth()
                     .padding(vertical = 6.dp),
                 platform = platform,
-                title = mcmod.getMcmodTitle(title, context),
+                title = title,
                 description = description,
                 iconUrl = iconUrl,
                 authors = authors,

@@ -102,7 +102,6 @@ import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.coroutine.TaskSystem
 import com.movtery.zalithlauncher.game.addons.modloader.ModLoader
 import com.movtery.zalithlauncher.game.download.addon.platform.Platform
-import com.movtery.zalithlauncher.game.download.addon.utils.getMcmodTitle
 import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.game.version.installed.VersionFolders
 import com.movtery.zalithlauncher.game.version.mod.AllModReader
@@ -1266,12 +1265,7 @@ private fun ModItemLayout(
                                 modifier = Modifier.height(IntrinsicSize.Max),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                val displayTitle = if (projectInfo != null) {
-                                    val title = projectInfo.title
-                                    mod.mcMod?.getMcmodTitle(title, context) ?: title
-                                } else {
-                                    localMod.name
-                                }
+                                val displayTitle = projectInfo?.title ?: localMod.name
                                 Text(
                                     modifier = Modifier
                                         .alpha(titleAlpha)

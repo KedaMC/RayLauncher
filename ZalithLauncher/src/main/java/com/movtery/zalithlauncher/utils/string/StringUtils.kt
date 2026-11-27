@@ -24,7 +24,6 @@ import java.io.StringWriter
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.util.UUID
-import java.util.regex.Pattern
 
 fun shiftString(input: String, direction: ShiftDirection, shiftCount: Int): String {
     if (input.isEmpty()) {
@@ -174,20 +173,6 @@ fun String.stripColorCodes(): String {
 fun String.isEmptyOrBlank(): Boolean = this.isEmpty() || this.isBlank()
 
 fun String.isNotEmptyOrBlank(): Boolean = !this.isEmptyOrBlank()
-
-/**
- * 检查一段字符串内是否含有中文字符（中文标点）
- * @return 是否带有中文
- */
-fun String?.containsChinese(): Boolean {
-    if (this == null || this.isEmpty()) {
-        return false
-    }
-
-    val pattern = Pattern.compile("[一-龥|！，。（）《》“”？：；【】]")
-    val matcher = pattern.matcher(this)
-    return matcher.find()
-}
 
 /**
  * 修改自源代码：[HMCL Github](https://github.com/HMCL-dev/HMCL/blob/942f7b7/HMCLCore/src/main/java/org/jackhuang/hmcl/util/StringUtils.java#L291-L393)

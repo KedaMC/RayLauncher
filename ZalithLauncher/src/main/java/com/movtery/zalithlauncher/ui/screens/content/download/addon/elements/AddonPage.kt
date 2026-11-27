@@ -19,7 +19,6 @@
 package com.movtery.zalithlauncher.ui.screens.content.download.addon.elements
 
 import com.movtery.zalithlauncher.game.download.addon.platform.PlatformSearchData
-import org.jackhuang.hmcl.addon.AddonProjectInfo
 
 /**
  * 资源搜索结果页面信息
@@ -34,5 +33,5 @@ data class AddonPage(
     val pageIndex: Int,
     val totalPage: Int,
     val isLastPage: Boolean,
-    val data: List<Pair<PlatformSearchData, AddonProjectInfo?>>
+    val data: List<PlatformSearchData>
 )

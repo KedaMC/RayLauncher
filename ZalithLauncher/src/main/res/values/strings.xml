@@ -2488,10 +2488,6 @@
     <string name="about_acknowledgements_fcl_text">%s incorporates code from FCL and references parts of its implementation</string>
     <!-- Description of the Hello Minecraft! Launcher item in the acknowledgements; %s is the launcher name -->
     <string name="about_acknowledgements_hmcl_text">%s incorporates code from HMCL and references parts of its implementation</string>
-    <!-- Title of the MCMod website item in the acknowledgements list -->
-    <string name="about_acknowledgements_mcmod">MCMod (mcmod.cn)</string>
-    <!-- Description of the MCMod item in the acknowledgements; %s is the launcher name -->
-    <string name="about_acknowledgements_mcmod_text">%s uses Simplified Chinese translations of mods and modpacks from MCMod</string>
     <!-- Description of the bangbang93 item (BMCLAPI provider) in the acknowledgements; %s is the launcher name -->
     <string name="about_acknowledgements_bangbang93_text">%s uses the BMCL API mirror source</string>
     <!-- Description of the mcmod-info-mirror item in the acknowledgements; %s is the launcher name -->

@@ -28,24 +28,12 @@ class FestivalEffectTypeTest {
     @Test
     fun `festivals map to their registered effects`() {
         assertEquals(
-            listOf(FestivalEffectType.RAIN),
-            FestivalEffectType.of(listOf(Festival.QING_MING))
-        )
-        assertEquals(
             listOf(FestivalEffectType.SNOW),
             FestivalEffectType.of(listOf(Festival.CHRISTMAS))
         )
         assertEquals(
             listOf(FestivalEffectType.FIREWORKS),
-            FestivalEffectType.of(listOf(Festival.NEW_YEAR, Festival.SPRING_FESTIVAL))
-        )
-        assertEquals(
-            listOf(FestivalEffectType.FIREWORKS_NATIONAL),
-            FestivalEffectType.of(listOf(Festival.NATIONAL_DAY))
-        )
-        assertEquals(
-            listOf(FestivalEffectType.FIREFLIES),
-            FestivalEffectType.of(listOf(Festival.MID_AUTUMN))
+            FestivalEffectType.of(listOf(Festival.NEW_YEAR))
         )
         assertEquals(
             listOf(FestivalEffectType.BAT_SWARM),
@@ -53,21 +41,21 @@ class FestivalEffectTypeTest {
         )
         assertEquals(
             listOf(FestivalEffectType.HEARTS),
-            FestivalEffectType.of(listOf(Festival.VALENTINES, Festival.QIXI))
+            FestivalEffectType.of(listOf(Festival.VALENTINES))
         )
     }
 
     @Test
     fun `repeated effect types are deduplicated`() {
         val types = FestivalEffectType.of(
-            listOf(Festival.QING_MING, Festival.CHRISTMAS, Festival.QING_MING)
+            listOf(Festival.CHRISTMAS, Festival.HALLOWEEN, Festival.CHRISTMAS)
         )
-        assertEquals(listOf(FestivalEffectType.RAIN, FestivalEffectType.SNOW), types)
+        assertEquals(listOf(FestivalEffectType.SNOW, FestivalEffectType.BAT_SWARM), types)
     }
 
     @Test
     fun `festivals without effects produce no result`() {
-        assertTrue(FestivalEffectType.of(listOf(Festival.DRAGON_BOAT, Festival.APRIL_FOOLS)).isEmpty())
+        assertTrue(FestivalEffectType.of(listOf(Festival.APRIL_FOOLS)).isEmpty())
         assertTrue(FestivalEffectType.of(emptyList()).isEmpty())
     }
 }

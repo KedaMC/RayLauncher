@@ -379,7 +379,6 @@ dependencies {
     implementation(libs.prismal)
     implementation(libs.fishnet)
     implementation(libs.process.phoenix)
-    implementation(libs.lunarcalendar)
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar", "*.aar"))))
     //Safe
     implementation(libs.androidx.room.runtime)

@@ -94,9 +94,7 @@ import com.movtery.zalithlauncher.ui.theme.onCardColor
 import com.movtery.zalithlauncher.utils.animation.getAnimateTween
 import com.movtery.zalithlauncher.utils.formatNumberByLocale
 import com.movtery.zalithlauncher.utils.getTimeAgo
-import com.movtery.zalithlauncher.utils.isChinese
 import com.movtery.zalithlauncher.utils.string.isNotEmptyOrBlank
-import org.jackhuang.hmcl.addon.AddonProjectInfo
 import org.jackhuang.hmcl.util.versioning.GameVersionNumber
 
 sealed interface DownloadAddonState<T> {
@@ -510,7 +508,6 @@ private fun AddonVersionListItem(
 fun ProjectUrlsContent(
     platform: Platform,
     urls: PlatformProject.Urls,
-    mcmod: AddonProjectInfo?,
     openLink: (String) -> Unit,
 ) {
     urls.projectUrl?.takeIf { it.isNotEmptyOrBlank() }?.let { url ->
@@ -546,19 +543,6 @@ fun ProjectUrlsContent(
             iconSize = 18.dp,
             painter = painterResource(R.drawable.ic_import_contacts_outlined),
             text = stringResource(R.string.download_addon_wiki_link)
-        )
-    }
-    val context = LocalContext.current
-    mcmod?.takeIf {
-        isChinese(context)
-    }?.mcmodUrl()?.takeIf {
-        it.isNotEmptyOrBlank()
-    }?.let { url ->
-        IconTextButton(
-            onClick = { openLink(url) },
-            iconSize = 18.dp,
-            painter = painterResource(R.drawable.ic_link),
-            text = "MC 百科" //品牌名不需要翻译，硬编码
         )
     }
 }

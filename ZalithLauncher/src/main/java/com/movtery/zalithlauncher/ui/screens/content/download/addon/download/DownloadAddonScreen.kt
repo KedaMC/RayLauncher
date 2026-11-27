@@ -70,8 +70,6 @@ import com.movtery.zalithlauncher.game.download.addon.platform.getProject
 import com.movtery.zalithlauncher.game.download.addon.platform.getVersionById
 import com.movtery.zalithlauncher.game.download.addon.platform.getVersions
 import com.movtery.zalithlauncher.game.download.addon.platform.isAllNull
-import com.movtery.zalithlauncher.game.download.addon.utils.getMcmodTitle
-import com.movtery.zalithlauncher.game.download.addon.utils.getTranslations
 import com.movtery.zalithlauncher.game.version.mod.InstalledMod
 import com.movtery.zalithlauncher.game.versioninfo.filterRelease
 import com.movtery.zalithlauncher.ui.AndroidStringText
@@ -111,7 +109,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
-import org.jackhuang.hmcl.addon.AddonProjectInfo
 import kotlin.time.Duration.Companion.milliseconds
 
 private class DownloadScreenViewModel(
@@ -218,7 +215,7 @@ private class DownloadScreenViewModel(
     }
 
     //项目信息
-    var projectResult by mutableStateOf<DownloadAddonState<Pair<PlatformProject, AddonProjectInfo?>>>(DownloadAddonState.Getting())
+    var projectResult by mutableStateOf<DownloadAddonState<PlatformProject>>(DownloadAddonState.Getting())
 
     fun getProject() {
         viewModelScope.launch {
@@ -233,8 +230,7 @@ private class DownloadScreenViewModel(
                         classes = accurateClasses
                         remapVersions()
                     }
-                    val mcmod = classes.getTranslations()?.getInfoByCurseForgeId(result.platformSlug())
-                    projectResult = DownloadAddonState.Success(Pair(result, mcmod))
+                    projectResult = DownloadAddonState.Success(result)
                 },
                 onError = { state, _ ->
                     projectResult = state
@@ -564,7 +560,7 @@ private fun Versions(
 @Composable
 private fun ProjectInfo(
     modifier: Modifier = Modifier,
-    projectResult: DownloadAddonState<Pair<PlatformProject, AddonProjectInfo?>>,
+    projectResult: DownloadAddonState<PlatformProject>,
     platform: Platform,
     projectId: String,
     classes: PlatformClasses,
@@ -622,7 +618,7 @@ private fun ProjectInfo(
                     }
                 }
                 is DownloadAddonState.Success -> {
-                    val (project, mcmod) = projectResult.result
+                    val project = projectResult.result
                     //项目基本信息
                     val platform = remember { project.platform() }
                     val iconUrl = remember { project.platformIconUrl() }
@@ -656,7 +652,7 @@ private fun ProjectInfo(
                                     verticalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
                                     Text(
-                                        text = mcmod.getMcmodTitle(title, context),
+                                        text = title,
                                         style = MaterialTheme.typography.titleMedium,
                                         textAlign = TextAlign.Center
                                     )
@@ -684,7 +680,6 @@ private fun ProjectInfo(
                                     ProjectUrlsContent(
                                         platform = platform,
                                         urls = urls,
-                                        mcmod = mcmod,
                                         openLink = openLink,
                                     )
                                 }
@@ -745,7 +740,7 @@ private fun ProjectInfo(
                         } else {
                             //项目数据未就绪时无法生成收藏缓存，忽略此次操作
                             (projectResult as? DownloadAddonState.Success)
-                                ?.result?.first?.let { project ->
+                                ?.result?.let { project ->
                                     FavoriteProjectsRepository.favorite(project, classes)
                                 }
                         }
