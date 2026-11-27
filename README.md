@@ -1,8 +1,9 @@
 <div align="center">
   <img width="120" height="120" alt="Ray" src="https://github.com/user-attachments/assets/c32ef0e8-28dc-4e2f-af0f-d5ad04c22071" />
   <h1>RayLauncher</h1>
+</div>
 
-**RayLauncher** is an unofficial modified version of [Zalith Launcher 2](https://github.com/ZalithLauncher/ZalithLauncher2), featuring additional customization, visual enhancements, and tools designed to improve the Minecraft launcher experience on Android.
+**RayLauncher** is an unofficial modified version of [Zalith Launcher 2](https://github.com/ZalithLauncher/ZalithLauncher2), featuring additional customization, lightweight size, visual enhancements, and tools designed to improve the Minecraft launcher experience on Android.
 
 ## Features
 
@@ -34,6 +35,6 @@ Thanks to the developers and contributors of these projects.
 
 ## License
 
-RayLauncher is based on Zalith Launcher 2 and is distributed under the **GNU General Public License v3.0 (GPL-3.0)**.
+RayLauncher is distributed under the **GNU General Public License v3.0 (GPL-3.0)**.
 
 See [LICENSE](LICENSE) for the full license text. Applicable copyright notices and license terms must be retained.
