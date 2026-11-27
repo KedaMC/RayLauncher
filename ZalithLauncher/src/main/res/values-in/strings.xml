@@ -1561,4 +1561,9 @@
     <string name="settings_ray_visualizer_add_summary">Tambahkan kartu visualizer ke halaman utama</string>
     <string name="settings_ray_visualizer_remove_all">Hapus semua visualizer</string>
     <string name="settings_ray_visualizer_count">%1$d di halaman utama</string>
+    <string name="startup_video_fit">Pas</string>
+    <string name="startup_video_fill">Penuh</string>
+    <string name="startup_video_stretch">Regangkan</string>
+    <string name="settings_ray_startup_edit">Edit video</string>
+    <string name="settings_ray_startup_edit_summary">Cubit untuk zoom, geser untuk posisi, dan pilih cara video mengisi layar</string>
 </resources>

@@ -35,6 +35,7 @@ import com.movtery.zalithlauncher.setting.enums.MouseControlMode
 import com.movtery.zalithlauncher.setting.enums.MouseTouchBlockMode
 import com.movtery.zalithlauncher.setting.enums.MusicSourceType
 import com.movtery.zalithlauncher.setting.enums.ResolutionRule
+import com.movtery.zalithlauncher.startup.StartupVideoScale
 import com.movtery.zalithlauncher.ui.control.HotbarRule
 import com.movtery.zalithlauncher.ui.control.gamepad.JoystickMode
 import com.movtery.zalithlauncher.ui.control.mouse.CENTER_HOTSPOT
@@ -371,6 +372,14 @@ object AllSettings : SettingsRegistry() {
      * Play the imported video at startup
      */
     val startupAnimationEnabled = boolSetting("startupAnimationEnabled", true)
+
+    /**
+     * Placement of the startup video, see StartupVideoLayout
+     */
+    val startupVideoScale = enumSetting("startupVideoScale", StartupVideoScale.FIT)
+    val startupVideoZoom = intSetting("startupVideoZoom", 100, 50..400)
+    val startupVideoOffsetX = intSetting("startupVideoOffsetX", 0, -2000..2000)
+    val startupVideoOffsetY = intSetting("startupVideoOffsetY", 0, -2000..2000)
 
     /**
      * Startup fade in duration, in tenths of a second

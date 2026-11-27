@@ -18,6 +18,7 @@
 
 package com.movtery.zalithlauncher.ui.screens.content.settings
 
+import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
@@ -34,6 +35,7 @@ import com.movtery.zalithlauncher.setting.unit.floatRange
 import com.movtery.zalithlauncher.startup.StartupAnimation
 import com.movtery.zalithlauncher.startup.StartupVideoInvalidException
 import com.movtery.zalithlauncher.startup.StartupVideoTooLongException
+import com.movtery.zalithlauncher.ui.activities.StartupVideoEditorActivity
 import com.movtery.zalithlauncher.ui.androidText
 import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.CardPosition
 import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.IntSliderSettingsCard
@@ -113,6 +115,17 @@ internal fun StartupAnimationSettings(
                 else R.string.settings_ray_startup_import_summary
             ),
             onClick = { filePicker.launch(Unit) }
+        )
+
+        SettingsCard(
+            modifier = Modifier.fillMaxWidth(),
+            position = CardPosition.Middle,
+            title = stringResource(R.string.settings_ray_startup_edit),
+            summary = stringResource(R.string.settings_ray_startup_edit_summary),
+            enabled = hasVideo,
+            onClick = {
+                context.startActivity(Intent(context, StartupVideoEditorActivity::class.java))
+            }
         )
 
         SettingsCard(

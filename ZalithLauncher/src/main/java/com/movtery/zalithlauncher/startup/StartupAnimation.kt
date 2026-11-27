@@ -64,6 +64,8 @@ object StartupAnimation {
             validate(temp)
             FileUtils.deleteQuietly(target)
             FileUtils.moveFile(temp, target)
+            //A new video starts without the placement of the old one
+            StartupVideoLayout().save()
             changes++
         } finally {
             FileUtils.deleteQuietly(temp)

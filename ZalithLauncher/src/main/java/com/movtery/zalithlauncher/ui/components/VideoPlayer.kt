@@ -159,6 +159,7 @@ fun VideoPlayer(
 
     AndroidView(
         factory = { playerView },
+        update = { it.resizeMode = resizeMode },
         modifier = modifier.fillMaxSize()
     )
 }

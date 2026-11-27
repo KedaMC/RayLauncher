@@ -18,7 +18,6 @@
 
 package com.movtery.zalithlauncher.ui.screens.splash
 
-import android.net.Uri
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -57,11 +56,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.media3.ui.AspectRatioFrameLayout
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.startup.InstallFailure
 import com.movtery.zalithlauncher.startup.StartupTransition
-import com.movtery.zalithlauncher.ui.components.VideoPlayer
+import com.movtery.zalithlauncher.startup.StartupVideoLayout
 import com.movtery.zalithlauncher.viewmodel.StartupPhase
 import kotlinx.coroutines.delay
 import java.io.File
@@ -138,11 +136,9 @@ fun StartupScreen(
         contentAlignment = Alignment.Center
     ) {
         if (playingVideo != null) {
-            VideoPlayer(
-                videoUri = Uri.fromFile(playingVideo),
-                loop = false,
-                muted = false,
-                resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT,
+            StartupVideo(
+                video = playingVideo,
+                layout = remember { StartupVideoLayout.load() },
                 onFirstFrame = { videoRendered = true },
                 onFinished = { leaving = true }
             )
