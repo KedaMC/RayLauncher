@@ -22,9 +22,7 @@ import android.content.Context
 import com.movtery.zalithlauncher.components.Components
 import com.movtery.zalithlauncher.components.InstallableItem
 import com.movtery.zalithlauncher.components.UnpackComponentsTask
-import com.movtery.zalithlauncher.components.jre.Jre
 import com.movtery.zalithlauncher.components.jre.UnpackJnaTask
-import com.movtery.zalithlauncher.components.jre.UnpackJreTask
 import com.movtery.zalithlauncher.utils.logging.Logger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -45,12 +43,6 @@ class ComponentInstaller(context: Context) {
     private val items: List<InstallableItem> = buildList {
         Components.entries.forEach { component ->
             add(InstallableItem(component.displayName, null, UnpackComponentsTask(context, component)))
-        }
-        Jre.entries.forEach { jre ->
-            val task = UnpackJreTask(context, jre)
-            if (!task.isCheckFailed()) {
-                add(InstallableItem(jre.jreName, null, task))
-            }
         }
         add(InstallableItem("JNA", null, UnpackJnaTask(context)))
     }.sorted()

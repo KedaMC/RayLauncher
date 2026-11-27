@@ -18,6 +18,7 @@
 
 package com.movtery.zalithlauncher.game.version.download
 
+import com.movtery.zalithlauncher.components.jre.JreInstaller
 import android.content.Context
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.coroutine.Task
@@ -57,6 +58,7 @@ class MinecraftDownloader(
     private val maxDownloadThreads: Int = DEFAULT_DOWNLOAD_THREADS
 ) {
     private var allDownloadTasks = mutableListOf<DownloadTask>()
+    private var requiredJavaVersion: Int? = null
 
     private fun <R> getTaskMessage(
         download: R,
@@ -106,6 +108,9 @@ class MinecraftDownloader(
                         }
                     )
                 }
+                if (mode == DownloadMode.DOWNLOAD) {
+                    requiredJavaVersion?.let { JreInstaller.ensureForJava(it, task) }
+                }
                 //清除任务信息
                 task.updateProgress(1f)
                 task.updateMessage(null)
@@ -138,6 +143,10 @@ class MinecraftDownloader(
         val gameManifest = downloader.findVersion(this.version)?.let {
             downloader.createVersionJson(it, clientName, clientVersionsDir)
         } ?: throw IllegalArgumentException("Version not found: $version")
+
+        requiredJavaVersion = gameManifest.javaVersion?.let { java ->
+            java.majorVersion.takeIf { it != 0 } ?: java.version
+        } ?: 8
 
         commonScheduleDownloads(gameManifest, null, clientName, clientVersionsDir)
     }

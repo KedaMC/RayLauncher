@@ -18,6 +18,7 @@
 
 package com.movtery.zalithlauncher.game.launch
 
+import com.movtery.zalithlauncher.components.jre.JreInstaller
 import android.content.Context
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.coroutine.Task
@@ -223,6 +224,24 @@ class GameLaunchFlow(scope: CoroutineScope) {
                         onError = onError
                     )
                 )
+            }
+
+            //下载缺失的 Java 运行环境
+            addTask(
+                icon = R.drawable.ic_assignment_filled,
+                title = androidText(R.string.launch_check_java_runtime),
+                dispatcher = Dispatchers.IO
+            ) { task ->
+                launchManifest?.let { manifest ->
+                    JreInstaller.ensureForLaunch(
+                        version = version,
+                        manifest = VersionInfoParser(version)
+                            .setManifest(manifest)
+                            .setInheriting()
+                            .build(),
+                        task = task
+                    )
+                }
             }
 
             //启动游戏

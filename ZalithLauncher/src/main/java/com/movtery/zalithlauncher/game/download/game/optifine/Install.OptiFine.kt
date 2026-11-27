@@ -18,6 +18,7 @@
 
 package com.movtery.zalithlauncher.game.download.game.optifine
 
+import com.movtery.zalithlauncher.components.jre.JreInstaller
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
@@ -110,6 +111,11 @@ fun getOptiFineInstallTask(
             val patchedLibFile = File(optifineLibFolder, "OptiFine-$mavenVersion.jar")
             val launchWrapperLibs: List<String> = ZipFile(tempInstallerJar).use { zip ->
                 if (zip.getEntry("optifine/Patcher.class") != null) {
+                    JreInstaller.ensure(Jre.JRE_8, task)
+                    task.updateProgress(-1f)
+                    task.updateMessage(androidText(
+                        R.string.download_game_install_base_installing, ModLoader.OPTIFINE.displayName
+                    ))
                     stopAllNonMainProcesses(GlobalContext)
                     withTaskLogOutput(
                         holder = logOutputHolder,

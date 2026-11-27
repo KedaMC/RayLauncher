@@ -3038,4 +3038,7 @@
     <string name="startup_video_stretch">Stretch</string>
     <string name="settings_ray_startup_edit">Edit video</string>
     <string name="settings_ray_startup_edit_summary">Pinch to zoom, drag to move, and choose how the video fills the screen</string>
+    <string name="launch_check_java_runtime">Checking Java runtime</string>
+    <string name="download_java_runtime">Downloading Java %1$d (%2$s / %3$s)</string>
+    <string name="download_java_runtime_failed">Failed to download Java %1$d. Check your internet connection and try again.</string>
 </resources>

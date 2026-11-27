@@ -18,6 +18,7 @@
 
 package com.movtery.zalithlauncher.game.download.jvm_server
 
+import com.movtery.zalithlauncher.components.jre.JreInstaller
 import android.content.Intent
 import com.movtery.zalithlauncher.components.jre.Jre
 import com.movtery.zalithlauncher.context.GlobalContext
@@ -72,6 +73,8 @@ suspend fun runJvmRetryRuntimes(
     logOutput: TaskLogOutput? = null
 ): Unit = withContext(Dispatchers.Default) {
     waitForJvmExclusiveProcessesStopped(logId)
+
+    JreInstaller.ensure(jre)
 
     start()
 

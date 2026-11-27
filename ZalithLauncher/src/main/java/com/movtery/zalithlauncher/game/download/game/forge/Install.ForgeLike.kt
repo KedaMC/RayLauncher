@@ -18,6 +18,7 @@
 
 package com.movtery.zalithlauncher.game.download.game.forge
 
+import com.movtery.zalithlauncher.components.jre.JreInstaller
 import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import com.movtery.zalithlauncher.R
@@ -365,6 +366,8 @@ private suspend fun runProcessors(
 
         Triple(processor, jvmArgs, outputs.map { (key, value) -> Paths.get(key) to value })
     }
+
+    if (commandList.isNotEmpty()) JreInstaller.ensure(Jre.JRE_8, task)
 
     stopAllNonMainProcesses(GlobalContext)
     //正式开始执行命令
