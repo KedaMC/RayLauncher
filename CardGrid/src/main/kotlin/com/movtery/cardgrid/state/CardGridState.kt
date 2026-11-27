@@ -490,6 +490,10 @@ class CardGridState internal constructor(
         ResizeEdge.Top -> Offset(rect.center.x, rect.top)
         ResizeEdge.End -> Offset(rect.right, rect.center.y)
         ResizeEdge.Bottom -> Offset(rect.center.x, rect.bottom)
+        ResizeEdge.TopStart -> rect.topLeft
+        ResizeEdge.TopEnd -> rect.topRight
+        ResizeEdge.BottomStart -> rect.bottomLeft
+        ResizeEdge.BottomEnd -> rect.bottomRight
     }
 
     // ---------- 调整会话：拖动 ----------
@@ -803,8 +807,20 @@ class CardGridState internal constructor(
 
     // ---------- 内部：跟手矩形 ----------
 
-    /** 依据指针位置计算缩放时跟手的原始矩形，被拖动边钳制在最小跨度与推挤结算的跨度之间 */
+    /** Raw rect following the pointer; a corner combines the rects of its two sides */
     private fun rawRectForResize(
+        card: GridCard,
+        edge: ResizeEdge,
+        pointer: Offset,
+        settled: CardRect
+    ): Rect {
+        if (!edge.isCorner) return rawRectForSide(card, edge, pointer, settled)
+        val (horizontal, vertical) = edge.sides.map { rawRectForSide(card, it, pointer, settled) }
+        return Rect(horizontal.left, vertical.top, horizontal.right, vertical.bottom)
+    }
+
+    /** 依据指针位置计算缩放时跟手的原始矩形，被拖动边钳制在最小跨度与推挤结算的跨度之间 */
+    private fun rawRectForSide(
         card: GridCard,
         edge: ResizeEdge,
         pointer: Offset,
@@ -816,6 +832,7 @@ class CardGridState internal constructor(
         val maxSpan = when (edge) {
             ResizeEdge.Start, ResizeEdge.End -> settled.width
             ResizeEdge.Top, ResizeEdge.Bottom -> settled.height
+            else -> error("Corners are resolved side by side")
         }
         val range = minSpan..maxSpan
         val settledRect = rectFor(layout)
@@ -833,6 +850,7 @@ class CardGridState internal constructor(
             ResizeEdge.Start -> Rect(pointer.x.coerceIn(edgePxStart(range.last), edgePxStart(range.first)), top, right, bottom)
             ResizeEdge.Bottom -> Rect(left, top, right, pointer.y.coerceIn(edgePxBottom(range.first), edgePxBottom(range.last)))
             ResizeEdge.Top -> Rect(left, pointer.y.coerceIn(edgePxTop(range.last), edgePxTop(range.first)), right, bottom)
+            else -> error("Corners are resolved side by side")
         }
     }
 

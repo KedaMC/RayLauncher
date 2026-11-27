@@ -243,6 +243,23 @@ object GridEngine {
         obstacles: List<CardRect>,
         rows: Int = Int.MAX_VALUE
     ): ResizeResult {
+        //A corner is resolved one side after the other, the second pass sees what the first one pushed
+        if (edge.isCorner) {
+            var result = ResizeResult(current, emptyMap())
+            edge.sides.forEach { side ->
+                val next = resolveResize(
+                    current = result.layout,
+                    edge = side,
+                    pointer = pointer,
+                    columns = columns,
+                    limits = limits,
+                    obstacles = obstacles.map { result.pushed[it.id] ?: it },
+                    rows = rows
+                )
+                result = ResizeResult(next.layout, result.pushed + next.pushed)
+            }
+            return result
+        }
         val lim = limits.clampedFor(columns)
         val horizontal = edge == ResizeEdge.Start || edge == ResizeEdge.End
         val minSpan = if (horizontal) lim.minWidth else lim.minHeight
@@ -253,6 +270,7 @@ object GridEngine {
             ResizeEdge.Start -> current.right
             ResizeEdge.Bottom -> if (rows == Int.MAX_VALUE) rows else rows - current.y
             ResizeEdge.Top -> current.bottom
+            else -> error("Corners are resolved side by side")
         }.coerceAtLeast(1)
         val upper = minOf(maxSpan, hardMax).coerceAtLeast(1)
         val span = when (edge) {
@@ -260,6 +278,7 @@ object GridEngine {
             ResizeEdge.Start -> current.right - pointer.x
             ResizeEdge.Bottom -> pointer.y - current.y
             ResizeEdge.Top -> current.bottom - pointer.y
+            else -> error("Corners are resolved side by side")
         }.coerceIn(minSpan.coerceAtMost(upper), upper)
 
         val desired = withSpan(current, edge, span)
@@ -347,6 +366,7 @@ object GridEngine {
     private fun spanOf(rect: CardRect, edge: ResizeEdge): Int = when (edge) {
         ResizeEdge.Start, ResizeEdge.End -> rect.width
         ResizeEdge.Top, ResizeEdge.Bottom -> rect.height
+        else -> error("Corners are resolved side by side")
     }
 
     private fun withSpan(rect: CardRect, edge: ResizeEdge, span: Int): CardRect = when (edge) {
@@ -354,6 +374,7 @@ object GridEngine {
         ResizeEdge.Start -> rect.copy(x = rect.right - span, width = span)
         ResizeEdge.Bottom -> rect.copy(height = span)
         ResizeEdge.Top -> rect.copy(y = rect.bottom - span, height = span)
+        else -> error("Corners are resolved side by side")
     }
 
     /**

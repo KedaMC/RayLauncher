@@ -464,6 +464,15 @@ private class SelectionHandlesNode(
         drawPill(center = Offset(size.width, size.height / 2), wide = false)
         drawPill(center = Offset(size.width / 2, 0f), wide = true)
         drawPill(center = Offset(size.width / 2, size.height), wide = true)
+
+        //Corner handles
+        val cornerRadius = handleThickness.toPx()
+        listOf(
+            Offset(0f, 0f),
+            Offset(size.width, 0f),
+            Offset(0f, size.height),
+            Offset(size.width, size.height)
+        ).forEach { drawCircle(color = color, radius = cornerRadius, center = it) }
     }
 }
 
