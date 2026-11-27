@@ -10,9 +10,9 @@
 - **Media Overlay** — Import image and video overlays to the launcher interface.
 - **Custom Startup Animation** — Additional startup animation customization.
 - **Customizable Card Grid** — Flexible card layout with drag-and-drop positioning, resizing, and an adjustment mode.
-- **PanVK Execution Support** — Modified driver execution handling to support MediaTek Vulkan drivers, including PanVK.
-- **Cape System** — Additional cape functionality adapted from ZalithLauncher2Plus.
-- **Built-in Screen Recorder** — Integrated screen recording functionality for Minecraft gameplay, adapted from ZalithLauncher2Plus.
+- **PanVK Execution Support** — Modified driver execution handling to support MediaTek Vulkan drivers.
+- **Cape System** — Additional cape functionality.
+- **Built-in Screen Recorder** — Integrated screen recording functionality for Minecraft gameplay.
 - **Audio Visualizer** — Audio spectrum visualization through customizable visualizer cards.
 - **Media Overlay** — Add image and video overlays to the launcher interface, with options to import and manage overlay media.
 - **Custom Startup Animation** — Additional startup animation customization.
