@@ -553,20 +553,6 @@ object AllSettings : SettingsRegistry() {
     val lastUpgradeCheck = longSetting("lastUpgradeCheck", 0L)
 
     /**
-     * 玩家结束运行游戏的次数
-     */
-    val finishedGame = intSetting("finishedGame", 0)
-
-    /**
-     * 是否在打开启动器时，根据特定的运行游戏次数，显示赞助支持弹窗
-     */
-    val showSponsorship = boolSetting("showSponsorship", true)
-
-    /**
-     * 上次已展示结算报告的上月赞助者月份标识
-     */
-
-    /**
      * 搜索模组的初始搜索平台
      */
     val searchModPlatform = enumSetting("searchModPlatform", Platform.MODRINTH)

@@ -802,8 +802,6 @@
     <string name="game_menu_option_show_menu_hided">Game menu overlay has been disabled. You can open the game menu using the system back button</string>
     <!-- Slider in the in-game menu for the opacity of the on-screen control buttons -->
     <string name="game_menu_option_controls_opacity">Control Layout Opacity</string>
-    <!-- Text in the sponsor dialog shown after 100 game launches; %s is the total launch count -->
-    <string name="game_saponsorship_finished_game">The launcher has successfully launched the game %s times! If you find it useful, please consider supporting the developer! :)</string>
     <!-- Title of the Vulkan check dialogs and of its entry in the version settings -->
     <string name="game_vulkan_check_title">Vulkan Check</string>
     <!-- Description of the Vulkan check entry in the version settings, also the intro text of the check dialog -->
@@ -2464,6 +2462,10 @@
     <!-- Description under the author name on the About page; %s is the launcher name -->
     <string name="about_launcher_author_movtery_text">Author of %s</string>
     <string name="about_launcher_fazry_text">Random Kid</string>
+    <!-- Suffix after the launcher name on the About page -->
+    <string name="about_launcher_unofficial" translatable="false">(unofficial modified version)</string>
+    <!-- Button on the About page checking for a launcher update -->
+    <string name="about_launcher_check_update">Check for Updates</string>
     <!-- Button on the About page opening the project website -->
     <string name="about_launcher_project_link">Project Link</string>
     <!-- Button on the About page opening the sponsorship page; also the title of the sponsorship dialog -->

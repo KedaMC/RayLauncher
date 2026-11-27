@@ -707,6 +707,7 @@
     <string name="about_launcher_author_movtery_text">Pembuat %s</string>
     <string name="about_launcher_maintainer_keda_text">Maintainer RayLauncher</string>
     <string name="about_launcher_fazry_text">Random Kid</string>
+    <string name="about_launcher_check_update">Cek Pembaruan</string>
     <string name="about_launcher_project_link">Link Project</string>
     <string name="about_sponsor">Dukung Dengan Sponsor</string>
     <string name="about_acknowledgements_title">Ucapan Terima Kasih Kepada</string>
@@ -1039,7 +1040,6 @@
     <string name="servers_list_edit_server">Ubah Server</string>
     <string name="servers_list_copy_server_address">Salin Alamat</string>
     <string name="download_install_warning_mobile_data">Anda sedang menggunakan data seluler. Melanjutkan unduhan akan mengonsumsi kuota data.</string>
-    <string name="game_saponsorship_finished_game">Launcher sudah berhasil menjalankan game sebanyak %s kali! Kalau kamu merasa terbantu, silakan pertimbangkan untuk mendukung developernya! :)</string>
     <string name="versions_export">Ekspor Modpack</string>
     <string name="versions_export_type_mcbbs">MCBBS Modpack</string>
     <string name="versions_export_type_mcbbs_summary">Dapat diimpor oleh %s, HMCL, dan launcher lainnya</string>

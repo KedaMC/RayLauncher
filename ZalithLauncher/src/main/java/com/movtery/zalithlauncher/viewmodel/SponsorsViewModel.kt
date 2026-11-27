@@ -169,18 +169,6 @@ class SponsorsViewModel : ViewModel() {
     private var cache: MonthlySponsors? = null
     private var cacheTime = 0L
 
-    /**
-     * 启动时预拉取数据并刷新缓存
-     */
-    fun loadOnStart() {
-        viewModelScope.launch(Dispatchers.Main) {
-            _data.update { DataOperation.Loading }
-
-            val newData = toDataOperation(ensureData())
-            _data.update { newData }
-        }
-    }
-
     private var refreshJob: Job? = null
     /**
      * 刷新赞助者列表并更新缓存
@@ -202,9 +190,19 @@ class SponsorsViewModel : ViewModel() {
      */
     fun openDialog() {
         _ui.update { SponsorsOperation.Show }
-        //数据此前拉取失败且无缓存时，打开对话框时自动重试
-        if (_data.value is DataOperation.Empty) {
-            refresh()
+        //Nothing is fetched until the dialog is opened; a failed fetch is retried on the next open
+        if (_data.value !is DataOperation.Result && refreshJob == null) {
+            load()
+        }
+    }
+
+    private fun load() {
+        refreshJob = viewModelScope.launch(Dispatchers.Main) {
+            _data.update { DataOperation.Loading }
+
+            val newData = toDataOperation(ensureData())
+            _data.update { newData }
+            refreshJob = null
         }
     }
 

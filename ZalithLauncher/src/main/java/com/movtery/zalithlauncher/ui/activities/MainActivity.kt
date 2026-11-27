@@ -218,11 +218,6 @@ class MainActivity : BaseAppCompatActivity() {
         //初始化通知管理（创建渠道）
         NotificationManager.initManager(this)
 
-        //拉取当月赞助者数据
-        lifecycleScope.launch {
-            sponsorsViewModel.loadOnStart()
-        }
-
         //Ray: check for a launcher update on start (rate limited inside the view model)
         launcherUpgradeViewModel.checkOnAppStart()
 
@@ -489,7 +484,7 @@ class MainActivity : BaseAppCompatActivity() {
                         onLinkClick = { eventViewModel.sendEvent(EventViewModel.Event.OpenLink(it)) }
                     )
 
-                    //当月赞助者对话框 / 上月赞助者结算报告
+                    //Sponsor list, only opened from the About page
                     SponsorsDialog(
                         viewModel = sponsorsViewModel,
                         onSupportClick = {

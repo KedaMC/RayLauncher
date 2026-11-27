@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.movtery.zalithlauncher.ui.components.Button
 import androidx.compose.material3.Icon
@@ -87,6 +88,9 @@ import com.movtery.zalithlauncher.ui.theme.onItemColor
 
 /** Gap between two sections, on top of the 2dp the list already puts between any two cards. */
 private val SectionGap = 8.dp
+
+/** Shared width of the stacked buttons of the launcher section, so they line up */
+private val AboutButtonWidth = 180.dp
 
 @Composable
 fun AboutInfoScreen(
@@ -146,10 +150,17 @@ fun AboutInfoScreen(
                     modifier = modifier,
                     position = position,
                     icon = painterResource(R.drawable.img_launcher),
-                    title = BuildKeys.LAUNCHER_NAME,
+                    title = "${BuildKeys.LAUNCHER_NAME} ${stringResource(R.string.about_launcher_unofficial)}",
                     text = stringResource(R.string.about_launcher_version, BuildConfig.VERSION_NAME),
-                    //Lite: tombol “Cek pembaruan” dan “Link Project” ditahan sampai fork siap dirilis
-                    button = {}
+                    //The “Project Link” button stays hidden until the fork is ready to be published
+                    button = {
+                        ScalingActionButton(
+                            modifier = Modifier.width(AboutButtonWidth),
+                            onClick = checkUpdate
+                        ) {
+                            Text(text = stringResource(R.string.about_launcher_check_update))
+                        }
+                    }
                 )
             }
             row("author_movtery", 0) { modifier, position ->
@@ -161,6 +172,7 @@ fun AboutInfoScreen(
                     text = stringResource(R.string.about_launcher_author_movtery_text, "Zalith Launcher 2"),
                     button = {
                         ScalingActionButton(
+                            modifier = Modifier.width(AboutButtonWidth),
                             onClick = { openLink(URL_SUPPORT) }
                         ) {
                             Text(text = stringResource(R.string.about_sponsor))
