@@ -356,6 +356,7 @@ private fun CardGridGlowEffect(state: CardGridState, modifier: Modifier = Modifi
     val primary = MaterialTheme.colorScheme.primary
     val onSurface = MaterialTheme.colorScheme.onSurface
     val cell = state.cellPx
+    val cellHeight = state.cellHeightPx
     val columns = state.geometry.columns
     Canvas(modifier = modifier.zIndex(0.1f)) {
         // 空槽落点：邻居让位后开出的空位，以浅色填充与淡描边表达
@@ -376,8 +377,8 @@ private fun CardGridGlowEffect(state: CardGridState, modifier: Modifier = Modifi
         val fadePx = GridFadeExtent.toPx()
         val startCol = floor((previewRect.left - fadePx) / cell).toInt().coerceAtLeast(0)
         val endCol = ceil((previewRect.right + fadePx) / cell).toInt().coerceAtMost(columns)
-        val startRow = floor((previewRect.top - fadePx) / cell).toInt().coerceAtLeast(0)
-        val endRow = ceil((previewRect.bottom + fadePx) / cell).toInt()
+        val startRow = floor((previewRect.top - fadePx) / cellHeight).toInt().coerceAtLeast(0)
+        val endRow = ceil((previewRect.bottom + fadePx) / cellHeight).toInt()
             .coerceAtMost(state.workspace?.rows ?: Int.MAX_VALUE)
 
         // 线段到预览矩形的距离越远，透明度越低（smoothstep 衰减）
@@ -392,7 +393,7 @@ private fun CardGridGlowEffect(state: CardGridState, modifier: Modifier = Modifi
 
         val strokeWidth = 1.dp.toPx()
         for (row in startRow..endRow) {
-            val y = row * cell
+            val y = row * cellHeight
             for (col in startCol..endCol) {
                 val alpha = segmentAlpha(Rect(col * cell, y, (col + 1) * cell, y))
                 if (alpha > 0f) {
@@ -408,12 +409,12 @@ private fun CardGridGlowEffect(state: CardGridState, modifier: Modifier = Modifi
         for (col in startCol..endCol) {
             val x = col * cell
             for (row in startRow..endRow) {
-                val alpha = segmentAlpha(Rect(x, row * cell, x, (row + 1) * cell))
+                val alpha = segmentAlpha(Rect(x, row * cellHeight, x, (row + 1) * cellHeight))
                 if (alpha > 0f) {
                     drawLine(
                         color = onSurface.copy(alpha = alpha),
-                        start = Offset(x, row * cell),
-                        end = Offset(x, (row + 1) * cell),
+                        start = Offset(x, row * cellHeight),
+                        end = Offset(x, (row + 1) * cellHeight),
                         strokeWidth = strokeWidth
                     )
                 }

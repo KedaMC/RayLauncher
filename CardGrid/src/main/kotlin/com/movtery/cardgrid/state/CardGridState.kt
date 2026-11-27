@@ -35,6 +35,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
 import com.movtery.cardgrid.engine.GridEngine
@@ -116,6 +117,17 @@ class CardGridState internal constructor(
 
     /** 屏幕密度（dp → px 换算），随几何更新 */
     private var densityFactor by mutableFloatStateOf(1f)
+
+    /** Cell height (px). Same as [cellPx] unless a workspace is fitted to its viewport */
+    var cellHeightPx by mutableFloatStateOf(20f)
+        private set
+
+    /** Cell size set by [fitWorkspaceCells], null while the workspace uses its own cell size */
+    private var fittedCell: Size? = null
+
+    /** Columns and rows whose lines coincide with the edges of the starting view */
+    private var viewColumns = 0
+    private var viewRows = 0
 
     /** 卡片矩形在单元格内的收缩量（px） */
     var cardInsetPx by mutableIntStateOf(2)
@@ -291,7 +303,8 @@ class CardGridState internal constructor(
         val oldColumns = geometry.columns
         val newGeometry = workspace?.let { GridGeometry(it.columns, it.cellSize) }
             ?: computeGridGeometry(widthDp)
-        cellPx = newGeometry.cellSize * density.density
+        cellPx = fittedCell?.width ?: (newGeometry.cellSize * density.density)
+        cellHeightPx = fittedCell?.height ?: cellPx
         cardInsetPx = with(density) {
             CardSpacing.roundToPx()
         }
@@ -305,6 +318,34 @@ class CardGridState internal constructor(
             reflowTo(newColumns = newGeometry.columns, oldColumns = oldColumns)
         }
     }
+
+    /**
+     * Stretches the workspace cells slightly, so that a whole number of columns and rows fills the
+     * viewport. Cards can then touch all four edges of the screen.
+     * @return the size of the whole workspace (px)
+     */
+    fun fitWorkspaceCells(viewport: Size, density: Float): Size {
+        val canvas = workspace ?: return Size.Zero
+        if (viewport.width <= 0f || viewport.height <= 0f) return Size.Zero
+        val preferred = canvas.cellSize * density
+        viewColumns = (viewport.width / preferred).roundToInt().coerceIn(1, canvas.columns)
+        viewRows = (viewport.height / preferred).roundToInt().coerceIn(1, canvas.rows)
+        val cell = Size(viewport.width / viewColumns, viewport.height / viewRows)
+        if (cell != fittedCell) {
+            fittedCell = cell
+            cellPx = cell.width
+            cellHeightPx = cell.height
+            cards.forEach { card ->
+                val animatable = animatorFor(card)
+                val target = rectFor(effectiveLayout(card))
+                scope.launch { animatable.snapTo(target) }
+            }
+        }
+        return Size(canvas.columns * cell.width, canvas.rows * cell.height)
+    }
+
+    /** Whole columns and rows visible in the starting view of a fitted workspace */
+    val visibleCells: IntOffset get() = IntOffset(viewColumns, viewRows)
 
     /**
      * 卡片布局矩形在窗口坐标系中的位置
@@ -322,15 +363,19 @@ class CardGridState internal constructor(
 
     /** 卡片布局对应的渲染矩形（px），锚点为网格左上角 */
     fun rectFor(layout: CardRect): Rect = Rect(
-        left = layout.x * cellPx + cardInsetPx,
-        top = layout.y * cellPx + cardInsetPx,
-        right = layout.right * cellPx - cardInsetPx,
-        bottom = layout.bottom * cellPx - cardInsetPx
+        left = layout.x * cellPx + insetAt(layout.x, viewColumns, workspace?.columns),
+        top = layout.y * cellHeightPx + insetAt(layout.y, viewRows, workspace?.rows),
+        right = layout.right * cellPx - insetAt(layout.right, viewColumns, workspace?.columns),
+        bottom = layout.bottom * cellHeightPx - insetAt(layout.bottom, viewRows, workspace?.rows)
     )
+
+    /** No gap on the edges of the workspace and of its starting view, so cards sit flush against them */
+    private fun insetAt(line: Int, viewEnd: Int, canvasEnd: Int?): Int =
+        if (canvasEnd != null && (line == 0 || line == viewEnd || line == canvasEnd)) 0 else cardInsetPx
 
     /** 网格内容高度（px），含一行备用行供尾部推放 */
     fun gridHeightPx(): Float {
-        workspace?.let { return it.rows * cellPx }
+        workspace?.let { return it.rows * cellHeightPx }
         val rows = max(
             GridEngine.totalRows(cards.map { it.layout }),
             dragPreview?.bottom ?: 0
@@ -478,12 +523,12 @@ class CardGridState internal constructor(
         // 被压卡片依据手指位置实时做方向性让位预览
         val target = IntOffset(
             (topLeft.x / cellPx).roundToInt().coerceIn(0, geometry.columns - current.card.layout.width),
-            (topLeft.y / cellPx).roundToInt().coerceIn(0, rowLimit - current.card.layout.height)
+            (topLeft.y / cellHeightPx).roundToInt().coerceIn(0, rowLimit - current.card.layout.height)
         )
         val preview = current.card.layout.positionAt(target)
         val pointerCell = IntOffset(
             (pointer.x / cellPx).roundToInt(),
-            (pointer.y / cellPx).roundToInt()
+            (pointer.y / cellHeightPx).roundToInt()
         )
         lockDisplacementDirections(preview, pointerCell)
         val displacements = GridEngine.resolveDisplacements(
@@ -557,7 +602,7 @@ class CardGridState internal constructor(
             edge = edge,
             pointer = IntOffset(
                 (pointer.x / cellPx).roundToInt(),
-                (pointer.y / cellPx).roundToInt()
+                (pointer.y / cellHeightPx).roundToInt()
             ),
             columns = geometry.columns,
             limits = current.card.type.limits,
@@ -773,15 +818,16 @@ class CardGridState internal constructor(
             ResizeEdge.Top, ResizeEdge.Bottom -> settled.height
         }
         val range = minSpan..maxSpan
-        val left = layout.x * cellPx + cardInsetPx
-        val top = layout.y * cellPx + cardInsetPx
-        val right = layout.right * cellPx - cardInsetPx
-        val bottom = layout.bottom * cellPx - cardInsetPx
+        val settledRect = rectFor(layout)
+        val left = settledRect.left
+        val top = settledRect.top
+        val right = settledRect.right
+        val bottom = settledRect.bottom
         // 各跨度对应的被拖动边像素位置
-        fun edgePxStart(span: Int) = (layout.right - span) * cellPx + cardInsetPx
-        fun edgePxTop(span: Int) = (layout.bottom - span) * cellPx + cardInsetPx
-        fun edgePxEnd(span: Int) = (layout.x + span) * cellPx - cardInsetPx
-        fun edgePxBottom(span: Int) = (layout.y + span) * cellPx - cardInsetPx
+        fun edgePxStart(span: Int) = rectFor(layout.copy(x = layout.right - span, width = span)).left
+        fun edgePxTop(span: Int) = rectFor(layout.copy(y = layout.bottom - span, height = span)).top
+        fun edgePxEnd(span: Int) = rectFor(layout.copy(width = span)).right
+        fun edgePxBottom(span: Int) = rectFor(layout.copy(height = span)).bottom
         return when (edge) {
             ResizeEdge.End -> Rect(left, top, pointer.x.coerceIn(edgePxEnd(range.first), edgePxEnd(range.last)), bottom)
             ResizeEdge.Start -> Rect(pointer.x.coerceIn(edgePxStart(range.last), edgePxStart(range.first)), top, right, bottom)

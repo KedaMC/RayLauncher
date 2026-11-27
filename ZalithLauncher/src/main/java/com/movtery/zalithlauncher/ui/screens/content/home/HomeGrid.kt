@@ -68,6 +68,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
@@ -128,7 +129,6 @@ fun HomeGrid(
     //front camera. Only the system bars keep it clear on the sides and bottom (they are hidden in immersive mode,
     //so this is normally 0); the display cutout is deliberately ignored and the top bar floats over the canvas
     val windowInsets = WindowInsets.systemBars
-    val gridPadding = 6.dp
     //长按调整工具栏触发的卡片操作
     var operation by remember { mutableStateOf<HomeCardOperation>(HomeCardOperation.None) }
 
@@ -230,8 +230,7 @@ fun HomeGrid(
         snapshotFlow { state.isLayoutReady && camera.viewport != Size.Zero }.first { it }
         if (state.cards.any { it.type.typeId == HomeCards.LAUNCH_CARD_TYPE_ID }) return@LaunchedEffect
         val type = HomeCards.launchCardType()
-        val visibleColumns = (camera.viewport.width / state.cellPx).toInt().coerceAtMost(HomeWorkspace.columns)
-        val visibleRows = (camera.viewport.height / state.cellPx).toInt().coerceAtMost(HomeWorkspace.rows)
+        val (visibleColumns, visibleRows) = state.visibleCells.let { it.x to it.y }
         val width = type.defaultSpan.x
         val height = type.limits.minHeight
         val y = (visibleRows - height).coerceAtLeast(0)
@@ -258,6 +257,22 @@ fun HomeGrid(
                 state.cards
                     .filter { it.type.typeId == HomeCards.VISUALIZER_CARD_TYPE_ID && it.id !in ids }
                     .forEach { state.removeCard(it.id) }
+            }
+    }
+
+    //Home must never open onto an empty part of the canvas: when the screen is entered or resized and no
+    //card is in view, the camera returns to the starting view
+    LaunchedEffect(state, camera, isVisible) {
+        if (!isVisible) return@LaunchedEffect
+        snapshotFlow { camera.viewport.takeIf { it != Size.Zero && state.isLayoutReady && state.cards.isNotEmpty() } }
+            .filterNotNull()
+            .distinctUntilChanged()
+            .collect { viewport ->
+                val view = Rect(Offset.Zero, viewport)
+                val anyInView = Snapshot.withoutReadObservation {
+                    state.cards.any { camera.toViewport(state.rectFor(it.layout)).overlaps(view) }
+                }
+                if (!anyInView) camera.set(MAX_WORKSPACE_ZOOM, Offset.Zero)
             }
     }
 
@@ -316,7 +331,6 @@ fun HomeGrid(
                     .windowInsetsPadding(
                         windowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)
                     )
-                    .padding(all = gridPadding)
             ) {
                 CardGrid(
                     state = state,

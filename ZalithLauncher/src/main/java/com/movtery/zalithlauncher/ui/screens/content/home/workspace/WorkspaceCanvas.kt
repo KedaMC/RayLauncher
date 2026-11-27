@@ -76,9 +76,9 @@ fun WorkspaceCanvas(
 ) {
     val workspace = HomeWorkspace
     val density = LocalDensity.current
-    val width = (workspace.columns * workspace.cellSize).dp
-    val height = (workspace.rows * workspace.cellSize).dp
-    val contentSize = with(density) { Size(width.toPx(), height.toPx()) }
+    //Follows the cell size that is fitted to the viewport
+    val width = with(density) { (workspace.columns * state.cellPx).toDp() }
+    val height = with(density) { (workspace.rows * state.cellHeightPx).toDp() }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(camera) {
@@ -93,7 +93,10 @@ fun WorkspaceCanvas(
     Box(
         modifier = modifier
             .clipToBounds()
-            .onSizeChanged { camera.updateBounds(Size(it.width.toFloat(), it.height.toFloat()), contentSize) }
+            .onSizeChanged {
+                val viewport = Size(it.width.toFloat(), it.height.toFloat())
+                camera.updateBounds(viewport, state.fitWorkspaceCells(viewport, density.density))
+            }
             .pointerInput(camera, state) {
                 var fling: Job? = null
                 awaitEachGesture {
