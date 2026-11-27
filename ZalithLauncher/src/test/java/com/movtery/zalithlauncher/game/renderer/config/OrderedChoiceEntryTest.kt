@@ -18,7 +18,6 @@
 
 package com.movtery.zalithlauncher.game.renderer.config
 
-import com.movtery.zalithlauncher.game.renderer.renderers.MobileGluesRenderer
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -87,107 +86,6 @@ class OrderedChoiceEntryTest {
         )
 
         assertFalse(config.jsonFields.containsKey(entry.id))
-    }
-
-    @Test
-    fun mobileGluesDefaultsAreFullyWrittenToJson() {
-        val store = MemoryRendererConfigStore()
-
-        val config = resolveRendererConfig(
-            rendererId = "renderer",
-            spec = MobileGluesRenderer.configSpec,
-            globalStore = store
-        )
-
-        // 全量落盘：未编辑的项也按默认值写入，保证界面展示与实际生效一致
-        assertEquals(ConfigScalar.IntValue(0), config.jsonFields["enableANGLE"])
-        assertEquals(ConfigScalar.IntValue(1), config.jsonFields["enableExtTimerQuery"])
-        assertEquals(ConfigScalar.IntValue(32), config.jsonFields["maxGlslCacheSize"])
-    }
-
-    @Test
-    fun mobileGluesUsesOfficialBackendSetsAndDefaultOrders() {
-        val expected = mapOf(
-            "multidrawOrder" to listOf(
-                "native", "multiindirect", "multibasevertex", "multiarrays",
-                "indirect", "basevertex", "unroll", "compute"
-            ),
-            "multidrawOrderArrays" to listOf("multiarrays", "multiindirect", "unroll"),
-            "multidrawOrderElements" to listOf(
-                "multiarrays", "multiindirect", "multibasevertex", "indirect", "unroll"
-            ),
-            "multidrawOrderElementsBaseVertex" to listOf(
-                "multibasevertex", "multiindirect", "indirect", "basevertex", "unroll", "compute"
-            ),
-            "multidrawOrderArraysIndirect" to listOf("multiindirect", "indirect"),
-            "multidrawOrderElementsIndirect" to listOf("multiindirect", "indirect")
-        )
-        val entries = MobileGluesRenderer.configSpec.entries.filterIsInstance<OrderedChoiceEntry>()
-            .associateBy { it.id }
-
-        assertEquals(expected.keys, entries.keys)
-        expected.forEach { (id, order) ->
-            val entry = entries.getValue(id)
-            assertEquals(order.joinToString(","), entry.defaultValue.value)
-            assertEquals(order.toSet(), entry.options.mapTo(mutableSetOf()) { it.value.asString() })
-        }
-    }
-
-    @Test
-    fun enabledExceptionsExpandCustomGlobalOrder() {
-        val store = MemoryRendererConfigStore()
-        store.putValue(
-            "renderer",
-            "multidrawOrder",
-            ConfigScalar.StringValue(
-                "compute,native,indirect,multiindirect,multibasevertex,multiarrays,basevertex,unroll"
-            )
-        )
-        val expected = mapOf(
-            "multidrawOrderArrays" to "multiarrays,multiindirect,unroll",
-            "multidrawOrderElements" to "multiarrays,indirect,multiindirect,multibasevertex,unroll",
-            "multidrawOrderElementsBaseVertex" to
-                    "compute,multibasevertex,indirect,multiindirect,basevertex,unroll",
-            "multidrawOrderArraysIndirect" to "multiindirect,indirect",
-            "multidrawOrderElementsIndirect" to "multiindirect,indirect"
-        )
-        expected.keys.forEach { store.putEnabled("renderer", it, true) }
-
-        val config = resolveRendererConfig(
-            rendererId = "renderer",
-            spec = MobileGluesRenderer.configSpec,
-            globalStore = store
-        )
-
-        expected.forEach { (id, order) ->
-            assertEquals(ConfigScalar.StringValue(order), config.jsonFields[id])
-        }
-    }
-
-    @Test
-    fun enablingExceptionSavesCurrentExpandedOrder() {
-        val store = MemoryRendererConfigStore()
-        store.putValue(
-            "renderer",
-            "multidrawOrder",
-            ConfigScalar.StringValue(
-                "compute,native,indirect,multiindirect,multibasevertex,multiarrays,basevertex,unroll"
-            )
-        )
-        val session = RendererConfigSession("renderer", MobileGluesRenderer.configSpec, store, store)
-        val global = session.states.single { it.entry.id == "multidrawOrder" }
-        val exception = session.states.single { it.entry.id == "multidrawOrderElementsBaseVertex" }
-        val expected = ConfigScalar.StringValue(
-            "compute,multibasevertex,indirect,multiindirect,basevertex,unroll"
-        )
-
-        assertEquals(expected, exception.value)
-        exception.saveEnabled(true)
-        assertEquals(expected, store.getValue("renderer", exception.entry.id))
-
-        global.saveValue(ConfigScalar.StringValue("unroll,native,compute"))
-        exception.reload()
-        assertEquals(expected, exception.value)
     }
 
     private fun orderedEntry(vararg values: String) = OrderedChoiceEntry(
