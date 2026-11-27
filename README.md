@@ -4,18 +4,15 @@
 
 ## About
 
-RayLauncher is an unofficial modification of [Zalith Launcher 2](https://github.com/ZalithLauncher/ZalithLauncher2), focused on making the launcher as lightweight as possible. Its goals include reducing APK size and improving Minecraft performance wherever possible.
+RayLauncher is an unofficial modification of [Zalith Launcher 2](https://github.com/ZalithLauncher/ZalithLauncher2), focused on making the launcher as lightweight. Its goals include reducing APK size and more customization.
 
 ## Features
 
 - **Liquid Glass** — A modern interface with Liquid Glass visual effects.
-- **PanVK Execution Support** — Modified driver execution handling that enables MediaTek Vulkan drivers, including PanVK, to run through the launcher. The PanVK driver itself is not bundled with RayLauncher.
-- **Capes** — Cape system adapted from [ZalithLauncher2Plus](https://github.com/Star1xr/ZalithLauncher2Plus).
-- **Built-in Recorder** — Integrated screen recorder for Minecraft gameplay, adapted from ZalithLauncher2Plus.
-
-## Screenshots
-
-<!-- Add RayLauncher screenshots here. -->
+- **PanVK Execution Support** — Modified driver execution handling that enables MediaTek Vulkan drivers.
+- **Capes** — Cape system.
+- **Built-in Recorder** — Integrated screen recorder for Minecraft gameplay.
+- **and more**
 
 ## Credits & Acknowledgements
 
