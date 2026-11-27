@@ -30,6 +30,7 @@ import com.movtery.zalithlauncher.game.versioninfo.models.GameManifest
 import com.movtery.zalithlauncher.path.PathManager
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.ui.androidText
+import com.movtery.zalithlauncher.utils.GSON
 import com.movtery.zalithlauncher.utils.device.Architecture
 import com.movtery.zalithlauncher.utils.file.formatFileSize
 import com.movtery.zalithlauncher.utils.logging.Logger
@@ -71,6 +72,22 @@ object JreInstaller {
                 Logger.warning(TAG, "Failed to update ${jre.jreName}, keeping the installed one", e)
             }
         }
+    }
+
+    /**
+     * The runtime that mod loader installers should run with, based on the vanilla version JSON.
+     * Falls back to Java 8 when the file does not declare a Java version.
+     */
+    fun forInstaller(versionJson: File): Jre {
+        val majorVersion = runCatching {
+            GSON.fromJson(versionJson.readText(), GameManifest::class.java).javaVersion?.let { java ->
+                java.majorVersion.takeIf { it != 0 } ?: java.version
+            }
+        }.onFailure { e ->
+            Logger.warning(TAG, "Failed to read the Java version from ${versionJson.absolutePath}", e)
+        }.getOrNull() ?: 8
+
+        return Jre.entries.firstOrNull { it.majorVersion >= majorVersion } ?: Jre.entries.last()
     }
 
     /** Makes sure a runtime suitable for the given Java version is installed */

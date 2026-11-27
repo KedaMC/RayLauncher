@@ -202,6 +202,9 @@ private suspend fun installNewForgeHMCLWay(
         loaderName = loaderName,
         tempMinecraftDir = tempMinecraftDir,
         tempGameDir = tempGameFolder,
+        installerJre = JreInstaller.forInstaller(
+            File(tempVanillaJar.parentFile, "${tempVanillaJar.nameWithoutExtension}.json")
+        ),
         processors = processors,
         vars = vars,
         logOutput = logOutput
@@ -300,6 +303,7 @@ private suspend fun runProcessors(
     loaderName: String,
     tempMinecraftDir: File,
     tempGameDir: File,
+    installerJre: Jre,
     processors: List<ForgeLikeInstallProcessor>,
     vars: Map<String, String>,
     logOutput: TaskLogOutput
@@ -367,7 +371,7 @@ private suspend fun runProcessors(
         Triple(processor, jvmArgs, outputs.map { (key, value) -> Paths.get(key) to value })
     }
 
-    if (commandList.isNotEmpty()) JreInstaller.ensure(Jre.JRE_8, task)
+    if (commandList.isNotEmpty()) JreInstaller.ensure(installerJre, task)
 
     stopAllNonMainProcesses(GlobalContext)
     //正式开始执行命令
@@ -380,7 +384,7 @@ private suspend fun runProcessors(
             logId = FORGE_LIKE_INSTALL_ID,
             jvmArgs = jvmArgs,
             prefixArgs = { null },
-            jre = Jre.JRE_8,
+            jre = installerJre,
             userHome = tempGameDir.absolutePath.trimEnd('\\'),
             postSummary = "$loaderName $taskStr ($step/${commandList.size})",
             postProgress = NoticeProgress(commandList.size, step),

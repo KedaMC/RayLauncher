@@ -1566,4 +1566,7 @@
     <string name="startup_video_stretch">Regangkan</string>
     <string name="settings_ray_startup_edit">Edit video</string>
     <string name="settings_ray_startup_edit_summary">Cubit untuk zoom, geser untuk posisi, dan pilih cara video mengisi layar</string>
+    <string name="launch_check_java_runtime">Memeriksa runtime Java</string>
+    <string name="download_java_runtime">Mengunduh Java %1$d (%2$s / %3$s)</string>
+    <string name="download_java_runtime_failed">Gagal mengunduh Java %1$d. Periksa koneksi internet lalu coba lagi.</string>
 </resources>
