@@ -192,10 +192,10 @@ fun MainScreen(
     val navIndex = mainBackStack.lastOrNull { pageIndexOf(it) >= 0 }?.let { pageIndexOf(it) } ?: 0
     val autoHideEnabled = mainBackStack.lastOrNull().let { it == null || pageIndexOf(it) == 0 }
 
-    //Auto-hide of the navigation: Home only. Shown on open, hidden after 3s without touch,
-    //shown again on touch, never hidden while a page slide runs
+    //Auto-hide of the navigation: Home only. Hidden on open, shown on touch, hidden again after 3s
+    //without touch, never hidden while a page slide runs once the user has touched the screen
     val lastTouch = remember { mutableLongStateOf(0L) }
-    var navVisible by remember { mutableStateOf(true) }
+    var navVisible by remember { mutableStateOf(false) }
     var pageTransitioning by remember { mutableStateOf(false) }
     LaunchedEffect(navIndex) {
         pageTransitioning = true
@@ -203,9 +203,11 @@ fun MainScreen(
         pageTransitioning = false
     }
     LaunchedEffect(autoHideEnabled, pageTransitioning) {
-        navVisible = true
+        //A last touch of 0 means the screen has not been touched since it was opened
+        navVisible = lastTouch.longValue != 0L
         if (!autoHideEnabled || pageTransitioning) return@LaunchedEffect
-        snapshotFlow { lastTouch.longValue }.collectLatest {
+        snapshotFlow { lastTouch.longValue }.collectLatest { touchTime ->
+            if (touchTime == 0L) return@collectLatest
             navVisible = true
             delay(NAV_AUTO_HIDE_MS)
             navVisible = false
