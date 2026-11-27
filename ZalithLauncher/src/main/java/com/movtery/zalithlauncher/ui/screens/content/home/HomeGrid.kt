@@ -19,11 +19,6 @@
 package com.movtery.zalithlauncher.ui.screens.content.home
 
 import com.movtery.zalithlauncher.ui.components.effectiveBackgroundBlur
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalDensity
@@ -129,10 +124,6 @@ fun HomeGrid(
     val density = LocalDensity.current
     val camera = remember(density.density) { WorkspaceCamera(density.density) }
     val scope = rememberCoroutineScope()
-    //Edge to edge: the canvas fills the whole screen, including the strip at the top and the area next to the
-    //front camera. Only the system bars keep it clear on the sides and bottom (they are hidden in immersive mode,
-    //so this is normally 0); the display cutout is deliberately ignored and the top bar floats over the canvas
-    val windowInsets = WindowInsets.systemBars
     //长按调整工具栏触发的卡片操作
     var operation by remember { mutableStateOf<HomeCardOperation>(HomeCardOperation.None) }
 
@@ -335,11 +326,9 @@ fun HomeGrid(
             WorkspaceCanvas(
                 state = state,
                 camera = camera,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .windowInsetsPadding(
-                        windowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)
-                    )
+                //Edge to edge on all four sides: the system bars are hidden, but the immersive window can
+                //still report their insets, which would keep the cards away from the screen edges
+                modifier = Modifier.fillMaxSize()
             ) {
                 CardGrid(
                     state = state,
