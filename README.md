@@ -7,10 +7,10 @@
 - **Liquid Glass UI** — Enhanced interface with Liquid Glass visual effects and translucent materials.
 - **Custom Music Player** — Dedicated music player card with local music library support and external music sources, including Shizuku integration for supported access workflows.
 - **Audio Visualizer** — Audio spectrum visualization through customizable visualizer cards.
-- **Media Overlay** — Add image and video overlays to the launcher interface, with options to import and manage overlay media.
+- **Media Overlay** — Import image and video overlays to the launcher interface.
 - **Custom Startup Animation** — Additional startup animation customization.
 - **Customizable Card Grid** — Flexible card layout with drag-and-drop positioning, resizing, and an adjustment mode.
-- **PanVK Execution Support** — Modified driver execution handling to support MediaTek Vulkan drivers, including PanVK. The driver itself is not bundled with RayLauncher.
+- **PanVK Execution Support** — Modified driver execution handling to support MediaTek Vulkan drivers, including PanVK.
 - **Cape System** — Additional cape functionality adapted from ZalithLauncher2Plus.
 - **Built-in Screen Recorder** — Integrated screen recording functionality for Minecraft gameplay, adapted from ZalithLauncher2Plus.
 - **Audio Visualizer** — Audio spectrum visualization through customizable visualizer cards.
