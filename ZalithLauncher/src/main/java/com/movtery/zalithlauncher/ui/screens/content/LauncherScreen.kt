@@ -63,7 +63,6 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.boundsInParent
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.res.painterResource
@@ -72,7 +71,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.movtery.cardgrid.state.CardGridState
@@ -82,7 +80,6 @@ import com.movtery.zalithlauncher.game.account.AccountsManager
 import com.movtery.zalithlauncher.game.account.getAccountTypeName
 import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.game.version.installed.VersionsManager
-import com.movtery.zalithlauncher.setting.enums.ActionMenuSide
 import com.movtery.zalithlauncher.ui.base.BaseScreen
 import com.movtery.zalithlauncher.ui.components.BackgroundCard
 import com.movtery.zalithlauncher.ui.components.LiquidGlassSurface
@@ -91,7 +88,6 @@ import com.movtery.zalithlauncher.ui.components.liquidGlassActive
 import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
 import com.movtery.zalithlauncher.ui.components.MarqueeText
 import com.movtery.zalithlauncher.ui.components.ScalingActionButton
-import com.movtery.zalithlauncher.ui.components.SkinPreview3D
 import com.movtery.zalithlauncher.ui.components.animated
 import com.movtery.zalithlauncher.ui.components.rememberAnimatedContext
 import com.movtery.zalithlauncher.ui.screens.NestedNavKey
@@ -101,20 +97,14 @@ import com.movtery.zalithlauncher.ui.screens.content.elements.PlayerFace
 import com.movtery.zalithlauncher.ui.screens.content.elements.VersionIconImage
 import com.movtery.cardgrid.model.CardState
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.runtime.derivedStateOf
 import com.movtery.zalithlauncher.ui.screens.content.home.HomeGrid
-import com.movtery.zalithlauncher.ui.screens.content.home.LocalHomeGridState
 import com.movtery.zalithlauncher.ui.screens.content.home.server.LocalServerCardQuickPlay
 import com.movtery.zalithlauncher.ui.screens.content.home.version.LocalHomeCardLauncher
 import com.movtery.zalithlauncher.ui.screens.content.home.version.LocalHomeCardVersionSettings
-import com.movtery.zalithlauncher.ui.screens.content.home.workspace.LocalWorkspaceCamera
 import com.movtery.zalithlauncher.ui.theme.itemColor
 import com.movtery.zalithlauncher.viewmodel.ScreenBackStackViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-
-/** Rows the launch card needs before it switches to the tall layout with the skin preview */
-private const val LaunchCardTallRows = 28
 
 /** Actions the launch card needs from the launcher screen */
 class LaunchCardActions(
@@ -192,39 +182,17 @@ fun LauncherScreen(
 @Composable
 fun CardState.LaunchCardContent(cardId: String) {
     val actions = LocalLaunchCardActions.current ?: return
-    val gridState = LocalHomeGridState.current
     val account by AccountsManager.currentAccountFlow.collectAsStateWithLifecycle()
 
-    //The skin preview turns towards the middle of the screen
-    val camera = LocalWorkspaceCamera.current
-    val onRight by remember(gridState, camera, cardId) {
-        derivedStateOf {
-            val layout = gridState?.cards?.firstOrNull { it.id == cardId }?.layout
-            if (gridState == null || camera == null || layout == null) true
-            else camera.toViewport(gridState.rectFor(layout)).center.x > camera.viewport.width / 2f
-        }
-    }
-
-    if (spanHeight >= LaunchCardTallRows && spanWidth >= 10) {
-        ActionMenuTallerContent(
-            modifier = Modifier.fillMaxSize(),
-            account = account,
-            dockedSide = if (onRight) ActionMenuSide.END else ActionMenuSide.START,
-            onLaunchGame = actions.onLaunchGame,
-            toAccountManageScreen = actions.toAccountManageScreen,
-            toVersionManageScreen = actions.toVersionManageScreen,
-            toVersionSettingsScreen = actions.toVersionSettingsScreen,
-        )
-    } else {
-        ActionMenuCardContent(
-            modifier = Modifier.fillMaxSize(),
-            account = account,
-            onLaunchGame = actions.onLaunchGame,
-            toAccountManageScreen = actions.toAccountManageScreen,
-            toVersionManageScreen = actions.toVersionManageScreen,
-            toVersionSettingsScreen = actions.toVersionSettingsScreen,
-        )
-    }
+    //The panel always fills the card box, so it lines up with the other cards of the same height
+    LauncherPanel(
+        modifier = Modifier.fillMaxSize(),
+        account = account,
+        onLaunchGame = actions.onLaunchGame,
+        toAccountManageScreen = actions.toAccountManageScreen,
+        toVersionManageScreen = actions.toVersionManageScreen,
+        toVersionSettingsScreen = actions.toVersionSettingsScreen
+    )
 }
 
 @Composable
@@ -281,7 +249,8 @@ private fun PanelInnerCard(
             .then(background)
             .then(
                 if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier
-            )
+            ),
+        contentAlignment = Alignment.CenterStart
     ) {
         content()
     }
@@ -317,7 +286,7 @@ private fun AccountCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 6.dp),
+                .padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
@@ -393,12 +362,12 @@ private fun InstanceCard(
     var showList by remember { mutableStateOf(false) }
     var versionManagerRow by remember { mutableStateOf<LayoutCoordinates?>(null) }
 
-    Box(modifier = modifier.fillMaxWidth()) {
+    Box(modifier = modifier.fillMaxWidth(), propagateMinConstraints = true) {
         PanelInnerCard(modifier = Modifier.fillMaxWidth()) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 4.dp, vertical = 2.dp),
+                    .padding(horizontal = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
@@ -495,11 +464,11 @@ private fun LaunchButton(
         modifier = modifier.fillMaxWidth(),
         shape = PanelInnerShape,
         elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp, pressedElevation = 0.dp, focusedElevation = 0.dp, hoveredElevation = 0.dp),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp),
         onClick = { onLaunchGame(null) },
         content = {
             if (launchGlass) {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     MarqueeText(text = stringResource(R.string.main_launch_game), style = textStyle)
                 }
             } else {
@@ -526,98 +495,29 @@ private fun LauncherPanel(
         shape = MaterialTheme.shapes.extraLarge,
         liquidGlass = true
     ) {
+        //The three rows share the height of the card
         Column(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .padding(PanelPadding),
             verticalArrangement = Arrangement.spacedBy(PanelSpacing)
         ) {
             AccountCard(
+                modifier = Modifier.weight(1f),
                 account = account,
                 onClick = toAccountManageScreen
             )
             InstanceCard(
+                modifier = Modifier.weight(1f),
                 onLaunchGame = onLaunchGame,
                 toVersionManageScreen = toVersionManageScreen,
                 toVersionSettingsScreen = toVersionSettingsScreen
             )
             LaunchButton(
+                modifier = Modifier.weight(1f),
                 onLaunchGame = onLaunchGame
             )
         }
-    }
-}
-
-@Composable
-private fun ActionMenuCardContent(
-    modifier: Modifier = Modifier,
-    account: Account?,
-    onLaunchGame: (Version?) -> Unit,
-    toAccountManageScreen: () -> Unit,
-    toVersionManageScreen: () -> Unit,
-    toVersionSettingsScreen: () -> Unit,
-) {
-    //The panel only takes the height of its content and sits at the bottom of the card box
-    Box(
-        modifier = modifier,
-        contentAlignment = Alignment.BottomCenter
-    ) {
-        LauncherPanel(
-            modifier = Modifier.fillMaxWidth(),
-            account = account,
-            onLaunchGame = onLaunchGame,
-            toAccountManageScreen = toAccountManageScreen,
-            toVersionManageScreen = toVersionManageScreen,
-            toVersionSettingsScreen = toVersionSettingsScreen
-        )
-    }
-}
-
-@Composable
-private fun ActionMenuTallerContent(
-    modifier: Modifier = Modifier,
-    account: Account?,
-    dockedSide: ActionMenuSide,
-    onLaunchGame: (Version?) -> Unit,
-    toAccountManageScreen: () -> Unit,
-    toVersionManageScreen: () -> Unit,
-    toVersionSettingsScreen: () -> Unit,
-) {
-    val refreshWardrobe by AccountsManager.refreshWardrobe.collectAsStateWithLifecycle()
-    val skinFile = remember(account, refreshWardrobe) {
-        account?.getSkinFile()?.takeIf { it.exists() }
-    }
-    val capeFile = remember(account, refreshWardrobe) {
-        account?.getCapeFile()?.takeIf { it.exists() }
-    }
-
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
-        val azimuth = (if (dockedSide == ActionMenuSide.START) -35 else 35) * (if (isRtl) -1 else 1)
-
-        SkinPreview3D(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
-            skinFile = skinFile,
-            capeFile = capeFile,
-            modelType = account?.skinModelType,
-            interactionEnabled = false,
-            azimuth = azimuth,
-            refreshKey = listOf(account?.uniqueUUID, refreshWardrobe, skinFile?.lastModified() ?: 0L, capeFile?.lastModified() ?: 0L)
-        )
-
-        LauncherPanel(
-            modifier = Modifier.fillMaxWidth(),
-            account = account,
-            onLaunchGame = onLaunchGame,
-            toAccountManageScreen = toAccountManageScreen,
-            toVersionManageScreen = toVersionManageScreen,
-            toVersionSettingsScreen = toVersionSettingsScreen
-        )
     }
 }
 
@@ -645,7 +545,7 @@ private fun VersionManagerLayout(
                 onLongClick = {
                     if (version != null) openListMenu()
                 }
-            ).padding(PaddingValues(all = 4.dp)),
+            ).padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (isRefreshing) {
@@ -679,7 +579,7 @@ private fun VersionManagerLayout(
             } else {
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                    verticalArrangement = Arrangement.Center
                 ) {
                     Text(
                         modifier = Modifier.basicMarquee(iterations = Int.MAX_VALUE),

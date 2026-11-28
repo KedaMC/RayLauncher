@@ -78,8 +78,8 @@ object HomeCards {
     /** The launch card is unique, so its grid id is fixed */
     const val LAUNCH_CARD_ID = "launch_card"
 
-    /** Rows the compact launch panel needs, so the card box hugs the panel at its minimum size */
-    const val LAUNCH_CARD_MIN_ROWS = 5
+    /** Minimum rows of the launch card, the same as the default height of the Music card */
+    const val LAUNCH_CARD_MIN_ROWS = 4
 
     private val versionCardType = CardType(
         typeId = VERSION_CARD_TYPE_ID,
