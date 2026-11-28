@@ -9,7 +9,19 @@ permissions:
   contents: write
 
 jobs:
+  Changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Check the changelog entry
+        run: bash .github/scripts/changelog.sh HEAD
+
   Build:
+    needs: Changelog
     uses: ./.github/workflows/build.yml
     with:
       ref: ${{ github.event.release.tag_name }}
@@ -27,6 +39,14 @@ jobs:
     if: success()
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Read the changelog
+        run: bash .github/scripts/changelog.sh HEAD > release_notes.md
+
       - name: Download Files
         uses: actions/download-artifact@v8
         with:
@@ -61,6 +81,7 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.event.release.tag_name }}
+          body_path: release_notes.md
           files: |
             ./apks/*.apk
             ./mappings/*.txt

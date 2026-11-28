@@ -7,6 +7,7 @@ on:
       - RayLauncher
     paths-ignore:
       - '**/README*'
+      - 'CHANGELOG.md'
   workflow_dispatch:
     inputs:
       ref:
