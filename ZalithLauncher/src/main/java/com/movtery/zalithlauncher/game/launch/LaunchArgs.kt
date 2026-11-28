@@ -258,7 +258,8 @@ class LaunchArgs(
 
         varArgMap["classpath_separator"] = ":"
         varArgMap["library_directory"] = getLibrariesHome(version.getGameHome())
-        varArgMap["version_name"] = gameManifest.id
+        //The manifest id keeps the name given at install time, the folder name follows renames
+        varArgMap["version_name"] = version.getVersionName()
         varArgMap["natives_directory"] = runtimeLibraryPath
         setLauncherInfo(varArgMap)
 
@@ -369,7 +370,8 @@ class LaunchArgs(
         varArgMap["game_directory"] = gameDirPath.absolutePath
         varArgMap["user_properties"] = "{}"
         varArgMap["user_type"] = "msa"
-        varArgMap["version_name"] = gameManifest.id
+        //The manifest id keeps the name given at install time, the folder name follows renames
+        varArgMap["version_name"] = version.getVersionName()
 
         setLauncherInfo(varArgMap)
 
