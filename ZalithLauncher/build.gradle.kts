@@ -114,12 +114,6 @@ android {
     }
 
     signingConfigs {
-        create("releaseBuild") {
-            storeFile = file("zalith_launcher.jks")
-            storePassword = getKeyFromLocal("STORE_PASSWORD", ".store_password.txt")
-            keyAlias = "movtery_zalith"
-            keyPassword = getKeyFromLocal("KEY_PASSWORD", ".key_password.txt")
-        }
         //Ray: key milik sendiri. File dibuat CI dari secret RAY_KEYSTORE_BASE64 (atau taruh manual saat build lokal)
         create("rayRelease") {
             storeFile = file("ray_release.jks")
@@ -383,7 +377,6 @@ dependencies {
     //Safe
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
-    implementation(libs.sqlcipher.android)
     ksp(libs.androidx.room.compiler)
     //Support
     implementation(libs.proxy.client.android)

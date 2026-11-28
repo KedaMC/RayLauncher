@@ -21,10 +21,6 @@ on:
         type: string
         default: "RayLauncher"
     secrets:
-      KEY_PASSWORD:
-        required: false
-      STORE_PASSWORD:
-        required: false
       OAUTH_CLIENT_ID:
         required: false
       CURSEFORGE_API_KEY:
@@ -51,8 +47,6 @@ jobs:
       fail-fast: false
 
     env:
-      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-      STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
       OAUTH_CLIENT_ID: ${{ secrets.OAUTH_CLIENT_ID }}
       CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
       RAY_KEYSTORE_BASE64: ${{ secrets.RAY_KEYSTORE_BASE64 }}

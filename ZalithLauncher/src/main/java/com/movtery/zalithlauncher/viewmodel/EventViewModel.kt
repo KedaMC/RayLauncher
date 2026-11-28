@@ -76,8 +76,6 @@ class EventViewModel : ViewModel() {
         }
         /** 检查更新 */
         data object CheckUpdate : Event
-        /** 查看当月赞助者 */
-        data object ShowSponsors : Event
         /** 在浏览器访问链接 */
         data class OpenLink(val url: String) : Event
         /** 让 MainActivity 防止熄屏 */

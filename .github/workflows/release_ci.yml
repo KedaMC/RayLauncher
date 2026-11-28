@@ -12,8 +12,6 @@ jobs:
   Build:
     uses: ./.github/workflows/build.yml
     secrets:
-      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-      STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
       OAUTH_CLIENT_ID: ${{ secrets.OAUTH_CLIENT_ID }}
       CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
       RAY_KEYSTORE_BASE64: ${{ secrets.RAY_KEYSTORE_BASE64 }}
@@ -52,7 +50,7 @@ jobs:
               arm64) abi="arm64-v8a" ;;
               *) abi="$arch" ;;
             esac
-            cp "$dir/mapping.txt" "./mappings/ZalithLauncher-mapping-${version}${abi:+-$abi}.txt"
+            cp "$dir/mapping.txt" "./mappings/RayLauncher-mapping-${version}${abi:+-$abi}.txt"
           done
 
           echo "Found $(ls ./mappings/ | wc -l) mapping file(s)"

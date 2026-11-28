@@ -98,7 +98,6 @@ fun AboutInfoScreen(
     settingsScreenKey: TitledNavKey?,
     mainScreenKey: TitledNavKey?,
     checkUpdate: () -> Unit,
-    onViewSponsors: () -> Unit,
     openLicense: (raw: Int) -> Unit,
     openLink: (url: String) -> Unit
 ) {
@@ -206,21 +205,6 @@ fun AboutInfoScreen(
 
             //Section 1: acknowledgements
             title("ack_title", 1) { stringResource(R.string.about_acknowledgements_title) }
-            row("ack_sponsors", 1) { modifier, position ->
-                val launcherName = remember { launcherName() }
-                ButtonIconItem(
-                    modifier = modifier,
-                    position = position,
-                    icon = painterResource(R.drawable.img_sponsor),
-                    title = stringResource(R.string.about_sponsors_title),
-                    text = stringResource(R.string.about_sponsors_summary, launcherName),
-                    button = {
-                        Button(onClick = onViewSponsors) {
-                            Text(text = stringResource(R.string.generic_view))
-                        }
-                    }
-                )
-            }
             row("ack_bangbang93", 1) { modifier, position ->
                 ButtonIconItem(
                     modifier = modifier,

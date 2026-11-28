@@ -37,7 +37,6 @@
     <string name="generic_setting">Settings</string>
     <string name="generic_expand">Expand</string>
     <string name="generic_collapse">Collapse</string>
-    <string name="generic_main_menu">Main Menu</string>
     <string name="generic_download">Download</string>
     <string name="generic_done">Done</string>
     <string name="generic_close">Close</string>
@@ -140,8 +139,6 @@
     <string name="crash_exit_message">JVM exited with code %d.</string>
     <!-- Shown on the crash screen when the game JVM aborted; %d is the fatal signal number -->
     <string name="crash_singnal_message">JVM aborted due to fatal signal %d.</string>
-    <!-- Note on the game crash screen telling the user to check and share the log file -->
-    <string name="crash_exit_note">For details on the cause, please check the log file. If you are unable to resolve the issue yourself, please send the log file to someone who can analyze it. They may be able to help you diagnose and fix the problem. Please do not take a screenshot of the current screen, as screenshots may not provide sufficient information to resolve the issue.</string>
     <!-- Label on the crash screen; %s is the crash type, launcher or game -->
     <string name="crash_type">Crash Type: %s</string>
     <!-- Crash type name shown on the crash screen -->
@@ -208,30 +205,8 @@
     <string name="error_service_unavailable">(%s) The server is temporarily unable to handle the request</string>
     <!-- Error message for HTTP 504 responses; %s is the status code -->
     <string name="error_gateway_timeout">(%s) The server did not receive a timely response</string>
-    <!-- Subtitle shown below the animated welcome title -->
-    <string name="welcome_screen_subtitle">Come and experience something new.</string>
-    <!-- First welcome introduction paragraph; %1$s is the launcher name -->
-    <string name="welcome_screen_intro_primary">Welcome to %1$s, a third-party Minecraft: Java Edition launcher designed for Android devices.</string>
-    <!-- Second introduction paragraph describing the PojavLauncher core -->
-    <string name="welcome_screen_intro_core">Powered by PojavLauncher, it provides a modern game launch and management experience.</string>
-    <!-- Heading of the agreement links on the welcome screen -->
-    <string name="welcome_screen_agreement_title">User Agreements</string>
-    <!-- Checkbox label for explicitly accepting the displayed agreements -->
-    <string name="welcome_screen_agreement_confirmation">I have read and agree to the documents above.</string>
-    <!-- Message shown when an agreement document cannot be loaded -->
-    <string name="agreement_content_unavailable">This document is unavailable.</string>
-    <!-- Title of the native dialog shown to returning users when the agreements change -->
-    <string name="agreement_update_title">Agreements Updated</string>
-    <!-- Message asking returning users to review and accept the updated agreements -->
-    <string name="agreement_update_message">The User Agreement or Privacy Policy has been updated. Please review and accept both documents again before continuing.</string>
     <!-- Button acknowledging the notice and continuing past the welcome screen -->
     <string name="welcome_screen_start">Get Started</string>
-    <!-- Description on the first run screen explaining bundled files must be extracted -->
-    <string name="splash_screen_unpack_desc">The launcher needs to install these files to ensure Minecraft runs properly. They are included in the app and must be extracted first. Click the button below to start extraction and update.</string>
-    <!-- Status text on the first run screen while the files are being extracted -->
-    <string name="splash_screen_installing">The launcher is extracting these files. Once done, it will automatically enter the main screen. Please wait patiently.</string>
-    <!-- Button on the first run screen to start extracting and installing -->
-    <string name="splash_screen_agree">Install</string>
     <!-- Title of the dialog asking the user to grant notification permission -->
     <string name="notification_title">Check Notification Permission</string>
     <!-- Confirm button in the notification permission dialog -->
@@ -242,8 +217,6 @@
     <string name="notification_data_jvm_service_name">Foreground Installation Service</string>
     <!-- Notification title shown while a game is being installed -->
     <string name="notification_data_jvm_service_running">Installing game via foreground service</string>
-    <!-- Dialog on the multiplayer screen explaining why notification permission is needed -->
-    <string name="notification_data_terracotta_message">During multiplayer sessions, the launcher uses a foreground service to display the current connection status, so notification permission is required.</string>
     <!-- Notification title and channel name of the service keeping the game running -->
     <string name="notification_jvm_running_name">JVM Keep-Alive Service</string>
     <!-- Notification channel name of the task keep-alive service -->
@@ -272,8 +245,6 @@
     <string name="unpack_screen_lwjgl">Lightweight Java Game Library (required by Minecraft)</string>
     <!-- Description of the launcher components in the first run extraction list -->
     <string name="unpack_screen_launcher">Essential launcher components</string>
-    <!-- Description of JNA in the first run extraction list -->
-    <string name="unpack_screen_jna">Enables Minecraft to directly call low-level OS functions</string>
     <!-- Launch button on the home screen; also the title of the final launch step -->
     <string name="main_launch_game">Launch</string>
     <!-- Title of the launch step that scans the installed mods -->
@@ -304,8 +275,6 @@
     <string name="download_game_type_snapshot">Snapshot</string>
     <!-- Toggleable filter chip on the game version selection screen for April Fools versions -->
     <string name="download_game_type_april_fools">April Fools</string>
-    <!-- Toggleable filter chip on the game version selection screen for old versions -->
-    <string name="download_game_type_old">Old Version</string>
     <!-- Subsection label for Alpha versions on the game version selection screen -->
     <string name="download_game_type_old_alpha">Alpha</string>
     <!-- Subsection label for Beta versions on the game version selection screen -->
@@ -1741,10 +1710,6 @@
     <string name="settings_renderer_full_screen_title">Game Fullscreen</string>
     <!-- Summary of the game fullscreen switch in the Renderer settings tab -->
     <string name="settings_renderer_full_screen_summary">Enable fullscreen mode, ignoring safe areas like notches and punch-holes</string>
-    <!-- Switch title in the Renderer settings tab to enable the sustained performance mode -->
-    <string name="settings_renderer_sustained_performance_title">Sustained Performance Mode</string>
-    <!-- Summary of the sustained performance mode switch in the Renderer settings tab -->
-    <string name="settings_renderer_sustained_performance_summary">When enabled, the system provides more stable performance for the game, suitable for long play sessions, but may slightly reduce device responsiveness to prevent overheating</string>
     <!-- Switch title in the Renderer tab and in-game menu to request the highest display refresh rate -->
     <string name="settings_renderer_max_refresh_rate_title">Request Max Refresh Rate</string>
     <!-- Summary of the request max refresh rate switch in the Renderer settings tab -->
@@ -1753,12 +1718,6 @@
     <string name="settings_renderer_shader_dump_title">Shader Logging</string>
     <!-- Summary of the shader logging switch in the Renderer settings tab -->
     <string name="settings_renderer_shader_dump_summary">Output the converted shader code during game runtime to a log file for easier debugging and graphics rendering analysis</string>
-    <!-- Switch title in the Renderer settings tab to use the system Vulkan driver instead of Turnip -->
-    <string name="settings_renderer_vulkan_driver_system_title">Use System Vulkan Driver</string>
-    <!-- Summary of the system Vulkan driver switch in the Renderer settings tab -->
-    <string name="settings_renderer_vulkan_driver_system_summary">When enabled, the launcher will force the use of the system\'s built-in Vulkan driver (for Adreno GPUs) instead of the default Turnip driver. This setting only affects the Zink backend and related mods that use Vulkan rendering</string>
-    <!-- Warning dialog shown when enabling the system Vulkan driver on a device with an Adreno GPU -->
-    <string name="settings_renderer_zink_driver_adreno">The launcher detected your device has an Adreno GPU. Enabling this option may cause the Zink renderer to malfunction. Are you sure you want to enable it?</string>
     <!-- Switch title in the Renderer settings tab for vertical sync with the Zink renderer -->
     <string name="settings_renderer_vsync_in_zink_title">Zink Vsync</string>
     <!-- Summary of the Zink vertical sync switch in the Renderer settings tab -->
@@ -1835,38 +1794,26 @@
     <string name="settings_control_mouse_physical_mouse_warning">If your device interprets a physical mouse right-click as "Back" or middle-click as "Home", go to System Settings &gt; Developer Options and enable "Disable Permission Monitoring"; this will likely resolve the issue.</string>
     <!-- Switch title in the Controls tab and in-game menu to hide the virtual mouse pointer -->
     <string name="settings_control_mouse_hide_title">Hide Virtual Mouse</string>
-    <!-- Summary of the hide virtual mouse switch in the Controls settings tab -->
-    <string name="settings_control_mouse_hide_summary">In some situations, you may want to hide the virtual mouse; this setting does not affect physical mouse control or swipe control</string>
     <!-- Slider title in the Controls tab and in-game menu for the virtual mouse pointer size -->
     <string name="settings_control_mouse_size_title">Virtual Mouse Size</string>
     <!-- Slider title in the Controls tab and in-game menu for the virtual mouse movement speed -->
     <string name="settings_control_mouse_sensitivity_title">Virtual Mouse Sensitivity</string>
-    <!-- Summary of the virtual mouse sensitivity slider in the Controls settings tab -->
-    <string name="settings_control_mouse_sensitivity_summary">Adjust the movement speed of the virtual mouse in normal mode</string>
     <!-- Slider title in the Controls tab and in-game menu for mouse sensitivity while captured in game -->
     <string name="settings_control_mouse_capture_sensitivity_title">Captured Mouse Movement Sensitivity</string>
-    <!-- Summary of the captured mouse sensitivity slider in the Controls settings tab -->
-    <string name="settings_control_mouse_capture_sensitivity_summary">Adjust the sensitivity of mouse movement when captured, such as sensitivity for moving the game view</string>
     <!-- Settings item title in the Controls tab and in-game menu for the virtual mouse control mode -->
     <string name="settings_control_mouse_control_mode_title">Mouse Control Mode</string>
-    <!-- Summary of the mouse control mode item in the Controls settings tab -->
-    <string name="settings_control_mouse_control_mode_summary">Choose the virtual mouse control method: swipe the screen to move the cursor, or tap the screen to specify the cursor position</string>
     <!-- Option of the mouse control mode setting, moving the cursor by swiping on the screen -->
     <string name="settings_control_mouse_control_mode_slide">Swipe Control</string>
     <!-- Option of the mouse control mode setting, tapping the screen to place the cursor -->
     <string name="settings_control_mouse_control_mode_click">Tap Control</string>
     <!-- Settings item title in the Controls tab and in-game menu to block accidental virtual mouse touches -->
     <string name="settings_control_mouse_block_touch_title">Block Virtual Mouse Touch Input</string>
-    <!-- Summary of the block virtual mouse touch item in the Controls settings tab -->
-    <string name="settings_control_mouse_block_touch_summary">Choose whether to block virtual mouse touches on half of the screen to prevent accidental input</string>
     <!-- Option of the block touch setting, blocking touches on the left half of the screen -->
     <string name="settings_control_mouse_block_touch_left">Block Left Half</string>
     <!-- Option of the block touch setting, blocking touches on the right half of the screen -->
     <string name="settings_control_mouse_block_touch_right">Block Right Half</string>
     <!-- Switch title in the Controls tab and in-game menu for touchpad mode, where taps act as left clicks -->
     <string name="settings_control_mouse_enable_click_title">Touchpad Mode</string>
-    <!-- Summary of the touchpad mode switch in the Controls settings tab -->
-    <string name="settings_control_mouse_enable_click_summary">Tapping the screen is treated as a left mouse click, long press as a left click hold; this setting does not affect physical mouse control or tap control</string>
     <!-- Settings item title in the Controls tab for the default virtual mouse pointer image -->
     <string name="settings_control_mouse_pointer_arrow_title">Virtual Mouse Pointer (Default)</string>
     <!-- Summary of the default virtual mouse pointer item in the Controls settings tab -->
@@ -1907,60 +1854,18 @@
     <string name="settings_control_mouse_pointer_hotspot_y_percent">Y Coordinate</string>
     <!-- Title of the long press delay slider in Control settings; also shown in the in-game settings menu -->
     <string name="settings_control_mouse_long_press_delay_title">Long Press Delay</string>
-    <!-- Description of the long press delay setting in Control settings; also used for the gesture long press delay -->
-    <string name="settings_control_mouse_long_press_delay_summary">Set the delay time for recognizing a long press on the screen (does not affect physical mouse long presses, even when physical mouse control is disabled)</string>
     <!-- Title of the gesture controls switch in Control settings; also a switch row in the in-game settings menu -->
     <string name="settings_control_gesture_control_title">Gesture Controls</string>
-    <!-- Description of the gesture controls switch in Control settings -->
-    <string name="settings_control_gesture_control_summary">Supports interactions in-game through gestures like tap, long press, and two-finger swipe scrolling, similar to the Bedrock Edition</string>
     <!-- Title of the setting choosing which mouse action a screen tap triggers; also in the in-game menu -->
     <string name="settings_control_gesture_tap_action_title">Tap Action Type</string>
-    <!-- Description of the tap action setting in Control settings -->
-    <string name="settings_control_gesture_tap_action_summary">Select the mouse button action to trigger on a screen tap</string>
     <!-- Title of the setting choosing which mouse action a long press triggers; also in the in-game menu -->
     <string name="settings_control_gesture_long_press_action_title">Long Press Action Type</string>
-    <!-- Description of the long press action setting in Control settings -->
-    <string name="settings_control_gesture_long_press_action_summary">Select the mouse button action to trigger on a long press of the screen</string>
     <!-- Left click option in the tap and long press gesture action pickers -->
     <string name="settings_control_gesture_trigger_mouse_left">Left Click</string>
     <!-- Right click option in the tap and long press gesture action pickers -->
     <string name="settings_control_gesture_trigger_mouse_right">Right Click</string>
     <!-- Title of the gesture long press delay slider in Control settings; also in the in-game menu -->
     <string name="settings_control_gesture_long_press_delay_title">Gesture Long Press Delay</string>
-    <!-- Title of the gyroscope control switch in Control settings; also a switch row in the in-game menu -->
-    <string name="settings_control_gyroscope_title">Gyroscope Control</string>
-    <!-- Tooltip shown next to the gyroscope switch when the device has no gyroscope -->
-    <string name="settings_control_gyroscope_unsupported">Device gyroscope unavailable</string>
-    <!-- Description of the gyroscope control switch in Control settings -->
-    <string name="settings_control_gyroscope_summary">Control the camera by rotating the device during gameplay</string>
-    <!-- Title of the gyroscope sensitivity slider in Control settings; also in the in-game menu -->
-    <string name="settings_control_gyroscope_sensitivity_title">Gyroscope Sensitivity</string>
-    <!-- Title of the gyroscope sampling rate slider in Control settings; also in the in-game menu -->
-    <string name="settings_control_gyroscope_sample_rate_title">Gyroscope Sampling Rate</string>
-    <!-- Description of the gyroscope sampling rate setting in Control settings -->
-    <string name="settings_control_gyroscope_sample_rate_summary">The sampling rate determines how frequently gyroscope data is updated. Higher frequency means more real-time data but higher battery usage</string>
-    <!-- Title of the gyroscope smoothing switch in Control settings; also in the in-game menu -->
-    <string name="settings_control_gyroscope_smoothing_title">Gyroscope Value Smoothing</string>
-    <!-- Description of the gyroscope smoothing switch in Control settings -->
-    <string name="settings_control_gyroscope_smoothing_summary">Smooths the detected gyroscope values to reduce jitter, but introduces more latency</string>
-    <!-- Title of the gyroscope smoothing window size slider; also in the in-game menu -->
-    <string name="settings_control_gyroscope_smoothing_window_title">Gyroscope Smoothing Window Size</string>
-    <!-- Description of the gyroscope smoothing window size setting -->
-    <string name="settings_control_gyroscope_smoothing_window_summary">Determines how many data points are averaged for smoothing. Larger values give smoother output but slower response</string>
-    <!-- Title of the invert X axis switch in the gyroscope settings; also in the in-game menu -->
-    <string name="settings_control_gyroscope_invert_x_title">Invert X-Axis</string>
-    <!-- Description of the gyroscope invert X axis switch -->
-    <string name="settings_control_gyroscope_invert_x_summary">When enabled, rotating the device left or right will control the camera in the opposite direction</string>
-    <!-- Title of the invert Y axis switch in the gyroscope settings; also in the in-game menu -->
-    <string name="settings_control_gyroscope_invert_y_title">Invert Y-Axis</string>
-    <!-- Description of the gyroscope invert Y axis switch -->
-    <string name="settings_control_gyroscope_invert_y_summary">When enabled, rotating the device up or down will control the camera in the opposite direction</string>
-    <!-- Title of the gamepad control master switch in Gamepad settings; also in the in-game menu -->
-    <string name="settings_gamepad_title">Gamepad Control</string>
-    <!-- Description of the gamepad control master switch in Gamepad settings -->
-    <string name="settings_gamepad_summary">Enable or disable gamepad control. If another device is mistakenly recognized as a gamepad, please turn off this option.</string>
-    <!-- Title of the gamepad input mode setting in Gamepad settings; also the title of the mode choice dialog -->
-    <string name="settings_gamepad_input_mode_title">Gamepad Input Mode</string>
     <!-- Mapped mode option of the gamepad input mode picker; also an option in the gamepad mode dialog -->
     <string name="settings_gamepad_input_mode_mapped">Mapped (Virtual Keys)</string>
     <!-- Description of the Mapped gamepad input mode option -->
@@ -1969,18 +1874,6 @@
     <string name="settings_gamepad_input_mode_sdl">SDL Direct</string>
     <!-- Description of the SDL Direct gamepad input mode option -->
     <string name="settings_gamepad_input_mode_sdl_summary">Raw gamepad input is delivered to the game via the SDL/GLFW gamepad API; button remapping is bypassed</string>
-    <!-- Explanation shown in the dialog that asks for a gamepad input mode when gamepad input is detected -->
-    <string name="gamepad_mode_prompt_description">Gamepad input detected. The launcher supports two gamepad input modes; please choose the one you want to use.</string>
-    <!-- Hint at the bottom of the gamepad input mode dialog, telling where to change the mode later -->
-    <string name="gamepad_mode_prompt_hint">You can change this later in the "Gamepad" tab of the in-game menu or in the launcher settings.</string>
-    <!-- Title of the gamepad deadzone slider in Gamepad settings; also in the in-game menu -->
-    <string name="settings_gamepad_deadzone_title">Gamepad Deadzone Scaling</string>
-    <!-- Description of the gamepad deadzone setting in Gamepad settings -->
-    <string name="settings_gamepad_deadzone_summary">Set the ratio of the joystick\'s non-responsive center area</string>
-    <!-- Title of the joystick operation mode picker in Gamepad settings -->
-    <string name="settings_gamepad_joystick_mode_title">Joystick Operation Mode</string>
-    <!-- Description of the joystick operation mode setting -->
-    <string name="settings_gamepad_joystick_mode_summary">Set the actions performed by the left and right joysticks in the game</string>
     <!-- Left handed option of the joystick operation mode picker -->
     <string name="settings_gamepad_joystick_mode_left">Left-Handed</string>
     <!-- Description of the left handed joystick mode option -->
@@ -1989,28 +1882,6 @@
     <string name="settings_gamepad_joystick_mode_right">Right-Handed</string>
     <!-- Description of the right handed joystick mode option -->
     <string name="settings_gamepad_joystick_mode_right_summary">Right joystick controls movement, left joystick controls camera</string>
-    <!-- Title of the joystick cursor sensitivity slider in Gamepad settings; also in the in-game menu -->
-    <string name="settings_gamepad_cursor_sensitivity_title">Joystick Cursor Sensitivity</string>
-    <!-- Description of the joystick cursor sensitivity setting -->
-    <string name="settings_gamepad_cursor_sensitivity_summary">Adjust the joystick\'s virtual mouse movement speed</string>
-    <!-- Title of the joystick camera sensitivity slider in Gamepad settings; also in the in-game menu -->
-    <string name="settings_gamepad_camera_sensitivity_title">Joystick Camera Sensitivity</string>
-    <!-- Description of the joystick camera sensitivity setting -->
-    <string name="settings_gamepad_camera_sensitivity_summary">Adjust the joystick\'s camera control sensitivity</string>
-    <!-- Prefix label on a gamepad button mapping entry, followed by the bound key names -->
-    <string name="settings_gamepad_mapping_bound">Bound:</string>
-    <!-- Label on a gamepad button mapping entry when no keys are bound yet -->
-    <string name="settings_gamepad_mapping_unbound">No keys bound</string>
-    <!-- Filter chip in the gamepad mapping section, showing bindings used while playing -->
-    <string name="settings_gamepad_mapping_in_game">In Game</string>
-    <!-- Filter chip in the gamepad mapping section, showing bindings used in menus -->
-    <string name="settings_gamepad_mapping_in_menu">In Menu</string>
-    <!-- Settings item in Gamepad settings that resets all gamepad button mappings -->
-    <string name="settings_gamepad_remapping_reset_title">Reset Gamepad Mapping</string>
-    <!-- Description of the gamepad mapping reset setting -->
-    <string name="settings_gamepad_remapping_reset_summary">Button mapping helps better adapt to your gamepad. If the previous setup was incorrect, you can restart the game after resetting and rebind the buttons</string>
-    <!-- Toast shown after all gamepad button mappings are reset -->
-    <string name="settings_gamepad_remapping_reset_finished">All gamepad button mappings have been reset</string>
     <!-- Title of the gamepad remapping intro dialog and heading of the wizard panel -->
     <string name="settings_gamepad_remapping_tip_title">Gamepad Button Remapping</string>
     <!-- Intro text of the gamepad button remapping wizard, shown before binding starts -->
@@ -2041,22 +1912,6 @@
     <string name="settings_gamepad_remapping_finished_saving">Please wait, the launcher is saving and applying the settings.</string>
     <!-- Message in the binding completed dialog after the mappings are saved -->
     <string name="settings_gamepad_remapping_finished_saved">Gamepad mapping saved successfully. You can now close this dialog!</string>
-    <!-- Title of the gamepad mapping profile picker in Gamepad settings; also in the in-game menu -->
-    <string name="settings_gamepad_config_title">Gamepad Mapping Configuration</string>
-    <!-- Description of the gamepad mapping profile setting -->
-    <string name="settings_gamepad_config_summary">Select the gamepad mapping configuration to use</string>
-    <!-- Settings item to delete the current gamepad mapping profile; also the title of its confirm dialog -->
-    <string name="settings_gamepad_config_delete">Delete Current Configuration</string>
-    <!-- Confirmation text when deleting the current gamepad mapping profile -->
-    <string name="settings_gamepad_config_delete_message">Are you sure you want to delete this configuration?</string>
-    <!-- Settings item that opens the new gamepad profile dialog; also that dialog title -->
-    <string name="settings_gamepad_config_create">New Gamepad Profile</string>
-    <!-- Text field label in the new gamepad profile dialog -->
-    <string name="settings_gamepad_config_create_name">Configuration Name</string>
-    <!-- Error in the new gamepad profile dialog when the name already exists -->
-    <string name="settings_gamepad_config_create_contains">A configuration with the same name already exists</string>
-    <!-- Disabled item in the in-game menu gamepad section when no mapping profiles exist -->
-    <string name="settings_gamepad_config_no_items">No configurations created, unable to switch</string>
     <!-- Title of the dark mode picker in Launcher settings -->
     <string name="settings_launcher_dark_mode_title">Dark Mode</string>
     <!-- Title of the launcher language picker in Launcher settings -->
@@ -2466,24 +2321,12 @@
     <string name="about_launcher_unofficial" translatable="false">(unofficial modified version)</string>
     <!-- Button on the About page checking for a launcher update -->
     <string name="about_launcher_check_update">Check for Updates</string>
-    <!-- Button on the About page opening the project website -->
-    <string name="about_launcher_project_link">Project Link</string>
     <!-- Button on the About page opening the sponsorship page; also the title of the sponsorship dialog -->
     <string name="about_sponsor">Sponsorship Support</string>
-    <!-- Item title on the About page opening the monthly sponsors dialog -->
-    <string name="about_sponsors_title">Launcher Sponsors</string>
-    <!-- Description of the sponsors item on the About page and the monthly sponsors dialog; %s is the hardcoded launcher name -->
-    <string name="about_sponsors_summary">Thanks to all the sponsors who support %s</string>
-    <!-- Title of the monthly sponsors dialog -->
-    <string name="sponsors_dialog_title">Sponsors of This Month</string>
-    <!-- Shown in the sponsors dialog when there is no data to display -->
-    <string name="sponsors_empty">No data available</string>
     <!-- Section title of the acknowledgements list on the About page -->
     <string name="about_acknowledgements_title">Acknowledgements</string>
     <!-- Description of the PojavLauncher item in the acknowledgements; %s is the launcher name -->
     <string name="about_acknowledgements_pojav_text">%s uses the launch backend from PojavLauncher</string>
-    <!-- Description of the Modrinth item in the acknowledgements; %s is the launcher name -->
-    <string name="about_acknowledgements_modrinth_text">%s ports the player model animation presets from Modrinth</string>
     <!-- Description of the Plain Craft Launcher 2 item in the acknowledgements; %s is the launcher name -->
     <string name="about_acknowledgements_pcl_text">%s references parts of the implementation from PCL2</string>
     <!-- Description of the Fold Craft Launcher item in the acknowledgements; %s is the launcher name -->
@@ -2506,8 +2349,6 @@
     <string name="about_plugin_title">Loaded Plugins</string>
     <!-- Section title on the About page listing third-party libraries -->
     <string name="about_library_title">Third-Party Libraries</string>
-    <!-- Button on the About page that starts checking for launcher updates -->
-    <string name="upgrade_title">Check for Updates</string>
     <!-- Heading of the dialog shown when a newer launcher version is available -->
     <string name="upgrade_new">New Version Found</string>
     <!-- Button in the update dialog opening the list of downloadable APK files -->
@@ -2533,22 +2374,7 @@
     <!-- Minecraft Wiki page for snapshot and April Fools versions in the game download list; %s is the version ID -->
     <string name="url_wiki_minecraft_game_snapshot">https://minecraft.wiki/w/Java_Edition_%s</string>
     <string name="language_english" translatable="false">English</string>
-    <string name="language_simplified_chinese" translatable="false">简体中文</string>
-    <string name="language_traditional_chinese" translatable="false">繁體中文</string>
-    <string name="language_japanese" translatable="false">日本語</string>
-    <string name="language_russian" translatable="false">Русский</string>
-    <string name="language_vietnamese" translatable="false">Tiếng Việt</string>
     <string name="language_indonesian" translatable="false">Indonesia</string>
-    <string name="language_turkish" translatable="false">Türkçe</string>
-    <string name="language_spanish" translatable="false">Español</string>
-    <string name="language_portuguese" translatable="false">Português</string>
-    <string name="language_arabic" translatable="false">اَلْعَرَبِيَّةُ</string>
-    <string name="language_italian" translatable="false">Italiano</string>
-    <string name="language_brazilian_portuguese" translatable="false">Português (Brasil)</string>
-    <string name="language_uyghur" translatable="false">ۋىغرۇچە</string>
-    <string name="language_filipino" translatable="false">Filipino</string>
-    <string name="language_thai" translatable="false">ไทย</string>
-    <string name="language_korean" translatable="false">한국어</string>
     <!-- Option in the game version touch vibration setting for a constant vibration -->
     <string name="vibrate_kind_one_shot">Constant</string>
     <!-- Option in the game version touch vibration setting for a click effect -->
@@ -2872,60 +2698,6 @@
     <string name="fm_calculating">Calculating…</string>
     <!-- Validation error shown when the chosen name already exists in the current directory -->
     <string name="fm_name_conflict">Name conflicts with an existing entry</string>
-    <!-- Welcome card shown centered on the screen at the very start of the main-screen guide; %s is the launcher name -->
-    <string name="guide_main_welcome_title">Welcome to %s!</string>
-    <!-- Second line of the centered welcome card that opens the main-screen guide -->
-    <string name="guide_main_welcome_text">Let\'s take a quick look at what the main screen can do.</string>
-    <!-- Guide text next to the account avatar on the action menu card; tapping it opens the account manager -->
-    <string name="guide_main_account">Tap here to open the account manager, where you can add or manage your Minecraft accounts</string>
-    <!-- Guide text next to the version entry on the action menu card; tapping it opens the version list -->
-    <string name="guide_main_version_list">Tap here to open the version list, where every game version you install will be listed</string>
-    <!-- Title of the guide card for the draggable action menu card -->
-    <string name="guide_main_card_drag_title">Not happy with where the action menu is?</string>
-    <!-- Body of the guide card explaining how to move the action menu card to the other side -->
-    <string name="guide_main_card_drag_text">Long-press the card to pick it up, then drag and drop it to dock on the other side</string>
-    <!-- Title of the guide card suggesting to pin content onto the main screen as cards -->
-    <string name="guide_main_card_tip_title">Looking a bit empty here?</string>
-    <!-- Body of the guide card about pinning contents as cards on the main screen; %s is the name of the pin-to-home option -->
-    <string name="guide_main_card_tip_text">Don\'t worry! You can pin content here as cards and arrange it freely, as long as it provides the \"%s\" option</string>
-    <!-- Welcome card shown centered on the screen at the very start of the control-editor guide -->
-    <string name="guide_editor_welcome_title">Welcome to the control layout editor!</string>
-    <!-- Second line of the centered welcome card that opens the control-editor guide -->
-    <string name="guide_editor_welcome_text">Let\'s take a quick look at how to use it.</string>
-    <!-- Title of the guide card for the floating menu button of the control-editor screen -->
-    <string name="guide_editor_menu_ball_title">This is the control layout editor\'s floating menu button</string>
-    <!-- Body of the guide card about the floating menu button; dragging repositions it, tapping opens the editor menu with the control layer list -->
-    <string name="guide_editor_menu_ball_text">Drag it to reposition it! Tap it to open the editor menu and the control layer list</string>
-    <!-- Title of the guide card for the control layer list in the right-hand editor menu card -->
-    <string name="guide_editor_layer_list_title">This is the control layer list</string>
-    <!-- Body explaining the concept: a control layer works like a graphics layer and acts as a container for controls -->
-    <string name="guide_editor_layer_list_text">A control layer works like a graphics layer: it is a container that holds controls. You can organize the controls you add by placing them on separate layers</string>
-    <!-- Closing line of the control-layer-list guide card; all created layers appear in this list -->
-    <string name="guide_editor_layer_list_note">Every control layer you add will be listed here</string>
-    <!-- Guide card for the button at the bottom of the control layer list that creates a new control layer -->
-    <string name="guide_editor_create_layer">Tap this button to create a new control layer</string>
-    <!-- Title of the guide card for the add-control buttons at the top of the editor menu -->
-    <string name="guide_editor_add_widgets_title">Add controls here!</string>
-    <!-- Body explaining that controls are added to the currently selected control layer -->
-    <string name="guide_editor_add_widgets_text">Once a control layer is selected, you can add any type of control to it</string>
-    <!-- Title of the guide card for the control and joystick appearance lists in the editor menu -->
-    <string name="guide_editor_styles_title">Want to change how your controls look?</string>
-    <!-- Body explaining control appearances, which can be created once and reused across controls -->
-    <string name="guide_editor_styles_text">You can create appearances for your controls so they can be quickly reused and switched between</string>
-    <!-- Title of the guide card introducing the style cabinet in the control editor -->
-    <string name="guide_editor_style_cabinet_title">You can also add your favorite styles to the shared style cabinet!</string>
-    <!-- Body of the guide card explaining that the style cabinet is shared across all control layouts -->
-    <string name="guide_editor_style_cabinet_text">The style cabinet is global: no matter which control layout you are editing, the styles inside are always there~</string>
-    <!-- Closing note of the style cabinet guide card about adding favorited styles to the current layout -->
-    <string name="guide_editor_style_cabinet_note">From here, you can add the favorited styles to the current control layout for use~</string>
-    <!-- Guide card for the preview option in the editor menu; preview mode lets the user test the control layout -->
-    <string name="guide_editor_preview">Use the preview mode to test out your control layout</string>
-    <!-- Final guide card reminding the user to save the control layout -->
-    <string name="guide_editor_save">Once you\'re done editing, remember to save your control layout!</string>
-    <!-- Next-step hint shown near a screen corner during non-final guide steps; tapping any blank area advances to the next step -->
-    <string name="guide_tip_blank">Tap any blank area to continue to the next step</string>
-    <!-- Next-step hint shown near a screen corner during the final guide step; tapping any blank area finishes the whole guide -->
-    <string name="guide_tip_finish">Tap any blank area to finish the guide</string>
 
     <!-- Ray Launcher strings (restored after upstream 2.8.1 merge) -->
     <string name="about_launcher_maintainer_keda_text">Maintainer of RayLauncher</string>
@@ -2964,14 +2736,11 @@
     <string name="main_nav_home">Home</string>
 
     <!-- Music card (home screen) -->
-    <string name="music_listener_label">RayLauncher music card</string>
     <string name="music_source_local">Local Music</string>
     <string name="music_source_background">Background Music</string>
     <string name="music_card_unknown_title">Unknown title</string>
     <string name="music_card_empty_title">No music yet</string>
     <string name="music_card_empty_summary">Import audio files in Settings → Launcher → Music card</string>
-    <string name="music_card_access_title">Notification access needed</string>
-    <string name="music_card_access_summary">Allow RayLauncher to read the music other apps are playing</string>
     <string name="music_card_access_grant">Grant access</string>
     <string name="music_card_shizuku_title">Shizuku needed</string>
     <string name="music_card_shizuku_not_installed">Install Shizuku to show the music other apps are playing</string>
@@ -2997,9 +2766,6 @@
     <string name="settings_launcher_music_clear">Clear imported music</string>
     <string name="settings_launcher_music_none">No music imported yet</string>
     <string name="settings_launcher_music_count">%d tracks imported</string>
-    <string name="settings_launcher_music_access">Notification access</string>
-    <string name="settings_launcher_music_access_summary">Required to read the music of other apps. Tap to open the system settings and allow RayLauncher</string>
-    <string name="settings_launcher_music_access_granted">Allowed. Tap to open the system settings</string>
     <string name="settings_launcher_music_shizuku">Shizuku</string>
     <string name="settings_launcher_music_shizuku_not_installed">Required to read the music of other apps. Shizuku is not installed. Tap to get it</string>
     <string name="settings_launcher_music_shizuku_not_running">Shizuku is not running. Tap to open it and start the service</string>

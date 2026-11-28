@@ -280,9 +280,6 @@ private fun NavigationUI(
                             checkUpdate = {
                                 eventViewModel.sendEvent(EventViewModel.Event.CheckUpdate)
                             },
-                            onViewSponsors = {
-                                eventViewModel.sendEvent(EventViewModel.Event.ShowSponsors)
-                            },
                             openLicense = openLicenseScreen,
                             openLink = { url ->
                                 eventViewModel.sendEvent(EventViewModel.Event.OpenLink(url))

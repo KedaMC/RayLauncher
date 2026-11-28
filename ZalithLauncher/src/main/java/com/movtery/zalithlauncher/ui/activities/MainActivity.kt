@@ -55,7 +55,6 @@ import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.game.version.installed.VersionsManager
 import com.movtery.zalithlauncher.notification.NotificationManager
 import com.movtery.zalithlauncher.path.PathManager
-import com.movtery.zalithlauncher.path.URL_SUPPORT
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.startup.StartupAnimation
 import com.movtery.zalithlauncher.startup.StartupTransition
@@ -110,8 +109,6 @@ import com.movtery.zalithlauncher.viewmodel.ModpackImportOperation
 import com.movtery.zalithlauncher.viewmodel.ModpackImportViewModel
 import com.movtery.zalithlauncher.viewmodel.ModpackVersionNameOperation
 import com.movtery.zalithlauncher.viewmodel.ScreenBackStackViewModel
-import com.movtery.zalithlauncher.viewmodel.SponsorsDialog
-import com.movtery.zalithlauncher.viewmodel.SponsorsViewModel
 import com.movtery.zalithlauncher.viewmodel.VulkanCheckerViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -170,11 +167,6 @@ class MainActivity : BaseAppCompatActivity() {
      * 启动器更新状态 ViewModel
      */
     val launcherUpgradeViewModel: LauncherUpgradeViewModel by viewModels()
-
-    /**
-     * 当月赞助者 ViewModel
-     */
-    private val sponsorsViewModel: SponsorsViewModel by viewModels()
 
     /**
      * 游戏日志分享菜单 ViewModel
@@ -253,9 +245,6 @@ class MainActivity : BaseAppCompatActivity() {
                     }
                     is EventViewModel.Event.CheckUpdate -> {
                         checkUpdate()
-                    }
-                    is EventViewModel.Event.ShowSponsors -> {
-                        sponsorsViewModel.openDialog()
                     }
                     is EventViewModel.Event.KeepScreen -> {
                         keepScreen(event.on)
@@ -482,14 +471,6 @@ class MainActivity : BaseAppCompatActivity() {
                             AllSettings.lastIgnoredVersion.save(ver)
                         },
                         onLinkClick = { eventViewModel.sendEvent(EventViewModel.Event.OpenLink(it)) }
-                    )
-
-                    //Sponsor list, only opened from the About page
-                    SponsorsDialog(
-                        viewModel = sponsorsViewModel,
-                        onSupportClick = {
-                            eventViewModel.sendEvent(EventViewModel.Event.OpenLink(URL_SUPPORT))
-                        }
                     )
 
                     //版本修改操作流程
