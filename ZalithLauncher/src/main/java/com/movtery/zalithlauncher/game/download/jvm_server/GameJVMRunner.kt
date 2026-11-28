@@ -18,6 +18,7 @@
 
 package com.movtery.zalithlauncher.game.download.jvm_server
 
+import com.movtery.zalithlauncher.components.jre.JreInstaller
 import android.content.Intent
 import com.movtery.zalithlauncher.components.jre.Jre
 import com.movtery.zalithlauncher.context.GlobalContext
@@ -57,6 +58,7 @@ private val POST_PROCESS_EXIT_COOLDOWN: Duration = 1.seconds
 /**
  * 运行一个简易的JVM环境，安装ModLoader，同时在jvm退出时，尝试使用其他的Java环境重试
  * @param logId 记录日志的 tag
+ * @param jre The preferred runtime. Newer runtimes are tried next, and Java 8 last
  * @param start 刚开始启动会调用的回调
  * @param logOutput 安装 JVM 的实时日志输出
  */
@@ -71,44 +73,37 @@ suspend fun runJvmRetryRuntimes(
     start: () -> Unit = {},
     logOutput: TaskLogOutput? = null
 ): Unit = withContext(Dispatchers.Default) {
-    waitForJvmExclusiveProcessesStopped(logId)
+    val candidates = (Jre.entries.filter { it.majorVersion >= jre.majorVersion } + Jre.JRE_8).distinct()
+    var exitCode = 0
 
-    start()
+    candidates.forEachIndexed { index, candidate ->
+        waitForJvmExclusiveProcessesStopped(logId)
 
-    val finalArgs = prefixArgs(jre)?.let {
-        "$it $jvmArgs"
-    } ?: jvmArgs
+        JreInstaller.ensure(candidate)
 
-    val exitCode = startJvmServiceAndWaitExit(
-        jvmArgs = finalArgs,
-        jreName = jre.jreName,
-        userHome = userHome,
-        postSummary = postSummary,
-        postProgress = postProgress,
-        logOutput = logOutput
-    )
-
-    if (exitCode != 0) {
-        val nextJava: Jre? = when (jre) {
-            Jre.JRE_8 -> Jre.JRE_17
-            Jre.JRE_17 -> Jre.JRE_21
-            else -> null
+        if (index == 0) {
+            start()
+        } else {
+            Logger.info(TAG, "Retry with jre ${candidate.name}...")
         }
 
-        nextJava?.let { jre ->
-            Logger.info(TAG, "Retry with jre ${jre.name}...")
-            runJvmRetryRuntimes(
-                logId = logId,
-                jvmArgs = jvmArgs,
-                prefixArgs = prefixArgs,
-                jre = jre,
-                userHome = userHome,
-                postSummary = postSummary,
-                postProgress = postProgress,
-                logOutput = logOutput
-            )
-        } ?: throw JvmCrashException(exitCode)
+        val finalArgs = prefixArgs(candidate)?.let {
+            "$it $jvmArgs"
+        } ?: jvmArgs
+
+        exitCode = startJvmServiceAndWaitExit(
+            jvmArgs = finalArgs,
+            jreName = candidate.jreName,
+            userHome = userHome,
+            postSummary = postSummary,
+            postProgress = postProgress,
+            logOutput = logOutput
+        )
+
+        if (exitCode == 0) return@withContext
     }
+
+    throw JvmCrashException(exitCode)
 }
 
 /**

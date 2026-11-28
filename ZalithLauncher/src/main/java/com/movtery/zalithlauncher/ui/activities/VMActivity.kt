@@ -156,7 +156,10 @@ import java.io.File
 import java.io.IOException
 import kotlin.time.Duration.Companion.milliseconds
 import android.graphics.Color as NativeColor
+import android.os.Handler
+import android.os.Looper
 import android.view.WindowInsets as AndroidWindowInsets
+import com.movtery.zalithlauncher.music.MusicManager
 
 
 private const val INTENT_RUN_GAME = "BUNDLE_RUN_GAME"
@@ -228,12 +231,6 @@ class VMViewModel : ViewModel() {
                     activity = activity,
                     config = config,
                     onExit = { code, isSignal ->
-                        if (code == 0) {
-                            val finishedCount = AllSettings.finishedGame.getValue()
-                            if (finishedCount < Int.MAX_VALUE)  {
-                                AllSettings.finishedGame.save(finishedCount + 1)
-                            }
-                        }
                         exitListener(code, isSignal)
                     },
                     openPath = { folder ->
@@ -1137,6 +1134,7 @@ fun runGame(
     version: Version,
     account: Account,
 ) {
+    pauseLauncherMusic()
     startGameService(context)
     val intent = Intent(context, VMActivity::class.java).apply {
         putExtra(INTENT_RUN_GAME, true)
@@ -1170,6 +1168,7 @@ fun runJar(
         jreName = jreName
     )
 
+    pauseLauncherMusic()
     startGameService(context)
 
     val intent = Intent(context, VMActivity::class.java).apply {
@@ -1177,6 +1176,12 @@ fun runJar(
         putExtra(INTENT_JAR_INFO, jvmLaunchInfo)
     }
     context.startActivity(intent)
+}
+
+/** The game runs in its own process, so the launcher's music has to be paused from here */
+private fun pauseLauncherMusic() {
+    //The player must be touched on the main thread
+    Handler(Looper.getMainLooper()).post { MusicManager.pauseLocal() }
 }
 
 private fun startGameService(context: Context) {

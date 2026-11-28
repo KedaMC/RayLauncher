@@ -172,6 +172,8 @@ internal class LocalMusicSource(
                 true
             )
             created.setHandleAudioBecomingNoisy(true)
+            //Keeps the CPU awake so playback goes on with the screen off
+            created.setWakeMode(C.WAKE_MODE_LOCAL)
             created.repeatMode = Player.REPEAT_MODE_OFF
             created.addListener(listener)
             applyPlaylist(created)

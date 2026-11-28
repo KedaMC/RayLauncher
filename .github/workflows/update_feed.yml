@@ -37,6 +37,7 @@ jobs:
           PROPS="$(git show "refs/tags/${TAG}:ZalithLauncher/gradle.properties")"
           CODE="$(echo "$PROPS" | grep -E '^launcher_version_code=' | head -n1 | cut -d= -f2- | tr -d '\r')"
           NAME="$(echo "$PROPS" | grep -E '^launcher_version_name=' | head -n1 | cut -d= -f2- | tr -d '\r')"
+          bash .github/scripts/changelog.sh "refs/tags/${TAG}" > release_notes.md
           gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" > release.json
           FILES="$(jq '[.assets[] | select(.name | endswith(".apk")) | {
             file_name: .name,
@@ -55,7 +56,7 @@ jobs:
             --argjson code "$CODE" \
             --arg version "$NAME" \
             --arg created "$(jq -r '.published_at' release.json)" \
-            --arg body "$(jq -r '.body // ""' release.json)" \
+            --rawfile body release_notes.md \
             --argjson files "$FILES" \
             '{code: $code, version: $version, created_at: $created,
               default_cloud_drive: null, cloud_drives: [], files: $files,

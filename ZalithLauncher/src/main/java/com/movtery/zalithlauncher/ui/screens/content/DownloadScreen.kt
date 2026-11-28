@@ -64,6 +64,7 @@ import com.movtery.zalithlauncher.ui.screens.NestedNavDisplay
 import com.movtery.zalithlauncher.ui.screens.NestedNavKey
 import com.movtery.zalithlauncher.ui.screens.NormalNavKey
 import com.movtery.zalithlauncher.ui.screens.TitledNavKey
+import com.movtery.zalithlauncher.ui.screens.addIfEmpty
 import com.movtery.zalithlauncher.ui.screens.content.download.DownloadFavoritesScreen
 import com.movtery.zalithlauncher.ui.screens.content.download.DownloadGameScreen
 import com.movtery.zalithlauncher.ui.screens.content.download.DownloadModPackScreen
@@ -84,9 +85,15 @@ import com.movtery.zalithlauncher.viewmodel.ScreenBackStackViewModel
 
 /**
  * 导航至DownloadScreen
+ * @param targetScreen the category to open, null returns to the page that was open last
  */
 fun ScreenBackStackViewModel.navigateToDownload(targetScreen: TitledNavKey? = null) {
-    downloadScreen.clearWith(targetScreen ?: downloadGameScreen)
+    if (targetScreen != null) {
+        downloadScreen.clearWith(targetScreen)
+    } else {
+        //The categories keep their own back stacks, so this restores the exact page
+        downloadScreen.backStack.addIfEmpty(downloadGameScreen)
+    }
     mainScreen.removeAndNavigateTo(
         removes = clearBeforeNavKeys,
         screenKey = downloadScreen,

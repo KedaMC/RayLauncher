@@ -62,7 +62,6 @@ class PathManager {
         lateinit var FILE_SETTINGS: File
         lateinit var FILE_MINECRAFT_VERSIONS: File
         lateinit var FILE_LAUNCHER_BACKGROUND: File
-        lateinit var FILE_SPONSORS_CACHE: File
 
         fun refreshPaths(context: Context) {
             DIR_FILES_PRIVATE = context.filesDir
@@ -105,7 +104,6 @@ class PathManager {
             FILE_SETTINGS = File(DIR_FILES_PRIVATE, "settings.json")
             FILE_MINECRAFT_VERSIONS = File(DIR_GAME, "minecraft_versions.json")
             FILE_LAUNCHER_BACKGROUND = File(DIR_BACKGROUND, "background01.file")
-            FILE_SPONSORS_CACHE = File(DIR_CACHE, "monthly_sponsors.json")
 
             createDirs()
             handleLegacy()

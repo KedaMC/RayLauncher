@@ -49,9 +49,13 @@ object AudioSpectrumBus {
     @Volatile
     private var lastPublishNanos = 0L
 
-    fun publish(newLevels: FloatArray) {
-        levels = newLevels
-        lastPublishNanos = System.nanoTime()
+    private val gain = SpectrumGain()
+
+    /** @param decibels loudness of every band in dB relative to the full scale of the producer */
+    fun publish(decibels: FloatArray) {
+        val now = System.nanoTime()
+        levels = gain.apply(decibels, (now - lastPublishNanos).coerceIn(0L, FRESH_NANOS) / 1e9f)
+        lastPublishNanos = now
     }
 
     /**
@@ -69,6 +73,45 @@ object AudioSpectrumBus {
     fun clear() {
         levels = FloatArray(BANDS)
         lastPublishNanos = 0L
+        gain.reset()
+    }
+}
+
+/**
+ * Automatic gain: the display range follows the loudest recent band, so loud and quiet music both
+ * move through the whole height and only rarely reach the top.
+ */
+private class SpectrumGain {
+    private var ceiling = MIN_CEILING
+
+    /** @param seconds time since the previous frame */
+    fun apply(decibels: FloatArray, seconds: Float): FloatArray {
+        val loudest = decibels.maxOrNull() ?: MIN_CEILING
+        //Rises quickly with the music, falls slowly, and never goes low enough to blow up noise
+        ceiling = if (loudest > ceiling) {
+            ceiling + (loudest - ceiling) * 0.6f
+        } else {
+            max(loudest, ceiling - FALL_PER_SECOND * seconds)
+        }.coerceAtLeast(MIN_CEILING)
+
+        val bottom = ceiling + HEADROOM - RANGE
+        return FloatArray(decibels.size) { band ->
+            ((decibels[band] - bottom) / RANGE).coerceIn(0f, 1f).pow(CONTRAST)
+        }
+    }
+
+    fun reset() {
+        ceiling = MIN_CEILING
+    }
+
+    private companion object {
+        const val MIN_CEILING = -30f
+        /** Room kept above the loudest recent band */
+        const val HEADROOM = 6f
+        /** Span (dB) from an empty bar to a full one */
+        const val RANGE = 36f
+        const val FALL_PER_SECOND = 6f
+        const val CONTRAST = 1.4f
     }
 }
 
@@ -82,11 +125,9 @@ internal object SpectrumBands {
         LOW_HZ * (HIGH_HZ / LOW_HZ).pow(i.toFloat() / AudioSpectrumBus.BANDS)
     }
 
-    /** Amplitude (0..1, full scale = 1) to a 0..1 display level, with a small tilt for the highs */
-    fun level(amplitude: Float, band: Int): Float {
-        val db = 20f * log10(amplitude + 1e-6f)
-        return ((db + 62f + band * 2.2f) / 50f).coerceIn(0f, 1f)
-    }
+    /** Amplitude (0..1, full scale = 1) to dB, with a small tilt for the highs */
+    fun decibels(amplitude: Float, band: Int): Float =
+        20f * log10(amplitude + 1e-6f) + band * 2.2f
 }
 
 /**
@@ -105,7 +146,7 @@ internal class SpectrumAnalyzer(private val size: Int = 1024) {
 
     /**
      * @param samples [size] mono samples, oldest first
-     * @param out band levels, size [AudioSpectrumBus.BANDS]
+     * @param out band loudness in dB, size [AudioSpectrumBus.BANDS]
      */
     fun analyze(samples: FloatArray, sampleRate: Int, out: FloatArray) {
         for (i in 0 until size) {
@@ -146,7 +187,7 @@ internal class SpectrumAnalyzer(private val size: Int = 1024) {
                 if (magnitude > peak) peak = magnitude
             }
             //Hann window: a full scale sine gives size / 4
-            out[band] = SpectrumBands.level(4f * peak / size, band)
+            out[band] = SpectrumBands.decibels(4f * peak / size, band)
         }
     }
 }
@@ -158,7 +199,7 @@ internal class SpectrumAnalyzer(private val size: Int = 1024) {
  */
 internal class ExternalSpectrumCapture {
     private var visualizer: Visualizer? = null
-    private val levels = FloatArray(AudioSpectrumBus.BANDS)
+    private val decibels = FloatArray(AudioSpectrumBus.BANDS)
 
     val isRunning: Boolean get() = visualizer != null
 
@@ -221,9 +262,9 @@ internal class ExternalSpectrumCapture {
             if (peak > 0f) anySignal = true
             //The system FFT is 8 bit: roughly 90 is a very loud bin
             val db = 20f * log10(peak / 90f + 1e-4f)
-            levels[band] = ((db + 36f + band * 1.5f) / 36f).coerceIn(0f, 1f)
+            decibels[band] = db + band * 1.5f
         }
         //A device that hands out only zeros has no usable data: keep the static pattern
-        if (anySignal) AudioSpectrumBus.publish(levels.copyOf())
+        if (anySignal) AudioSpectrumBus.publish(decibels)
     }
 }

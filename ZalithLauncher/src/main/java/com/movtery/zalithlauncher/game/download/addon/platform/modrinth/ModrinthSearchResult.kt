@@ -28,8 +28,6 @@ import com.movtery.zalithlauncher.game.download.addon.platform.modrinth.models.M
 import com.movtery.zalithlauncher.game.download.addon.platform.modrinth.models.ModrinthSide
 import com.movtery.zalithlauncher.game.download.addon.platform.modrinth.models.MonetizationStatus
 import com.movtery.zalithlauncher.game.download.addon.platform.modrinth.models.mapModrinthCategory
-import com.movtery.zalithlauncher.game.download.addon.platform.searchRankWithChineseBias
-import com.movtery.zalithlauncher.game.download.addon.utils.getTranslations
 import com.movtery.zalithlauncher.ui.screens.content.download.addon.elements.AddonPage
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -249,27 +247,13 @@ class ModrinthSearchResult(
         }
     }
 
-    override fun getAddonPage(classes: PlatformClasses): AddonPage {
-        val mcmodData = hits.map {
-            it to classes.getTranslations()?.getInfoByCurseForgeId(it.slug)
-        }
-
+    override fun getAddonPage(): AddonPage {
         return AddonPage(
             pageNumber = this.offset / this.limit + 1,
             pageIndex = this.offset,
             totalPage = (this.totalHits + this.limit - 1) / this.limit,
             isLastPage = (this.offset + this.limit) >= this.totalHits,
-            data = mcmodData
+            data = hits.toList()
         )
-    }
-
-    override fun processChineseSearchResults(
-        searchFilter: String,
-        classes: PlatformClasses
-    ): PlatformSearchResult {
-        val newHits = hits.toList()
-            .searchRankWithChineseBias(searchFilter, classes) { it.slug }
-            .toTypedArray()
-        return ModrinthSearchResult(newHits, offset, limit, totalHits)
     }
 }

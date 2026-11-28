@@ -60,7 +60,6 @@ import com.movtery.zalithlauncher.ui.components.GlassDialog as Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.gson.JsonSyntaxException
 import com.movtery.zalithlauncher.R
-import com.movtery.zalithlauncher.game.download.addon.utils.getMcmodTitle
 import com.movtery.zalithlauncher.game.download.jvm_server.JvmCrashException
 import com.movtery.zalithlauncher.game.download.jvm_server.isProcessStartRefused
 import com.movtery.zalithlauncher.game.version.download.DownloadFailedException
@@ -399,10 +398,9 @@ private fun ModsUpdateEntryItem(
                     modifier = Modifier.weight(1f)
                 ) {
                     val title = data.project.title
-                    val displayTitle = data.mcMod?.getMcmodTitle(title, context) ?: title
                     MarqueeText(
                         modifier = Modifier.fillMaxWidth(),
-                        text = displayTitle,
+                        text = title,
                         style = MaterialTheme.typography.titleSmall,
                     )
                     //旧版本
@@ -449,8 +447,7 @@ fun List<RemoteMod>.filterMods(
     val matchesName = nameFilter.isEmpty() || (
             mod.localMod.file.name.contains(nameFilter, true) ||
             mod.localMod.name.contains(nameFilter, true) ||
-            mod.projectInfo?.title?.contains(nameFilter, true) == true ||
-            mod.mcMod?.getMcmodTitle(mod.localMod.name, context)?.contains(nameFilter, true) == true
+            mod.projectInfo?.title?.contains(nameFilter, true) == true
     )
 
     val matchesState = when (stateFilter) {

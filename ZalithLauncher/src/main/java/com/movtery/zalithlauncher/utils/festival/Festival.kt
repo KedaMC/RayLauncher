@@ -23,12 +23,9 @@ import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.utils.checkDate
 import com.movtery.zalithlauncher.utils.checkDateRange
 import com.movtery.zalithlauncher.utils.festival.Festival.entries
-import com.xhinliang.lunarcalendar.LunarCalendar
 import java.time.LocalDate
 
 enum class Festival(
-    val isChinese: Boolean,
-    val isInternational: Boolean,
     @field:StringRes
     val textRes: Int
 ) {
@@ -36,95 +33,10 @@ enum class Festival(
      * 新年
      */
     NEW_YEAR(
-        isChinese = true,
-        isInternational = true,
         textRes = R.string.festivals_new_year
     ) {
-        override fun isToday(
-            date: LocalDate,
-            lunarCalendar: LunarCalendar
-        ): Boolean {
+        override fun isToday(date: LocalDate): Boolean {
             return date.checkDate(1, 1)
-        }
-    },
-
-    /**
-     * 春节
-     */
-    SPRING_FESTIVAL(
-        isChinese = true,
-        isInternational = false,
-        textRes = R.string.festivals_spring
-    ) {
-        override fun isToday(
-            date: LocalDate,
-            lunarCalendar: LunarCalendar
-        ): Boolean {
-            return lunarCalendar.checkDate(1, 1)
-        }
-    },
-
-    /**
-     * 清明节
-     */
-    QING_MING(
-        isChinese = true,
-        isInternational = false,
-        textRes = R.string.festivals_qing_ming
-    ) {
-        override fun isToday(
-            date: LocalDate,
-            lunarCalendar: LunarCalendar
-        ): Boolean {
-            return date.checkDateRange(4, 4..6)
-        }
-    },
-
-    /**
-     * 端午节
-     */
-    DRAGON_BOAT(
-        isChinese = true,
-        isInternational = false,
-        textRes = R.string.festivals_dragon_boat
-    ) {
-        override fun isToday(
-            date: LocalDate,
-            lunarCalendar: LunarCalendar
-        ): Boolean {
-            return lunarCalendar.checkDate(5, 5)
-        }
-    },
-
-    /**
-     * 中秋节
-     */
-    MID_AUTUMN(
-        isChinese = true,
-        isInternational = false,
-        textRes = R.string.festivals_mid_autumn
-    ) {
-        override fun isToday(
-            date: LocalDate,
-            lunarCalendar: LunarCalendar
-        ): Boolean {
-            return lunarCalendar.checkDate(8, 15)
-        }
-    },
-
-    /**
-     * 国庆节
-     */
-    NATIONAL_DAY(
-        isChinese = true,
-        isInternational = false,
-        textRes = R.string.festivals_national_day
-    ) {
-        override fun isToday(
-            date: LocalDate,
-            lunarCalendar: LunarCalendar
-        ): Boolean {
-            return date.checkDateRange(10, 1..7)
         }
     },
 
@@ -132,14 +44,9 @@ enum class Festival(
      * 愚人节
      */
     APRIL_FOOLS(
-        isChinese = false,
-        isInternational = true,
         textRes = R.string.festivals_april_fools
     ) {
-        override fun isToday(
-            date: LocalDate,
-            lunarCalendar: LunarCalendar
-        ): Boolean {
+        override fun isToday(date: LocalDate): Boolean {
             return date.checkDate(4, 1)
         }
     },
@@ -148,14 +55,9 @@ enum class Festival(
      * 圣诞节
      */
     CHRISTMAS(
-        isChinese = false,
-        isInternational = true,
         textRes = R.string.festivals_christmas
     ) {
-        override fun isToday(
-            date: LocalDate,
-            lunarCalendar: LunarCalendar
-        ): Boolean {
+        override fun isToday(date: LocalDate): Boolean {
             return date.checkDateRange(12, 24..25)
         }
     },
@@ -164,14 +66,9 @@ enum class Festival(
      * 万圣节
      */
     HALLOWEEN(
-        isChinese = false,
-        isInternational = true,
         textRes = R.string.festivals_halloween
     ) {
-        override fun isToday(
-            date: LocalDate,
-            lunarCalendar: LunarCalendar
-        ): Boolean {
+        override fun isToday(date: LocalDate): Boolean {
             return date.checkDate(10, 31)
         }
     },
@@ -180,53 +77,20 @@ enum class Festival(
      * 情人节
      */
     VALENTINES(
-        isChinese = false,
-        isInternational = true,
         textRes = R.string.festivals_valentines
     ) {
-        override fun isToday(
-            date: LocalDate,
-            lunarCalendar: LunarCalendar
-        ): Boolean {
+        override fun isToday(date: LocalDate): Boolean {
             return date.checkDate(2, 14)
-        }
-    },
-
-    /**
-     * 七夕
-     */
-    QIXI(
-        isChinese = true,
-        isInternational = false,
-        textRes = R.string.festivals_qixi
-    ) {
-        override fun isToday(
-            date: LocalDate,
-            lunarCalendar: LunarCalendar
-        ): Boolean {
-            return lunarCalendar.checkDate(7, 7)
         }
     };
 
-    abstract fun isToday(date: LocalDate, lunarCalendar: LunarCalendar): Boolean
+    abstract fun isToday(date: LocalDate): Boolean
 }
 
 
 /**
- * 获取今天的节日列表
- * @param containsChinese 是否包含中国节日
+ * 获取指定日期的节日
  */
-fun getTodayFestivals(
-    date: LocalDate = LocalDate.now(),
-    containsChinese: Boolean
-): List<Festival> {
-    val lunarCalendar = LunarCalendar.obtainCalendar(date.year, date.monthValue, date.dayOfMonth)
-    return entries.filter { festival ->
-        val type = if (containsChinese) {
-            festival.isChinese || festival.isInternational
-        } else {
-            festival.isInternational
-        }
-        type && festival.isToday(date, lunarCalendar)
-    }
+fun getTodayFestivals(date: LocalDate = LocalDate.now()): List<Festival> {
+    return Festival.entries.filter { festival -> festival.isToday(date) }
 }

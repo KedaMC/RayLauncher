@@ -23,7 +23,6 @@ import com.movtery.zalithlauncher.game.download.addon.platform.Platform
 import com.movtery.zalithlauncher.game.download.addon.platform.PlatformClasses
 import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.ui.androidText
-import com.movtery.zalithlauncher.ui.screens.splash.SplashOperation
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 
@@ -31,12 +30,6 @@ import kotlinx.serialization.Serializable
  * 嵌套NavDisplay的屏幕
  */
 sealed interface NestedNavKey {
-    /** 启动屏幕 */
-    @Serializable class Splash : BackStackNavKey<TitledNavKey>() {
-        init {
-            backStack.addIfEmpty(SplashOperation.Loading)
-        }
-    }
     /** 主屏幕 */
     @Serializable class Main : BackStackNavKey<TitledNavKey>() {
         init {

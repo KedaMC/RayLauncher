@@ -18,11 +18,11 @@
 
 package com.movtery.zalithlauncher.game.download.game.optifine
 
+import com.movtery.zalithlauncher.components.jre.JreInstaller
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
 import com.movtery.zalithlauncher.R
-import com.movtery.zalithlauncher.components.jre.Jre
 import com.movtery.zalithlauncher.context.GlobalContext
 import com.movtery.zalithlauncher.coroutine.Task
 import com.movtery.zalithlauncher.coroutine.TaskLogOutput
@@ -110,6 +110,14 @@ fun getOptiFineInstallTask(
             val patchedLibFile = File(optifineLibFolder, "OptiFine-$mavenVersion.jar")
             val launchWrapperLibs: List<String> = ZipFile(tempInstallerJar).use { zip ->
                 if (zip.getEntry("optifine/Patcher.class") != null) {
+                    val installerJre = JreInstaller.forInstaller(
+                        File(tempVersionFolder, "${optifineVersion.inherit}/${optifineVersion.inherit}.json")
+                    )
+                    JreInstaller.ensure(installerJre, task)
+                    task.updateProgress(-1f)
+                    task.updateMessage(androidText(
+                        R.string.download_game_install_base_installing, ModLoader.OPTIFINE.displayName
+                    ))
                     stopAllNonMainProcesses(GlobalContext)
                     withTaskLogOutput(
                         holder = logOutputHolder,
@@ -126,7 +134,7 @@ fun getOptiFineInstallTask(
                                     tempInstallerJar.absolutePath + " " +
                                     patchedLibFile.absolutePath,
                             prefixArgs = { null },
-                            jre = Jre.JRE_8,
+                            jre = installerJre,
                             userHome = tempGameDir.absolutePath.trimEnd('\\'),
                             logOutput = output
                         )

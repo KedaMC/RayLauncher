@@ -28,7 +28,6 @@ import com.movtery.zalithlauncher.utils.logging.Logger
 import com.movtery.zalithlauncher.utils.string.parseInstant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.jackhuang.hmcl.addon.AddonProjectInfo
 import java.io.File
 
 private const val TAG = "ModData"
@@ -37,13 +36,11 @@ private const val TAG = "ModData"
  * 需要更新的模组的数据类，记录模组文件和模组所属的项目
  * @param modFile 模组在模组平台上对应的文件
  * @param project 模组在模组平台上所属的项目
- * @param mcMod 模组翻译信息
  */
 data class ModData(
     val file: File,
     val modFile: ModFile,
-    val project: ModProject,
-    val mcMod: AddonProjectInfo?
+    val project: ModProject
 ) {
     /**
      * 当前模组的版本号，用于新旧对比

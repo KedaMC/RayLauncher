@@ -71,8 +71,6 @@ import com.movtery.zalithlauncher.game.download.addon.platform.PlatformProject
 import com.movtery.zalithlauncher.game.download.addon.platform.UnsupportedClassesException
 import com.movtery.zalithlauncher.game.download.addon.platform.getProjectByVersion
 import com.movtery.zalithlauncher.game.download.addon.platform.isAllNull
-import com.movtery.zalithlauncher.game.download.addon.utils.getMcMod
-import com.movtery.zalithlauncher.game.download.addon.utils.getMcmodTitle
 import com.movtery.zalithlauncher.ui.AndroidStringText
 import com.movtery.zalithlauncher.ui.androidText
 import com.movtery.zalithlauncher.ui.base.BaseScreen
@@ -100,7 +98,6 @@ import io.ktor.server.plugins.NotFoundException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import org.jackhuang.hmcl.addon.AddonProjectInfo
 
 private const val TAG = "SearchIdScreen"
 
@@ -111,7 +108,6 @@ private sealed interface SearchIdOperation {
     /** 已获得搜索结果 */
     data class Result(
         val project: PlatformProject,
-        val mcMod: AddonProjectInfo?,
     ) : SearchIdOperation
 
     /** 未找到该项目 */
@@ -152,7 +148,6 @@ private class SearchIdViewModel: ViewModel() {
                 val classes = project.platformClasses(defaultClasses)
                 operation = SearchIdOperation.Result(
                     project = project,
-                    mcMod = project.getMcMod(classes),
                 )
             }.onFailure { e ->
                 operation = when (e) {
@@ -301,7 +296,6 @@ private fun ContentResult(
             is SearchIdOperation.Result -> {
                 ResultLayout(
                     project = operation.project,
-                    mcmod = operation.mcMod,
                     defaultClasses = defaultClasses,
                     onView = onView,
                     openLink = openLink,
@@ -360,7 +354,6 @@ private fun IconTip(
 
 @Composable
 private fun ResultLayout(
-    mcmod: AddonProjectInfo?,
     project: PlatformProject,
     defaultClasses: PlatformClasses,
     onView: (Platform, PlatformClasses, id: String, iconUrl: String?) -> Unit,
@@ -391,7 +384,7 @@ private fun ResultLayout(
             ResultProjectLayout(
                 modifier = Modifier.fillMaxWidth(),
                 platform = platform,
-                title = mcmod.getMcmodTitle(title, context),
+                title = title,
                 description = description,
                 classes = classes,
                 iconUrl = iconUrl,
@@ -441,7 +434,6 @@ private fun ResultLayout(
                             ProjectUrlsContent(
                                 platform = platform,
                                 urls = urls,
-                                mcmod = mcmod,
                                 openLink = openLink,
                             )
                         }

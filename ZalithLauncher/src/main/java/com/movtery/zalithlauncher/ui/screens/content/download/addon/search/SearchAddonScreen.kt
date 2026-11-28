@@ -44,7 +44,6 @@ import com.movtery.zalithlauncher.game.download.addon.platform.navigatePage
 import com.movtery.zalithlauncher.game.download.addon.platform.nextPage
 import com.movtery.zalithlauncher.game.download.addon.platform.previousPage
 import com.movtery.zalithlauncher.game.download.addon.platform.searchAddons
-import com.movtery.zalithlauncher.game.download.addon.utils.searchMcMods
 import com.movtery.zalithlauncher.game.version.mod.InstalledMod
 import com.movtery.zalithlauncher.game.versioninfo.MinecraftVersion
 import com.movtery.zalithlauncher.game.versioninfo.MinecraftVersions
@@ -68,7 +67,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.jackhuang.hmcl.addon.AddonProjectInfo
 
 private const val TAG = "SearchAddonScreen"
 
@@ -87,15 +85,11 @@ private class SearchScreenViewModel(
     var searchPlatform by mutableStateOf(initialPlatform)
     var searchFilter by mutableStateOf(PlatformSearchFilter())
 
-    private val _searchedMcMods = MutableStateFlow<List<AddonProjectInfo>>(emptyList())
-    /** 搜索得到的所有 MCMOD 项目 */
-    val searchedMcMods = _searchedMcMods.asStateFlow()
     private val _searchedVersions = MutableStateFlow<List<String>>(emptyList())
     /** 搜索得到的所有Minecraft版本 */
     val searchedVersions = _searchedVersions.asStateFlow()
 
     var currentSearchJob: Job? = null
-    var currentSearchMCMODSJob: Job? = null
     var currentSearchVersionJob: Job? = null
 
     /**
@@ -103,18 +97,6 @@ private class SearchScreenViewModel(
      */
     fun updateNameFilter(searchName: String) {
         searchFilter = searchFilter.copy(searchName = searchName)
-        currentSearchMCMODSJob?.cancel()
-        currentSearchMCMODSJob = viewModelScope.launch {
-            val result = try {
-                searchName.searchMcMods(classes = platformClasses) ?: emptyList()
-            } catch (_: CancellationException) {
-                emptyList()
-            }.take(20) //仅展示20个搜索结果
-            withContext(Dispatchers.Main) {
-                _searchedMcMods.update { result }
-            }
-            currentSearchMCMODSJob = null
-        }
     }
 
     /**
@@ -168,7 +150,7 @@ private class SearchScreenViewModel(
     }
 
     private fun putResult(result: PlatformSearchResult) {
-        result.getAddonPage(platformClasses).also { page ->
+        result.getAddonPage().also { page ->
             Logger.info(TAG, "Searched page info: {pageNumber: ${page.pageNumber}, pageIndex: ${page.pageIndex}, totalPage: ${page.totalPage}, isLastPage: ${page.isLastPage}}")
 
             val targetIndex = page.pageNumber - 1
@@ -220,7 +202,6 @@ private class SearchScreenViewModel(
 
     override fun onCleared() {
         currentSearchJob?.cancel()
-        currentSearchMCMODSJob?.cancel()
     }
 }
 
@@ -357,7 +338,6 @@ fun SearchAddonScreen(
             )
 
             val filterCtx = rememberAnimatedContext(isVisible = isVisible)
-            val searchedMcMods by viewModel.searchedMcMods.collectAsStateWithLifecycle()
             val searchedVersions by viewModel.searchedVersions.collectAsStateWithLifecycle()
             SearchFilter(
                 modifier = Modifier
@@ -381,7 +361,6 @@ fun SearchAddonScreen(
                 onSearch = {
                     viewModel.resetSearch()
                 },
-                searchedMcMods = searchedMcMods,
                 searchedVersions = searchedVersions,
                 gameVersion = viewModel.searchFilter.gameVersion,
                 onGameVersionChange = {

@@ -21,7 +21,9 @@ package com.movtery.zalithlauncher.ui.screens.content.home
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import com.movtery.cardgrid.state.GridCard
+import com.movtery.zalithlauncher.ui.screens.content.home.workspace.HomeWorkspace
 import com.tencent.mmkv.MMKV
+import kotlin.math.roundToInt
 
 /** 单张卡片的持久化数据 */
 data class HomeCardSnapshot(
@@ -53,19 +55,47 @@ data class HomeGridSnapshot(
  * 系统卡片不参与持久化。
  */
 object HomeGridStore {
-    private const val KEY_LAYOUT = "homeCardLayout"
+    /** Layout of the former vertically scrolling grid, only read to migrate it */
+    private const val KEY_LEGACY_LAYOUT = "homeCardLayout"
+    private const val KEY_LAYOUT = "homeWorkspaceLayout"
 
     private val mmkv: MMKV by lazy { MMKV.mmkvWithID("home_grid") }
 
     private val gson = Gson()
 
     /** 读取布局快照，无有效数据时返回 null */
-    fun load(): HomeGridSnapshot? {
-        val json = mmkv.decodeString(KEY_LAYOUT, "") ?: ""
+    fun load(): HomeGridSnapshot? =
+        decode(KEY_LAYOUT) ?: decode(KEY_LEGACY_LAYOUT)?.let(::toWorkspace)
+
+    private fun decode(key: String): HomeGridSnapshot? {
+        val json = mmkv.decodeString(key, "") ?: ""
         if (json.isBlank()) return null
         return runCatching {
             gson.fromJson(json, HomeGridSnapshot::class.java)
         }.getOrNull()?.takeIf { it.cards.isNotEmpty() }
+    }
+
+    /**
+     * Moves a layout of the former grid (cells of about 20 dp) to the top left of the workspace.
+     * Both edges of a card are rounded, so neighbours stay neighbours.
+     */
+    private fun toWorkspace(old: HomeGridSnapshot): HomeGridSnapshot {
+        var scale = 1f / HomeWorkspace.contentUnitsPerCell
+        if (old.columns * scale > HomeWorkspace.columns) scale = HomeWorkspace.columns.toFloat() / old.columns
+        fun convert(value: Int): Int = (value * scale).roundToInt()
+        return HomeGridSnapshot(
+            columns = HomeWorkspace.columns,
+            cards = old.cards.map { card ->
+                val x = convert(card.x)
+                val y = convert(card.y)
+                card.copy(
+                    x = x,
+                    y = y,
+                    width = convert(card.x + card.width) - x,
+                    height = convert(card.y + card.height) - y
+                )
+            }
+        )
     }
 
     /** 保存布局快照（仅用户卡片参与持久化） */

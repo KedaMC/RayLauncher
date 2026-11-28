@@ -114,12 +114,6 @@ android {
     }
 
     signingConfigs {
-        create("releaseBuild") {
-            storeFile = file("zalith_launcher.jks")
-            storePassword = getKeyFromLocal("STORE_PASSWORD", ".store_password.txt")
-            keyAlias = "movtery_zalith"
-            keyPassword = getKeyFromLocal("KEY_PASSWORD", ".key_password.txt")
-        }
         //Ray: key milik sendiri. File dibuat CI dari secret RAY_KEYSTORE_BASE64 (atau taruh manual saat build lokal)
         create("rayRelease") {
             storeFile = file("ray_release.jks")
@@ -231,19 +225,6 @@ androidComponents {
                     task.inputs.property("lwjglArch", projectArch)
                     task.doLast {
                         val assetsDir = task.outputDir.get().asFile
-                        val tag = "JREAssetsCleanup"
-                        logger.lifecycle("[$tag] arch: $projectArch")
-                        val jreList = listOf("jre-8", "jre-17", "jre-21", "jre-25")
-                        jreList.forEach { jreVersion ->
-                            val runtimeDir = File("$assetsDir/runtimes/$jreVersion")
-                            logger.lifecycle("[$tag] runtimeDir: ${runtimeDir.absolutePath}")
-                            runtimeDir.listFiles()?.forEach {
-                                if (projectArch != "all" && it.name != "version" && !it.name.contains("universal") && it.name != "bin-$projectArch.tar.xz") {
-                                    logger.lifecycle("[$tag] delete: $it : ${it.delete()}")
-                                }
-                            }
-                        }
-
                         if (projectArch != "all") {
                             val abi = when (projectArch) {
                                 "arm" -> "armeabi-v7a"
@@ -392,12 +373,10 @@ dependencies {
     implementation(libs.prismal)
     implementation(libs.fishnet)
     implementation(libs.process.phoenix)
-    implementation(libs.lunarcalendar)
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar", "*.aar"))))
     //Safe
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
-    implementation(libs.sqlcipher.android)
     ksp(libs.androidx.room.compiler)
     //Support
     implementation(libs.proxy.client.android)

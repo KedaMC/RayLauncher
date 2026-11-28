@@ -22,7 +22,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.movtery.zalithlauncher.game.download.addon.platform.Platform
-import com.movtery.zalithlauncher.game.download.addon.platform.PlatformClasses
 import com.movtery.zalithlauncher.game.download.addon.platform.PlatformVersion
 import com.movtery.zalithlauncher.game.download.addon.platform.curseforge.models.CurseForgeFile
 import com.movtery.zalithlauncher.game.download.addon.platform.curseforge.models.CurseForgeModLoader
@@ -30,8 +29,6 @@ import com.movtery.zalithlauncher.game.download.addon.platform.getProjectByVersi
 import com.movtery.zalithlauncher.game.download.addon.platform.getVersionByLocalFile
 import com.movtery.zalithlauncher.game.download.addon.platform.modrinth.models.ModrinthModLoaderCategory
 import com.movtery.zalithlauncher.game.download.addon.platform.modrinth.models.ModrinthVersion
-import com.movtery.zalithlauncher.game.download.addon.utils.getMcMod
-import com.movtery.zalithlauncher.game.download.addon.utils.getTranslations
 import com.movtery.zalithlauncher.utils.file.calculateFileSha1
 import com.movtery.zalithlauncher.utils.logging.Logger
 import com.tencent.mmkv.MMKV
@@ -39,7 +36,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
-import org.jackhuang.hmcl.addon.AddonProjectInfo
 
 private const val TAG = "RemoteMod"
 
@@ -65,12 +61,6 @@ class RemoteMod(
         private set
 
     /**
-     * 项目翻译信息
-     */
-    var mcMod: AddonProjectInfo? by mutableStateOf(null)
-        private set
-
-    /**
      * 是否已经加载过
      */
     var isLoaded: Boolean = false
@@ -90,7 +80,6 @@ class RemoteMod(
         if (!loadFromCache) {
             remoteFile = null
             projectInfo = null
-            mcMod = null
         }
 
         isLoaded = false
@@ -127,7 +116,6 @@ class RemoteMod(
 
                     if (loadFromCache && cachedProject != null) {
                         projectInfo = cachedProject
-                        mcMod = PlatformClasses.MOD.getTranslations()?.getInfoByCurseForgeId(cachedProject.slug)
                     } else {
                         ensureActive()
                         remoteFile?.let { modFile ->
@@ -145,7 +133,6 @@ class RemoteMod(
                             )
 
                             projectInfo = newProjectInfo
-                            mcMod = project.getMcMod(PlatformClasses.MOD)
 
                             modProjectCache.encode(sha1, newProjectInfo, MMKV.ExpireInDay)
                         }

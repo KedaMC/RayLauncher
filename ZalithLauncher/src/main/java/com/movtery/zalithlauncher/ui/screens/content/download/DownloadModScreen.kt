@@ -34,7 +34,7 @@ import androidx.navigation3.runtime.entryProvider
 import com.movtery.zalithlauncher.game.download.addon.downloadDependenciesForVersions
 import com.movtery.zalithlauncher.game.download.addon.downloadSingleForVersions
 import com.movtery.zalithlauncher.game.download.addon.platform.PlatformClasses
-import com.movtery.zalithlauncher.game.version.installed.VersionsManager
+import com.movtery.zalithlauncher.game.version.installed.DownloadTargetVersion
 import com.movtery.zalithlauncher.ui.screens.NestedNavDisplay
 import com.movtery.zalithlauncher.ui.screens.NestedNavKey
 import com.movtery.zalithlauncher.ui.screens.NormalNavKey
@@ -69,7 +69,7 @@ fun DownloadModScreen(
         // 进入模组搜索页或项目详情页时，重新扫描当前版本已安装的模组
         // 同版本重复扫描会直接复用内存与持久缓存，且不会清除已有的标注数据
         if (stackTopKey is NormalNavKey.SearchMod || stackTopKey is NormalNavKey.DownloadAddon) {
-            installedViewModel.scan(VersionsManager.currentVersion.value)
+            installedViewModel.scan(DownloadTargetVersion.current)
         }
     }
 

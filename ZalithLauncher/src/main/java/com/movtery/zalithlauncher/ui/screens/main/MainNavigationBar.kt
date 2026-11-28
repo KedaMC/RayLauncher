@@ -41,6 +41,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -57,15 +59,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.setting.AllSettings
-import com.movtery.zalithlauncher.ui.components.GlassSegmentedControl
 import com.movtery.zalithlauncher.ui.components.LiquidGlassSurface
 import com.movtery.zalithlauncher.ui.components.SharedGlassBlurPage
 import com.movtery.zalithlauncher.ui.components.liquidGlassBackdrop
 import com.styropyr0.prismal.PrismalBackdrop
+import com.styropyr0.prismal.components.PrismalGlassBottomTab
+import com.styropyr0.prismal.components.PrismalGlassBottomTabs
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -84,6 +88,8 @@ enum class MainPage(
 private val NavItemWidth = 60.dp
 private val NavItemHeight = 32.dp
 private val NavPadding = 4.dp
+/** Scales the 64dp glass tabs down to the 40dp top bar */
+private const val GlassTabsScale = 40f / 64f
 private val BlobShape = RoundedCornerShape(percent = 50)
 
 //Water drop physics: the edge moving toward the target is stiff and leaves first, the trailing edge
@@ -103,8 +109,8 @@ private val GlassRimBrush = Brush.linearGradient(
 /**
  * Horizontal navigation group for the three main pages.
  *
- * On glass it is a [GlassSegmentedControl]: a water droplet that is always visible over the selected
- * page, refracts the icons and can be tapped or dragged across the pages. Without glass, or with the swap
+ * On glass it is PrismalAGSL's [PrismalGlassBottomTabs]: a liquid droplet that marks the selected
+ * page and can be tapped or dragged across the pages. Without glass, or with the swap
  * animation off, the classic bar is used: one shared indicator that travels to the target button and
  * stretches like a water drop while the page slides.
  *
@@ -152,8 +158,17 @@ private fun GlassNavigationBar(
     )
     val hiddenShiftPx = with(density) { 12.dp.toPx() }
     val pages = MainPage.entries
-    //Accessibility names of the segments; the segments themselves draw icons
-    val labels = pages.map { stringResource(it.label) }
+
+    //The tabs restart their effects when these lambdas change, so both stay the same instance
+    val currentIndex by rememberUpdatedState(selectedIndex)
+    val currentShown by rememberUpdatedState(shown)
+    val currentOnNavigate by rememberUpdatedState(onNavigate)
+    val selectedProvider = remember { { currentIndex } }
+    val onSelected: (Int) -> Unit = remember {
+        { index ->
+            if (currentShown && index != currentIndex) pages.getOrNull(index)?.let(currentOnNavigate)
+        }
+    }
 
     Box(
         modifier = modifier.graphicsLayer {
@@ -161,45 +176,41 @@ private fun GlassNavigationBar(
             translationY = -(1f - visibility) * hiddenShiftPx
         }
     ) {
-        SharedGlassBlurPage {
-            LiquidGlassSurface(
+        //PrismalGlassBottomTabs has a fixed 64dp height, a smaller density fits it into the top bar
+        //while keeping all of its proportions
+        CompositionLocalProvider(
+            LocalDensity provides Density(density.density * GlassTabsScale, density.fontScale)
+        ) {
+            PrismalGlassBottomTabs(
+                selectedTabIndex = selectedProvider,
+                onTabSelected = onSelected,
                 backdrop = backdrop,
-                shape = MaterialTheme.shapes.large,
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = LocalContentColor.current,
-                blurRadius = 12.dp
+                tabsCount = pages.size,
+                modifier = Modifier.width(NavItemWidth / GlassTabsScale * pages.size)
             ) {
-                Box(modifier = Modifier.padding(NavPadding)) {
-                    //The icons are the segment content, so the droplet's lens refracts them
-                    GlassSegmentedControl(
-                        labels = labels,
-                        selectedIndex = selectedIndex,
-                        onSelected = { index -> if (shown) pages.getOrNull(index)?.let(onNavigate) },
-                        backdrop = backdrop,
-                        modifier = Modifier.width(NavItemWidth * pages.size),
-                        height = NavItemHeight
-                    ) { index ->
+                pages.forEach { page ->
+                    PrismalGlassBottomTab(onClick = { onSelected(page.index) }) {
                         Icon(
-                            modifier = Modifier.size(22.dp),
-                            painter = painterResource(pages[index].icon),
-                            contentDescription = null,
+                            modifier = Modifier.size(22.dp / GlassTabsScale),
+                            painter = painterResource(page.icon),
+                            contentDescription = stringResource(page.label),
                             tint = Color.White
-                        )
-                    }
-                    //The segmented control has no enabled state: while hidden, swallow touches (taps and drags)
-                    if (!shown) {
-                        Box(
-                            modifier = Modifier
-                                .matchParentSize()
-                                .pointerInput(Unit) {
-                                    awaitPointerEventScope {
-                                        while (true) awaitPointerEvent().changes.forEach { it.consume() }
-                                    }
-                                }
                         )
                     }
                 }
             }
+        }
+        //The tabs have no enabled state: while hidden, swallow touches (taps and drags)
+        if (!shown) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .pointerInput(Unit) {
+                        awaitPointerEventScope {
+                            while (true) awaitPointerEvent().changes.forEach { it.consume() }
+                        }
+                    }
+            )
         }
     }
 }

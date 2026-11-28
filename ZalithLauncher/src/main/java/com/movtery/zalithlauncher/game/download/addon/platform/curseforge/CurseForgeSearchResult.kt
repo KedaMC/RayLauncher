@@ -18,13 +18,10 @@
 
 package com.movtery.zalithlauncher.game.download.addon.platform.curseforge
 
-import com.movtery.zalithlauncher.game.download.addon.platform.PlatformClasses
 import com.movtery.zalithlauncher.game.download.addon.platform.PlatformSearchResult
 import com.movtery.zalithlauncher.game.download.addon.platform.curseforge.models.CurseForgeData
 import com.movtery.zalithlauncher.game.download.addon.platform.curseforge.models.CurseForgePagination
 import com.movtery.zalithlauncher.game.download.addon.platform.curseforge.models.isApproved
-import com.movtery.zalithlauncher.game.download.addon.platform.searchRankWithChineseBias
-import com.movtery.zalithlauncher.game.download.addon.utils.getTranslations
 import com.movtery.zalithlauncher.ui.screens.content.download.addon.elements.AddonPage
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -43,11 +40,8 @@ class CurseForgeSearchResult(
     @SerialName("pagination")
     private val pagination: CurseForgePagination
 ): PlatformSearchResult {
-    override fun getAddonPage(classes: PlatformClasses): AddonPage {
-        val mcmodData = data.mapNotNull { data0 ->
-            if (!data0.isApproved()) return@mapNotNull null
-            data0 to classes.getTranslations()?.getInfoByCurseForgeId(data0.slug)
-        }
+    override fun getAddonPage(): AddonPage {
+        val approved = data.filter { it.isApproved() }
         val pageSize = pagination.pageSize
         val isLastPage = pagination.resultCount < pageSize ||
                 (pagination.index + pagination.resultCount) >= pagination.totalCount
@@ -57,17 +51,7 @@ class CurseForgeSearchResult(
             pageIndex = pagination.index,
             totalPage = ((pagination.totalCount + pageSize - 1) / pageSize).toInt(),
             isLastPage = isLastPage,
-            data = mcmodData
+            data = approved
         )
-    }
-
-    override fun processChineseSearchResults(
-        searchFilter: String,
-        classes: PlatformClasses
-    ): PlatformSearchResult {
-        val newData = data.filter { it.isApproved() }
-            .searchRankWithChineseBias(searchFilter, classes) { it.slug }
-            .toTypedArray()
-        return CurseForgeSearchResult(newData, pagination)
     }
 }

@@ -1,33 +1,40 @@
-# RayLauncher
+<div align="center">
+  <img width="120" height="120" alt="Ray" src="https://github.com/user-attachments/assets/c32ef0e8-28dc-4e2f-af0f-d5ad04c22071" />
+  <h1>RayLauncher</h1>
+</div>
 
-[English](README.md) | [简体中文](README_ZH_CN.md) | [繁體中文](README_ZH_TW.md)
-
-## About
-
-RayLauncher is an unofficial modification of [Zalith Launcher 2](https://github.com/ZalithLauncher/ZalithLauncher2), focused on making the launcher as lightweight as possible. Its goals include reducing APK size and improving Minecraft performance wherever possible.
+**RayLauncher** is an unofficial modified version of [Zalith Launcher 2](https://github.com/ZalithLauncher/ZalithLauncher2), featuring additional customization, lightweight size, visual enhancements, and tools designed to improve the Minecraft launcher experience on Android.
 
 ## Features
 
-- **Liquid Glass** — A modern interface with Liquid Glass visual effects.
-- **PanVK Execution Support** — Modified driver execution handling that enables MediaTek Vulkan drivers, including PanVK, to run through the launcher. The PanVK driver itself is not bundled with RayLauncher.
-- **Capes** — Cape system adapted from [ZalithLauncher2Plus](https://github.com/Star1xr/ZalithLauncher2Plus).
-- **Built-in Recorder** — Integrated screen recorder for Minecraft gameplay, adapted from ZalithLauncher2Plus.
-
-## Screenshots
-
-<!-- Add RayLauncher screenshots here. -->
+- **Liquid Glass UI** — Enhanced interface with Liquid Glass visual effects and translucent materials.
+- **Custom Music Player** — Dedicated music player card with local music library support and external music sources, including Shizuku integration for supported access workflows.
+- **Audio Visualizer** — Audio spectrum visualization through customizable visualizer cards.
+- **Media Overlay** — Import image and video overlays to the launcher interface.
+- **Custom Startup Animation** — Additional startup animation customization.
+- **Customizable Card Grid** — Flexible card layout with drag-and-drop positioning, resizing, and an adjustment mode.
+- **PanVK Execution Support** — Modified driver execution handling to support MediaTek Vulkan drivers.
+- **Cape System** — Additional cape functionality.
+- **Built-in Screen Recorder** — Integrated screen recording functionality for Minecraft gameplay.
+- **Audio Visualizer** — Audio spectrum visualization through customizable visualizer cards.
+- **Media Overlay** — Add image and video overlays to the launcher interface, with options to import and manage overlay media.
+- **Custom Startup Animation** — Additional startup animation customization.
+- **Customizable Card Grid** — Flexible card layout with drag-and-drop positioning, resizing, and an adjustment mode.
 
 ## Credits & Acknowledgements
 
-RayLauncher uses components from the following projects:
+RayLauncher is based on [Zalith Launcher 2](https://github.com/ZalithLauncher/ZalithLauncher2) and incorporates components from the following projects:
 
 | Project | Contribution | License |
 |---|---|---|
+| [Zalith Launcher 2](https://github.com/ZalithLauncher/ZalithLauncher2) | Original launcher and upstream project | GPL-3.0 |
+| [ZalithLauncher2Plus](https://github.com/Star1xr/ZalithLauncher2Plus) | Cape system and built-in screen recorder | GPL-3.0 |
 | [PrismalAGSL](https://github.com/styropyr0/PrismalAGSL) | Liquid Glass UI components | MIT |
-| [ZalithLauncher2Plus](https://github.com/Star1xr/ZalithLauncher2Plus) | Cape system and built-in recorder | GPL-3.0 |
+
+Thanks to the developers and contributors of these projects.
 
 ## License
 
-RayLauncher is based on Zalith Launcher 2 and is distributed under the **GNU General Public License v3.0 (GPL-3.0)**, subject to the upstream project's additional terms under Section 7.
+RayLauncher is distributed under the **GNU General Public License v3.0 (GPL-3.0)**.
 
-See [LICENSE](LICENSE) for the license text. Applicable copyright notices and license terms must be retained. RayLauncher is an unofficial modified version and is not the original Zalith Launcher 2 project.
+See [LICENSE](LICENSE) for the full license text. Applicable copyright notices and license terms must be retained.

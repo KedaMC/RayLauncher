@@ -60,7 +60,14 @@ object SwapTimeline {
     /**
      * @return 页面切换动画是否关闭
      */
-    fun isSwapClosed(): Boolean = !AllSettings.launcherSwapAnimEnabled.state || pageSlideActive
+    fun isSwapClosed(): Boolean =
+        !AllSettings.launcherSwapAnimEnabled.state || pageSlideActive || entranceSuppressed
+
+    /**
+     * True while the main page appears after startup: it shows up without any entrance animation.
+     */
+    @Volatile
+    var entranceSuppressed: Boolean = false
 
     /**
      * True while a full-page horizontal slide runs between main pages.

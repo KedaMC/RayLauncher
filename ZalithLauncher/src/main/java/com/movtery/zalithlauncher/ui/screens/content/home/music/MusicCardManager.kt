@@ -18,6 +18,7 @@
 
 package com.movtery.zalithlauncher.ui.screens.content.home.music
 
+import com.movtery.zalithlauncher.music.MusicManager
 import com.tencent.mmkv.MMKV
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -61,6 +62,7 @@ object MusicCardManager {
         synchronized(this) {
             mmkv.removeValueForKey(KEY_CARD_ID)
             _cardId.value = null
+            MusicManager.stopLocal()
         }
     }
 }

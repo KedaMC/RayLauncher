@@ -94,6 +94,7 @@ import androidx.navigation3.runtime.entryProvider
 import com.movtery.zalithlauncher.BuildKeys
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.coroutine.TaskSystem
+import com.movtery.zalithlauncher.game.version.installed.DownloadTargetVersion
 import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.game.version.installed.VersionsManager
 import com.movtery.zalithlauncher.setting.AllSettings
@@ -126,6 +127,7 @@ import com.movtery.zalithlauncher.ui.screens.content.VersionsManageScreen
 import com.movtery.zalithlauncher.ui.screens.content.WebViewScreen
 import com.movtery.zalithlauncher.ui.screens.content.addoninfo.AddonInfoScreen
 import com.movtery.zalithlauncher.ui.screens.content.navigateToDownload
+import com.movtery.zalithlauncher.ui.screens.content.home.workspace.HomeWorkspace
 import com.movtery.zalithlauncher.ui.screens.navigateTo
 import com.movtery.zalithlauncher.ui.screens.onBack
 import com.movtery.zalithlauncher.ui.theme.backgroundColor
@@ -190,10 +192,10 @@ fun MainScreen(
     val navIndex = mainBackStack.lastOrNull { pageIndexOf(it) >= 0 }?.let { pageIndexOf(it) } ?: 0
     val autoHideEnabled = mainBackStack.lastOrNull().let { it == null || pageIndexOf(it) == 0 }
 
-    //Auto-hide of the navigation: Home only. Shown on open, hidden after 3s without touch,
-    //shown again on touch, never hidden while a page slide runs
+    //Auto-hide of the navigation: Home only. Hidden on open, shown on touch, hidden again after 3s
+    //without touch, never hidden while a page slide runs once the user has touched the screen
     val lastTouch = remember { mutableLongStateOf(0L) }
-    var navVisible by remember { mutableStateOf(true) }
+    var navVisible by remember { mutableStateOf(false) }
     var pageTransitioning by remember { mutableStateOf(false) }
     LaunchedEffect(navIndex) {
         pageTransitioning = true
@@ -201,9 +203,11 @@ fun MainScreen(
         pageTransitioning = false
     }
     LaunchedEffect(autoHideEnabled, pageTransitioning) {
-        navVisible = true
+        //A last touch of 0 means the screen has not been touched since it was opened
+        navVisible = lastTouch.longValue != 0L
         if (!autoHideEnabled || pageTransitioning) return@LaunchedEffect
-        snapshotFlow { lastTouch.longValue }.collectLatest {
+        snapshotFlow { lastTouch.longValue }.collectLatest { touchTime ->
+            if (touchTime == 0L) return@collectLatest
             navVisible = true
             delay(NAV_AUTO_HIDE_MS)
             navVisible = false
@@ -558,10 +562,16 @@ private fun NavigationUI(
         }
     }
     //主页网格状态随主导航存活，离开主页再返回时不会重建、重播种与重放入场动画
-    val homeGridState = rememberCardGridState()
+    val homeGridState = rememberCardGridState(HomeWorkspace)
 
     LaunchedEffect(currentKey) {
         screenBackStackModel.mainScreen.currentKey = currentKey
+        //Downloads started from a version's settings go to that version until the user leaves them
+        when (currentKey) {
+            is NestedNavKey.VersionSettings -> DownloadTargetVersion.override = currentKey.version
+            is NestedNavKey.Download, is NestedNavKey.AddonInfo -> Unit
+            else -> DownloadTargetVersion.override = null
+        }
     }
 
     if (backStack.isNotEmpty()) {

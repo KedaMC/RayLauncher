@@ -46,6 +46,11 @@
         tools:targetApi="33"
         tools:ignore="DiscouragedApi">
         <activity
+            android:name=".ui.activities.StartupVideoEditorActivity"
+            android:exported="false"
+            android:configChanges="keyboardHidden|orientation|screenSize|smallestScreenSize|screenLayout|keyboard|navigation"
+            android:screenOrientation="sensorLandscape" />
+        <activity
             android:name=".ui.activities.SplashActivity"
             android:launchMode="singleTop"
             android:theme="@style/AppTheme.SplashScreen"

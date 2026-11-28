@@ -1,0 +1,170 @@
+/*
+ * Zalith Launcher 2
+ * Copyright (C) 2025-2026 MovTery <movtery228@qq.com> and contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/gpl-3.0.txt>.
+ */
+
+package com.movtery.zalithlauncher.ui.screens.splash
+
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import com.movtery.zalithlauncher.startup.StartupTransition
+import com.movtery.zalithlauncher.startup.StartupVideoLayout
+import com.movtery.zalithlauncher.utils.animation.SwapTimeline
+import kotlinx.coroutines.delay
+import java.io.File
+import kotlin.time.Duration.Companion.milliseconds
+
+/** Time the page gets to settle before entrance animations are allowed again */
+private const val SETTLE_MILLIS = 500
+
+/** Gives up on a video that does not render its first frame */
+private const val VIDEO_TIMEOUT_MILLIS = 3000
+
+/**
+ * Reveals [content] after startup: from black, or through the startup [video] that dissolves into it.
+ * While [reveal] runs, [SwapTimeline.entranceSuppressed] keeps the page from playing entrance animations.
+ */
+@Composable
+fun StartupRevealHost(
+    reveal: Boolean,
+    video: File?,
+    content: @Composable () -> Unit
+) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        content()
+
+        if (reveal) {
+            var finished by remember { mutableStateOf(false) }
+
+            LaunchedEffect(finished) {
+                if (!finished) return@LaunchedEffect
+                delay(SETTLE_MILLIS.milliseconds)
+                SwapTimeline.entranceSuppressed = false
+            }
+            DisposableEffect(Unit) {
+                onDispose { SwapTimeline.entranceSuppressed = false }
+            }
+
+            if (!finished) {
+                if (video != null) {
+                    VideoReveal(video = video, onFinished = { finished = true })
+                } else {
+                    BlackReveal(onFinished = { finished = true })
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BlackReveal(onFinished: () -> Unit) {
+    val alpha = remember { Animatable(1f) }
+
+    LaunchedEffect(Unit) {
+        //Start fading only once the first frames of the page are done
+        repeat(2) { withFrameNanos {} }
+        alpha.animateTo(0f, tween(StartupTransition.fadeInMillis, easing = LinearEasing))
+        onFinished()
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .graphicsLayer { this.alpha = alpha.value }
+            .background(Color.Black)
+    )
+}
+
+/**
+ * The startup video above the page. It fades in from black, and shortly before its end (or when tapped)
+ * picture and sound fade out together, showing the page underneath.
+ */
+@Composable
+private fun VideoReveal(
+    video: File,
+    onFinished: () -> Unit
+) {
+    var rendered by remember { mutableStateOf(false) }
+    var leaving by remember { mutableStateOf(false) }
+    val intro = remember { Animatable(0f) }
+    val presence = remember { Animatable(1f) }
+    val layout = remember { StartupVideoLayout.load() }
+
+    LaunchedEffect(rendered) {
+        if (rendered) {
+            intro.animateTo(1f, tween(StartupTransition.fadeInMillis, easing = LinearEasing))
+        } else {
+            delay(VIDEO_TIMEOUT_MILLIS.milliseconds)
+            leaving = true
+        }
+    }
+
+    LaunchedEffect(leaving) {
+        if (!leaving) return@LaunchedEffect
+        presence.animateTo(0f, tween(StartupTransition.fadeOutMillis, easing = LinearEasing))
+        onFinished()
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            //Fades the video and its black bars as one picture
+            .graphicsLayer { alpha = presence.value }
+            .background(Color.Black)
+    ) {
+        StartupVideo(
+            video = video,
+            layout = layout,
+            volume = presence.value,
+            onFirstFrame = { rendered = true },
+            onFinished = { leaving = true },
+            nearEndMillis = StartupTransition.fadeOutMillis.toLong(),
+            onNearEnd = { leaving = true }
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer { alpha = 1f - intro.value }
+                .background(Color.Black)
+        )
+        //Tapping skips the video, and the page stays untouched until it is gone
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable(
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() }
+                ) { leaving = true }
+        )
+    }
+}

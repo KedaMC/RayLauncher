@@ -94,14 +94,12 @@ import com.movtery.zalithlauncher.ui.screens.content.elements.backgroundGlass
 import com.movtery.zalithlauncher.ui.theme.cardColor
 import com.movtery.zalithlauncher.ui.theme.onCardColor
 import com.movtery.zalithlauncher.utils.animation.getAnimateTween
-import org.jackhuang.hmcl.addon.AddonProjectInfo
 
 /**
  * 搜索资源过滤器UI
  * @param enablePlatform 是否允许更改目标平台
  * @param searchPlatform 目标平台
  * @param searchName 搜索名称
- * @param searchedMcMods 搜索得到的 MCMOD 项目
  * @param searchedVersions 搜索得到的Minecraft版本号
  * @param gameVersion 游戏版本
  * @param sortField 排序方式
@@ -148,7 +146,6 @@ fun SearchFilter(
     searchName: String,
     onSearchNameChange: (String) -> Unit = {},
     onSearch: () -> Unit,
-    searchedMcMods: List<AddonProjectInfo>,
     searchedVersions: List<String>,
     gameVersion: String,
     onGameVersionChange: (String) -> Unit = {},
@@ -175,28 +172,9 @@ fun SearchFilter(
                 onValueChange = onSearchNameChange,
                 label = stringResource(R.string.download_addon_filter_search_name),
                 onSearch = onSearch,
-                suggestions = searchedMcMods,
-                suggestionLabel = { item ->
-                    Text(
-                        item.mainName(),
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                    //英文名/次要名称
-                    if (item.subName().isNotBlank()) {
-                        Text(
-                            modifier = Modifier.alpha(0.7f),
-                            text = item.subName(),
-                            style = MaterialTheme.typography.labelSmall
-                        )
-                    }
-                },
-                onSuggestionClick = { item ->
-                    onSearchNameChange(
-                        item.subName().ifEmpty { item.abbrName() }
-                    )
-                    onSearch()
-                    onSearch()
-                }
+                suggestions = emptyList<String>(),
+                suggestionLabel = {},
+                onSuggestionClick = {}
             )
             }
         }

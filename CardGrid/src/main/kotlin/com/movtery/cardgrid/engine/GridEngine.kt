@@ -75,10 +75,14 @@ object GridEngine {
         height: Int,
         origin: IntOffset,
         columns: Int,
-        obstacles: List<CardRect>
+        obstacles: List<CardRect>,
+        rows: Int = Int.MAX_VALUE
     ): IntOffset? {
-        if (width <= 0 || height <= 0 || width > columns) return null
-        val maxRow = obstacles.maxOfOrNull { it.bottom } ?: 0
+        if (width <= 0 || height <= 0 || width > columns || height > rows) return null
+        val maxRow = minOf(
+            maxOf(obstacles.maxOfOrNull { it.bottom } ?: 0, if (rows == Int.MAX_VALUE) 0 else origin.y),
+            rows - height
+        )
         val originCenterX = origin.x + width / 2f
         val originCenterY = origin.y + height / 2f
         var best: IntOffset? = null
@@ -117,7 +121,8 @@ object GridEngine {
         columns: Int,
         cards: List<CardRect>,
         pointer: IntOffset? = null,
-        directions: Map<String, IntOffset> = emptyMap()
+        directions: Map<String, IntOffset> = emptyMap(),
+        rows: Int = Int.MAX_VALUE
     ): Map<String, CardRect>? {
         val displaced = cards
             .filter { it.id != moving.id && it.intersects(moving) }
@@ -148,7 +153,7 @@ object GridEngine {
                 perpendicular,
                 IntOffset(-perpendicular.x, -perpendicular.y)
             ).firstNotNullOfOrNull { candidate ->
-                slideChain(current, candidate, moving, columns, occupied)
+                slideChain(current, candidate, moving, columns, occupied, rows)
             } ?: return null
             occupied.removeAll { it.id in chain }
             occupied.addAll(chain.values)
@@ -194,7 +199,8 @@ object GridEngine {
         direction: IntOffset,
         mover: CardRect,
         columns: Int,
-        obstacles: List<CardRect>
+        obstacles: List<CardRect>,
+        rows: Int = Int.MAX_VALUE
     ): Map<String, CardRect>? {
         val moved = linkedMapOf(head.id to head)
         while (moved.getValue(head.id).intersects(mover)) {
@@ -211,7 +217,8 @@ object GridEngine {
             val overflow = moved.values.any { member ->
                 val next = member.shift(direction)
                 (direction.x != 0 && (next.x < 0 || next.right > columns)) ||
-                    (direction.y < 0 && next.y < 0)
+                    (direction.y < 0 && next.y < 0) ||
+                    (direction.y > 0 && next.bottom > rows)
             }
             if (overflow) return null
             // 整链同步前进一格
@@ -233,8 +240,26 @@ object GridEngine {
         pointer: IntOffset,
         columns: Int,
         limits: CardLimits,
-        obstacles: List<CardRect>
+        obstacles: List<CardRect>,
+        rows: Int = Int.MAX_VALUE
     ): ResizeResult {
+        //A corner is resolved one side after the other, the second pass sees what the first one pushed
+        if (edge.isCorner) {
+            var result = ResizeResult(current, emptyMap())
+            edge.sides.forEach { side ->
+                val next = resolveResize(
+                    current = result.layout,
+                    edge = side,
+                    pointer = pointer,
+                    columns = columns,
+                    limits = limits,
+                    obstacles = obstacles.map { result.pushed[it.id] ?: it },
+                    rows = rows
+                )
+                result = ResizeResult(next.layout, result.pushed + next.pushed)
+            }
+            return result
+        }
         val lim = limits.clampedFor(columns)
         val horizontal = edge == ResizeEdge.Start || edge == ResizeEdge.End
         val minSpan = if (horizontal) lim.minWidth else lim.minHeight
@@ -243,8 +268,9 @@ object GridEngine {
         val hardMax = when (edge) {
             ResizeEdge.End -> columns - current.x
             ResizeEdge.Start -> current.right
-            ResizeEdge.Bottom -> Int.MAX_VALUE
+            ResizeEdge.Bottom -> if (rows == Int.MAX_VALUE) rows else rows - current.y
             ResizeEdge.Top -> current.bottom
+            else -> error("Corners are resolved side by side")
         }.coerceAtLeast(1)
         val upper = minOf(maxSpan, hardMax).coerceAtLeast(1)
         val span = when (edge) {
@@ -252,6 +278,7 @@ object GridEngine {
             ResizeEdge.Start -> current.right - pointer.x
             ResizeEdge.Bottom -> pointer.y - current.y
             ResizeEdge.Top -> current.bottom - pointer.y
+            else -> error("Corners are resolved side by side")
         }.coerceIn(minSpan.coerceAtMost(upper), upper)
 
         val desired = withSpan(current, edge, span)
@@ -261,7 +288,7 @@ object GridEngine {
         val forward = edge == ResizeEdge.End || edge == ResizeEdge.Bottom
         var candidate = desired
         while (true) {
-            val pushed = push(candidate, axis, forward, columns, obstacles)
+            val pushed = push(candidate, axis, forward, columns, obstacles, rows)
             if (pushed != null) return ResizeResult(candidate, pushed)
             val shrunk = spanOf(candidate, edge) - 1
             if (shrunk < spanOf(current, edge)) return ResizeResult(current, emptyMap())
@@ -281,7 +308,8 @@ object GridEngine {
         axis: PushAxis,
         forward: Boolean,
         columns: Int,
-        obstacles: List<CardRect>
+        obstacles: List<CardRect>,
+        rows: Int = Int.MAX_VALUE
     ): Map<String, CardRect>? {
         val horizontal = axis == PushAxis.Horizontal
 
@@ -321,7 +349,7 @@ object GridEngine {
             front += if (forward) span(card) else -span(card)
             val blocked = when {
                 horizontal && forward -> front > columns
-                forward -> false
+                forward -> front > rows
                 else -> front < 0
             }
             if (blocked) return null
@@ -338,6 +366,7 @@ object GridEngine {
     private fun spanOf(rect: CardRect, edge: ResizeEdge): Int = when (edge) {
         ResizeEdge.Start, ResizeEdge.End -> rect.width
         ResizeEdge.Top, ResizeEdge.Bottom -> rect.height
+        else -> error("Corners are resolved side by side")
     }
 
     private fun withSpan(rect: CardRect, edge: ResizeEdge, span: Int): CardRect = when (edge) {
@@ -345,6 +374,7 @@ object GridEngine {
         ResizeEdge.Start -> rect.copy(x = rect.right - span, width = span)
         ResizeEdge.Bottom -> rect.copy(height = span)
         ResizeEdge.Top -> rect.copy(y = rect.bottom - span, height = span)
+        else -> error("Corners are resolved side by side")
     }
 
     /**
@@ -399,6 +429,7 @@ object GridEngine {
     fun validate(
         cards: List<CardRect>,
         columns: Int,
+        rows: Int = Int.MAX_VALUE,
         limits: (CardRect) -> CardLimits = { CardLimits.DEFAULT }
     ): List<CardRect> {
         val seen = mutableSetOf<String>()
@@ -407,25 +438,33 @@ object GridEngine {
             if (!seen.add(card.id)) continue
             val lim = limits(card).clampedFor(columns)
             val width = lim.clampWidth(card.width.coerceAtLeast(1))
-            val height = lim.clampHeight(card.height.coerceAtLeast(1))
+            val height = lim.clampHeight(card.height.coerceAtLeast(1)).coerceAtMost(rows)
             val x = card.x.coerceIn(0, columns - width)
-            val y = card.y.coerceAtLeast(0)
+            val y = card.y.coerceIn(0, rows - height)
             clamped.add(card.copy(x = x, y = y, width = width, height = height))
         }
         val settled = mutableListOf<CardRect>()
         for (card in clamped.sortedWith(readingOrder())) {
-            val position = if (settled.any { it.intersects(card) }) {
-                findNearestFreeSlot(
-                    width = card.width,
-                    height = card.height,
-                    origin = IntOffset(card.x, card.y),
-                    columns = columns,
-                    obstacles = settled
-                ) ?: IntOffset(0, totalRows(settled))
-            } else {
-                IntOffset(card.x, card.y)
+            if (settled.none { it.intersects(card) }) {
+                settled.add(card)
+                continue
             }
-            settled.add(card.positionAt(position))
+            fun relocate(candidate: CardRect): CardRect? = findNearestFreeSlot(
+                width = candidate.width,
+                height = candidate.height,
+                origin = IntOffset(candidate.x, candidate.y),
+                columns = columns,
+                obstacles = settled,
+                rows = rows
+            )?.let(candidate::positionAt)
+
+            //A bounded grid may be too full for the card: try its smallest size, then keep it where it is
+            val lim = limits(card).clampedFor(columns)
+            settled.add(
+                relocate(card)
+                    ?: relocate(card.copy(width = lim.minWidth, height = lim.minHeight.coerceAtMost(rows)))
+                    ?: card
+            )
         }
         return settled.sortedWith(readingOrder())
     }

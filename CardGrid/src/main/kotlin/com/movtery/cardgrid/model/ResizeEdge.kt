@@ -18,5 +18,19 @@
 
 package com.movtery.cardgrid.model
 
-/** 缩放手柄所在的边 */
-enum class ResizeEdge { Start, Top, End, Bottom }
+/** Side or corner a resize handle sits on */
+enum class ResizeEdge {
+    Start, Top, End, Bottom, TopStart, TopEnd, BottomStart, BottomEnd;
+
+    /** The sides moved by this handle: the side itself, or both sides of a corner */
+    val sides: List<ResizeEdge>
+        get() = when (this) {
+            Start, Top, End, Bottom -> listOf(this)
+            TopStart -> listOf(Start, Top)
+            TopEnd -> listOf(End, Top)
+            BottomStart -> listOf(Start, Bottom)
+            BottomEnd -> listOf(End, Bottom)
+        }
+
+    val isCorner: Boolean get() = sides.size > 1
+}

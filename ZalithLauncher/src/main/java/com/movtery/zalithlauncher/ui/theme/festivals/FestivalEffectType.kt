@@ -32,15 +32,10 @@ enum class FestivalEffectType {
 
     companion object {
         private val REGISTRY: Map<Festival, List<FestivalEffectType>> = mapOf(
-            Festival.QING_MING to listOf(RAIN),
             Festival.CHRISTMAS to listOf(SNOW),
             Festival.NEW_YEAR to listOf(FIREWORKS),
-            Festival.SPRING_FESTIVAL to listOf(FIREWORKS),
-            Festival.NATIONAL_DAY to listOf(FIREWORKS_NATIONAL),
-            Festival.MID_AUTUMN to listOf(FIREFLIES),
             Festival.HALLOWEEN to listOf(BAT_SWARM),
             Festival.VALENTINES to listOf(HEARTS),
-            Festival.QIXI to listOf(HEARTS)
         )
 
         fun of(festivals: List<Festival>): List<FestivalEffectType> {

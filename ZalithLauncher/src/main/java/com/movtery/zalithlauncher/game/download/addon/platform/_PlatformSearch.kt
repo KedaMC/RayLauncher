@@ -28,7 +28,6 @@ import com.movtery.zalithlauncher.game.download.addon.platform.curseforge.models
 import com.movtery.zalithlauncher.game.download.addon.platform.modrinth.MCIM_MODRINTH_API
 import com.movtery.zalithlauncher.game.download.addon.platform.modrinth.ModrinthSearcher
 import com.movtery.zalithlauncher.game.download.addon.platform.modrinth.models.ModrinthVersion
-import com.movtery.zalithlauncher.game.download.addon.utils.localizedModSearchKeywords
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.ui.screens.content.download.addon.elements.DownloadAddonState
 import com.movtery.zalithlauncher.ui.screens.content.download.addon.elements.SearchAddonState
@@ -144,57 +143,30 @@ suspend fun searchAddons(
     onError: (SearchAddonState.Error) -> Unit
 ) {
     runCatching {
-        val (containsChinese, englishKeywords) = searchFilter.searchName.localizedModSearchKeywords(platformClasses)
-        //参考源代码：[HMCL Github](https://github.com/HMCL-dev/HMCL/blob/d295e60/HMCL/src/main/java/org/jackhuang/hmcl/game/LocalizedRemoteModRepository.java#L56-L68)
-        //逐个英文短语尝试搜索，取第一个有非空结果的
-        val queries = englishKeywords?.takeIf { it.isNotEmpty() }?.toList()
-            ?: listOf(searchFilter.searchName)
-        //参考源代码：[HMCL Github](https://github.com/HMCL-dev/HMCL/blob/8767cc0e/HMCL/src/main/java/org/jackhuang/hmcl/game/LocalizedRemoteAddonRepository.java)
-        //翻译出的英文短语搜索固定使用相关性排序，避免所选的排序方式将目标资源挤出结果页
-        val searchFilterForQuery = englishKeywords?.takeIf { it.isNotEmpty() }
-            ?.let { searchFilter.copy(sortField = PlatformSortField.RELEVANCE) }
-            ?: searchFilter
-
-        var lastResult: PlatformSearchResult? = null
-        var lastException: Exception? = null
-        for (query in queries) {
-            try {
-                val r = when (searchPlatform) {
-                    Platform.CURSEFORGE -> mirroredPlatformSearcher(
-                        searchers = mirroredCurseForgeSource(),
-                        printLog = false
-                    ) { searcher ->
-                        searcher.searchAddons(
-                            query = query,
-                            searchFilter = searchFilterForQuery,
-                            platformClasses = platformClasses
-                        )
-                    }
-                    Platform.MODRINTH -> mirroredPlatformSearcher(
-                        searchers = mirroredModrinthSource(),
-                        printLog = false
-                    ) { searcher ->
-                        searcher.searchAddons(
-                            query = query,
-                            searchFilter = searchFilterForQuery,
-                            platformClasses = platformClasses
-                        )
-                    }
-                }
-                lastResult = r
-                if (r.getAddonPage(platformClasses).data.isNotEmpty()) break
-            } catch (e: Exception) {
-                //当前关键词搜索失败，记录异常并继续尝试下一个
-                lastException = e
+        val result = when (searchPlatform) {
+            Platform.CURSEFORGE -> mirroredPlatformSearcher(
+                searchers = mirroredCurseForgeSource(),
+                printLog = false
+            ) { searcher ->
+                searcher.searchAddons(
+                    query = searchFilter.searchName,
+                    searchFilter = searchFilter,
+                    platformClasses = platformClasses
+                )
+            }
+            Platform.MODRINTH -> mirroredPlatformSearcher(
+                searchers = mirroredModrinthSource(),
+                printLog = false
+            ) { searcher ->
+                searcher.searchAddons(
+                    query = searchFilter.searchName,
+                    searchFilter = searchFilter,
+                    platformClasses = platformClasses
+                )
             }
         }
 
-        val result = lastResult ?: throw lastException ?: IOException("Failed to search for all queries")
-
-        onSuccess(
-            if (containsChinese) result.processChineseSearchResults(searchFilter.searchName, platformClasses)
-            else result
-        )
+        onSuccess(result)
     }.onFailure { e ->
         if (e !is CancellationException) {
             Logger.error(TAG, "An exception occurred while searching for addons.", e)

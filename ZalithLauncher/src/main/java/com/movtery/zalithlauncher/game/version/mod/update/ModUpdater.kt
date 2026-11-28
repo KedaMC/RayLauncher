@@ -170,8 +170,7 @@ class ModUpdater(
                             readyData += ModData(
                                 file = file,
                                 modFile = modFile,
-                                project = project,
-                                mcMod = mod.mcMod
+                                project = project
                             )
                         } else {
                             needLoad += mod
@@ -337,8 +336,7 @@ class ModUpdater(
         return ModData(
             file = file,
             modFile = modFile,
-            project = project,
-            mcMod = mod.mcMod
+            project = project
         )
     }
 

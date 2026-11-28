@@ -35,7 +35,6 @@ import com.movtery.zalithlauncher.BuildKeys
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.utils.device.Architecture
 import com.movtery.zalithlauncher.utils.logging.Logger
-import com.xhinliang.lunarcalendar.LunarCalendar
 import java.io.File
 import java.io.PrintStream
 import java.text.DateFormat
@@ -190,20 +189,6 @@ fun LocalDate.checkDateRange(month: Int, dayRange: IntRange): Boolean {
 }
 
 /**
- * 检查是否为给定的日期（农历）
- */
-fun LunarCalendar.checkDate(month: Int, day: Int): Boolean {
-    return lunar.month == month && lunar.day == day
-}
-
-/**
- * 检查是否为给定的日期范围（农历）
- */
-fun LunarCalendar.checkDateRange(month: Int, dayRange: IntRange): Boolean {
-    return lunar.month == month && lunar.day in dayRange
-}
-
-/**
  * 获取简单的语言标签
  */
 fun Locale.toLangTag(): String {
@@ -338,39 +323,10 @@ fun killProgress() {
 }
 
 fun formatNumberByLocale(context: Context, number: Long): String {
-    val locale = context.resources.configuration.locales.get(0)
-
-    return when {
-        isSimplifiedChinese(locale) || isTraditionalChinese(locale) -> formatChineseNumber(number)
-        else -> formatNonChineseNumber(number)
-    }
+    return formatShortNumber(number)
 }
 
-private fun isSimplifiedChinese(locale: Locale): Boolean {
-    return locale.language == "zh" && (locale.country == "CN" || locale.script == "Hans")
-}
-
-private fun isTraditionalChinese(locale: Locale): Boolean {
-    return locale.language == "zh" && (
-            locale.country == "TW" || locale.country == "HK" || locale.script == "Hant"
-            )
-}
-
-private fun formatChineseNumber(number: Long): String {
-    return when {
-        number < 10_000 -> number.toString()
-        number < 100_000_000 -> {
-            val value = number / 10_000.0
-            formatWithUnit(value, "万")
-        }
-        else -> {
-            val value = number / 100_000_000.0
-            formatWithUnit(value, "亿")
-        }
-    }
-}
-
-private fun formatNonChineseNumber(number: Long): String {
+private fun formatShortNumber(number: Long): String {
     return when {
         number < 1_000 -> number.toString()
         number < 1_000_000 -> {
@@ -415,58 +371,6 @@ fun isChinaMainland(): Boolean {
 
     //应用内支持修改语言，不能再以语言来进行判断
     return /*Locale.getDefault().country.equals("CN", ignoreCase = true)*/false
-}
-
-/**
- * 检查当前环境是否为中文环境
- */
-fun isChinese(context: Context? = null): Boolean {
-    //检查默认区域设置
-    val defaultLocale = Locale.getDefault()
-    if (isChineseLocale(defaultLocale)) {
-        return true
-    }
-
-    //检查实际区域设置
-    val resources = context?.resources
-    return resources != null && isChineseLocale(resources.configuration.locales[0])
-}
-
-/**
- * 判断单个Locale是否为中文环境
- */
-fun isChineseLocale(locale: Locale): Boolean {
-    val language = locale.language.lowercase(Locale.ROOT)
-    if (language != "zh") return false
-
-    val country = locale.country.uppercase(Locale.ROOT)
-    return country in setOf(
-        "CN", //中国大陆
-        "TW", //台湾
-        "HK", //香港
-        "MO", //澳门
-        "SG", //新加坡
-        "MY"  //马来西亚
-    )
-}
-
-fun isInGreaterChina(): Boolean {
-    return isChinaTimeZone() && Locale.getDefault().language == "zh"
-}
-
-/**
- * 判断当前时区是否属于中国
- */
-private fun isChinaTimeZone(): Boolean {
-    return when (TimeZone.getDefault().id) {
-        "Asia/Shanghai",
-        "Asia/Chongqing",//历史遗留
-        "Asia/Hong_Kong",
-        "Asia/Macao",
-        "Asia/Taipei",
-        "Asia/Urumqi" -> true
-        else -> false
-    }
 }
 
 fun printLauncherInfo(
