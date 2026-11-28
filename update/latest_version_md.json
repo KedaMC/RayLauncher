@@ -1,26 +1,26 @@
 {
-  "code": 200051,
-  "version": "2.8.2 Ray Beta",
-  "created_at": "2026-11-16T14:03:38Z",
+  "code": 200052,
+  "version": "2.8.2 Ray RC1",
+  "created_at": "2026-11-28T11:36:10Z",
   "default_cloud_drive": null,
   "cloud_drives": [],
   "files": [
     {
-      "file_name": "RayLauncher-2.8.2-Beta-arm64-v8a.apk",
-      "uri": "https://github.com/KedaMC/RayLauncher/releases/download/v1.0-beta/RayLauncher-2.8.2-Beta-arm64-v8a.apk",
-      "size": 158025336,
+      "file_name": "RayLauncher-2.8.2-RC1-arm64-v8a.apk",
+      "uri": "https://github.com/KedaMC/RayLauncher/releases/download/v1.0-rc/RayLauncher-2.8.2-RC1-arm64-v8a.apk",
+      "size": 53828464,
       "arch": "arm64"
     },
     {
-      "file_name": "RayLauncher-2.8.2-Beta-armeabi-v7a.apk",
-      "uri": "https://github.com/KedaMC/RayLauncher/releases/download/v1.0-beta/RayLauncher-2.8.2-Beta-armeabi-v7a.apk",
-      "size": 153192426,
+      "file_name": "RayLauncher-2.8.2-RC1-armeabi-v7a.apk",
+      "uri": "https://github.com/KedaMC/RayLauncher/releases/download/v1.0-rc/RayLauncher-2.8.2-RC1-armeabi-v7a.apk",
+      "size": 51972258,
       "arch": "arm"
     }
   ],
   "default_body": {
     "language": "NULL",
-    "markdown": "**Highlights:**\r\n- Updated prismaAGSL (Liquid Glass component) from 1.0.6 to 1.0.7\r\n- Added a music widget\r\n- Slightly improved Liquid Glass performance\r\n- Potential improvement to MC loading times\r\n- Added notifications for launcher updates\r\n- The 3 navigation buttons are now centered and expand from the right\r\n- Overhauled the launch panel\r\n\r\n**Other changes:**\r\n- Fix: \"Game version\" filter caused errors when Liquid Glass was enabled\r\n- Fix: Page information text would incorrectly adopt the Liquid Glass style when returning to the home screen\r\n- Fix: Cursor customization caused the launcher to crash\r\n- Fix: Pages like \"Downloads - Games\" were positioned slightly higher than the adjacent game buttons\r\n- The launch panel can now be placed anywhere\r\n- Drastically reduced log file size\r\n- Slightly reduced the overall launcher size\r\n- Removed SPEFW\r\n- Removed various rarely used features\r\n- home screen now has a cleaner, edge-to-edge design\r\n- `latest_game.log` has been merged into `latest.log`\r\n- Expanded the Liquid Glass effect\r\n- App/instance icons now appear rounded"
+    "markdown": "**HIGHLIGHTS:**\n- Drastically reduced the Launcher's file size\n- Cleaned up the codebase (removed 4,000+ lines)\n- Added: A visualizer separate from the audio widget\n- Added: A custom boot launcher\n- Added: A \"Ray\" page containing Ray-specific features\n- The Launcher menu now supports zooming out, allowing cards to be placed anywhere\n\n**OTHER CHANGES:**\n- Fixed: An issue where the Minecraft version for a card would default to the Launcher's version when downloading mods\n- Fixed: Update notifications appearing even when the Launcher is already up to date\n- Fixed: Audio widget appearing squashed when no audio is loaded\n- Fixed: Audio widget pausing playback when navigating to another page while music is imported\n- Added: A \"don't auto-close log\" option to prevent the log window from closing automatically when the Mojang logo appears\n- Removed: The delete button for Launcher cards\n- Removed: Unnecessary duplicate UI settings\n- Updated: Page-transition animations so they can be toggled independently (preventing all animations from being disabled at once)\n- Renamed: The \"Controls\" menu to \"Mouse\"\n- Tweaked: The three navigation buttons at the top\n- Various other minor adjustments\n"
   },
   "bodies": []
 }
