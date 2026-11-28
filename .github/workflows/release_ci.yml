@@ -11,6 +11,8 @@ permissions:
 jobs:
   Build:
     uses: ./.github/workflows/build.yml
+    with:
+      ref: ${{ github.event.release.tag_name }}
     secrets:
       OAUTH_CLIENT_ID: ${{ secrets.OAUTH_CLIENT_ID }}
       CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
